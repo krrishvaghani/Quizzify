@@ -1,1 +1,1 @@
-# Quizzy
+# Quizzify

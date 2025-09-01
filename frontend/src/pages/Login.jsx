@@ -37,17 +37,62 @@ function Login() {
   }
 
   return (
-    <div className="container">
-      <div className="card" style={{ maxWidth: 420, margin: '40px auto' }}>
-        <div className="title">Welcome back</div>
-        <div className="subtitle">Sign in to continue generating quizzes.</div>
-        <form onSubmit={handleSubmit} className="grid">
-          <input className="input" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-          <input className="input" placeholder="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <button className="button" disabled={loading}>{loading ? 'Loading...' : 'Login'}</button>
-          {error && <div style={{ color: '#ef4444' }}>{error}</div>}
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-icon">🔐</div>
+          <h1 className="auth-title">Welcome Back</h1>
+          <p className="auth-subtitle">Sign in to continue your learning journey</p>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label className="form-label">Email Address</label>
+            <input 
+              className="form-input" 
+              type="email" 
+              placeholder="Enter your email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
+          
+          <div className="form-group">
+            <label className="form-label">Password</label>
+            <input 
+              className="form-input" 
+              type="password" 
+              placeholder="Enter your password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
+          
+          <button className="btn-primary auth-btn" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="loading-spinner"></span>
+                Signing In...
+              </>
+            ) : (
+              <>
+                <span className="btn-icon">🚀</span>
+                Sign In
+              </>
+            )}
+          </button>
+          
+          {error && <div className="error-message">{error}</div>}
         </form>
-        <div className="subtitle" style={{ marginTop: 12 }}>Don't have an account? <Link to="/signup">Signup</Link></div>
+        
+        <div className="auth-footer">
+          <p className="auth-link-text">
+            Don't have an account?{' '}
+            <Link to="/signup" className="auth-link">Create one here</Link>
+          </p>
+        </div>
       </div>
     </div>
   )

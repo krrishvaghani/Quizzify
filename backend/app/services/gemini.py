@@ -13,7 +13,7 @@ def configure_gemini() -> None:
 
 def generate_quiz_questions(context_text: str, num_questions: int = 5) -> List[dict]:
     configure_gemini()
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.0-flash-exp")
     prompt = (
         "You are a helpful tutor. Based on the provided study material, create a JSON array of"
         f" {num_questions} multiple-choice questions. Each item must have fields: question (string),"

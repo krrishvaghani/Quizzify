@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Login from './pages/Login.jsx'
 import Signup from './pages/Signup.jsx'
 import Home from './pages/Home.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 
 const isAuthed = () => !!localStorage.getItem('token')
 
@@ -14,28 +15,48 @@ function App() {
     window.addEventListener('storage', syncAuth)
     return () => window.removeEventListener('storage', syncAuth)
   }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    window.dispatchEvent(new Event('storage'))
+  }
+
   return (
-    <div className="container">
-      <nav className="nav" style={{ justifyContent: 'space-between' }}>
-        <div className="row" style={{ gap: 16 }}>
-          <Link to="/">Home</Link>
+    <div className="app-container">
+      <nav className="navbar">
+        <div className="nav-brand">
+          <Link to="/" className="brand-link">
+            <div className="brand-icon">🎯</div>
+            <span className="brand-text">Quizzify</span>
+          </Link>
         </div>
-        <div className="row" style={{ gap: 16 }}>
+        <div className="nav-menu">
           {authed ? (
-            <button className="button" onClick={() => { localStorage.removeItem('token'); window.dispatchEvent(new Event('storage')); }}>Logout</button>
+            <>
+              <Link to="/" className="nav-link">Quiz Generator</Link>
+              <Link to="/dashboard" className="nav-link">Dashboard</Link>
+              <button className="nav-button logout-btn" onClick={handleLogout}>
+                <span className="btn-icon">🚪</span>
+                Logout
+              </button>
+            </>
           ) : (
             <>
-              <Link to="/login">Login</Link>
-              <Link to="/signup">Signup</Link>
+              <Link to="/login" className="nav-link">Login</Link>
+              <Link to="/signup" className="nav-link signup-link">Sign Up</Link>
             </>
           )}
         </div>
       </nav>
-      <Routes>
-        <Route path="/" element={authed ? <Home /> : <Navigate to="/login" replace />} />
-        <Route path="/login" element={authed ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/signup" element={authed ? <Navigate to="/" replace /> : <Signup />} />
-      </Routes>
+      
+      <main className="main-content">
+        <Routes>
+          <Route path="/" element={authed ? <Home /> : <Navigate to="/login" replace />} />
+          <Route path="/dashboard" element={authed ? <Dashboard /> : <Navigate to="/login" replace />} />
+          <Route path="/login" element={authed ? <Navigate to="/" replace /> : <Login />} />
+          <Route path="/signup" element={authed ? <Navigate to="/" replace /> : <Signup />} />
+        </Routes>
+      </main>
     </div>
   )
 }

@@ -1,9 +1,13 @@
-import { Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom'
-import { useEffect, useState } from 'react'
-import Login from './pages/Login.jsx'
-import Signup from './pages/Signup.jsx'
-import Home from './pages/Home.jsx'
-import Dashboard from './pages/Dashboard.jsx'
+import React, { useState, useEffect } from 'react'
+import { Routes, Route, Navigate, Link } from 'react-router-dom'
+import Navbar from './components/Navbar'
+import Home from './pages/Home'
+import Dashboard from './pages/Dashboard'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Landing from './pages/Landing'
+import AIChatbot from './components/chat/AIChatbot'
+import ChatProvider from './components/chat/ChatProvider'
 
 const isAuthed = () => !!localStorage.getItem('token')
 
@@ -22,42 +26,49 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <nav className="navbar">
-        <div className="nav-brand">
-          <Link to="/" className="brand-link">
-            <div className="brand-icon">🎯</div>
-            <span className="brand-text">Quizzify</span>
-          </Link>
-        </div>
-        <div className="nav-menu">
-          {authed ? (
-            <>
-              <Link to="/" className="nav-link">Quiz Generator</Link>
-              <Link to="/dashboard" className="nav-link">Dashboard</Link>
-              <button className="nav-button logout-btn" onClick={handleLogout}>
-                <span className="btn-icon">🚪</span>
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login" className="nav-link">Login</Link>
-              <Link to="/signup" className="nav-link signup-link">Sign Up</Link>
-            </>
-          )}
-        </div>
-      </nav>
+    <Routes>
+      {/* Landing page for unauthenticated users */}
+      <Route path="/" element={authed ? <Navigate to="/app" replace /> : <Landing />} />
       
-      <main className="main-content">
-        <Routes>
-          <Route path="/" element={authed ? <Home /> : <Navigate to="/login" replace />} />
-          <Route path="/dashboard" element={authed ? <Dashboard /> : <Navigate to="/login" replace />} />
-          <Route path="/login" element={authed ? <Navigate to="/" replace /> : <Login />} />
-          <Route path="/signup" element={authed ? <Navigate to="/" replace /> : <Signup />} />
-        </Routes>
-      </main>
-    </div>
+      {/* Authentication routes */}
+      <Route path="/login" element={authed ? <Navigate to="/app" replace /> : <Login />} />
+      <Route path="/signup" element={authed ? <Navigate to="/app" replace /> : <Register />} />
+      
+      {/* Protected app routes */}
+      <Route path="/app/*" element={
+        authed ? (
+          <div className="app-container">
+            <nav className="navbar">
+              <div className="nav-brand">
+                <Link to="/app" className="brand-link">
+                  <div className="brand-icon">🎯</div>
+                  <span className="brand-text">Quizzify</span>
+                </Link>
+              </div>
+              <div className="nav-menu">
+                <Link to="/app" className="nav-link">Quiz Generator</Link>
+                <Link to="/app/dashboard" className="nav-link">Dashboard</Link>
+                <button className="nav-button logout-btn" onClick={handleLogout}>
+                  <span className="btn-icon">🚪</span>
+                  Logout
+                </button>
+              </div>
+            </nav>
+            
+            <main className="main-content">
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+              </Routes>
+            </main>
+            
+            <AIChatbot />
+          </div>
+        ) : (
+          <Navigate to="/" replace />
+        )
+      } />
+    </Routes>
   )
 }
 

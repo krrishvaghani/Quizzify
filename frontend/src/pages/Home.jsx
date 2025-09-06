@@ -1,4 +1,15 @@
-import { useCallback, useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import TopicSelector from '../components/TopicSelector';
+import DifficultySelector from '../components/DifficultySelector';
+import EnhancedQuiz from '../components/EnhancedQuiz';
+import AdaptiveQuiz from '../components/AdaptiveQuiz';
+import QuizModeSelector from '../components/QuizModeSelector';
+import QuizSettings from '../components/QuizSettings';
+import ProfessionalHeader from '../components/ProfessionalHeader';
+import ProgressTracker from '../components/ProgressTracker';
+import DifficultyStatistics from '../components/DifficultyStatistics';
+import PersonalizedRecommendations from '../components/PersonalizedRecommendations';
 
 function Home() {
   const [file, setFile] = useState(null)
@@ -10,11 +21,68 @@ function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [drag, setDrag] = useState(false)
-  const [currentStep, setCurrentStep] = useState('upload') // upload, quiz, results
+  const [currentStep, setCurrentStep] = useState('upload') // upload, config, quiz, results, recommendations
+  const [showRecommendations, setShowRecommendations] = useState(false)
+  const [lastQuizResults, setLastQuizResults] = useState(null)
+  
+  // New enhanced features
+  const [selectedTopic, setSelectedTopic] = useState('general')
+  const [selectedDifficulty, setSelectedDifficulty] = useState('easy')
+  const [availableTopics, setAvailableTopics] = useState([])
+  const [timePerQuestion, setTimePerQuestion] = useState(30)
+  const [totalTimeLimit, setTotalTimeLimit] = useState(null)
+  const [adaptiveDifficulty, setAdaptiveDifficulty] = useState(true)
+  const [recommendedDifficulty, setRecommendedDifficulty] = useState(null)
+  const [quizMode, setQuizMode] = useState('document') // document or topic-based
+  const [quizSettings, setQuizSettings] = useState({
+    numQuestions: 10,
+    timeLimit: 15,
+    difficulty: 'medium',
+    adaptiveDifficulty: true
+  })
+
+  useEffect(() => {
+    fetchAvailableTopics()
+    fetchRecommendedDifficulty()
+  }, [])
+
+  const fetchAvailableTopics = async () => {
+    try {
+      const response = await fetch('/api/quiz/topics')
+      const topics = await response.json()
+      setAvailableTopics(topics)
+    } catch (error) {
+      console.error('Failed to fetch topics:', error)
+      setAvailableTopics(['math', 'science', 'history', 'literature', 'geography', 'technology', 'general'])
+    }
+  }
+
+  const fetchRecommendedDifficulty = async () => {
+    try {
+      const userId = localStorage.getItem('userId') || 'demo-user'
+      const response = await fetch(`/api/quiz/user/${userId}/suggested-difficulty?topic=${selectedTopic}`)
+      const data = await response.json()
+      setRecommendedDifficulty(data.suggested_difficulty)
+    } catch (error) {
+      console.error('Failed to fetch recommended difficulty:', error)
+    }
+  }
 
   const handleUpload = async (e) => {
     e.preventDefault()
     if (!file) return
+    setCurrentStep('config')
+  }
+
+  const handleStartQuiz = () => {
+    if (quizMode === 'document') {
+      generateDocumentQuiz()
+    } else {
+      setCurrentStep('quiz')
+    }
+  }
+
+  const generateDocumentQuiz = async () => {
     setLoading(true)
     setError('')
     try {
@@ -40,6 +108,47 @@ function Home() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const getQuizConfig = () => {
+    return {
+      topic: selectedTopic,
+      difficulty: selectedDifficulty,
+      num_questions: num,
+      time_per_question: timePerQuestion,
+      total_time_limit: totalTimeLimit,
+      adaptive_difficulty: adaptiveDifficulty
+    }
+  }
+
+  const handleQuizComplete = (result) => {
+    if (result.results) {
+      // Adaptive quiz results
+      const correctAnswers = result.results.filter(r => r.isCorrect).length
+      setScore({ correct: correctAnswers, total: result.results.length })
+      
+      // Save adaptive quiz results to localStorage
+      const quizResult = {
+        title: `Adaptive Quiz - ${selectedTopic || file?.name || 'Document'}`,
+        date: new Date().toISOString(),
+        score: correctAnswers,
+        totalQuestions: result.results.length,
+        adaptiveStats: result.statistics,
+        difficultyManager: result.difficultyManager,
+        results: result.results
+      }
+      
+      const existingHistory = JSON.parse(localStorage.getItem('quizHistory') || '[]')
+      existingHistory.unshift(quizResult)
+      localStorage.setItem('quizHistory', JSON.stringify(existingHistory))
+      
+      // Store results for recommendations
+      setLastQuizResults(result)
+    } else {
+      // Regular quiz results
+      setScore({ correct: result.correct_answers, total: result.total_questions })
+    }
+    setCurrentStep('results')
   }
 
   const onDrop = useCallback((e) => {
@@ -90,8 +199,28 @@ function Home() {
     setAnswers({})
     setScore(null)
     setShowResults(false)
+    setShowRecommendations(false)
+    setLastQuizResults(null)
     setCurrentStep('upload')
     setError('')
+  }
+
+  const handleShowRecommendations = () => {
+    setShowRecommendations(true)
+    setCurrentStep('recommendations')
+  }
+
+  const handleGeneratePracticeQuiz = (topic) => {
+    // Navigate back to quiz creation with focus on the weak topic
+    setSelectedTopic(topic.toLowerCase())
+    setQuizMode('topic')
+    setShowRecommendations(false)
+    setCurrentStep('config')
+  }
+
+  const handleCloseRecommendations = () => {
+    setShowRecommendations(false)
+    setCurrentStep('results')
   }
 
   const getFileIcon = (fileName) => {
@@ -101,7 +230,118 @@ function Home() {
     return '📁'
   }
 
+  if (currentStep === 'config') {
+    return (
+      <div className="professional-quiz-container">
+        <ProfessionalHeader 
+          title="Create Your Quiz"
+          subtitle="Choose your preferred quiz mode and customize settings"
+        />
+
+        <div className="quiz-config-content">
+          <ProgressTracker userStats={{
+            totalQuizzes: 12,
+            averageScore: 85,
+            timeSpent: 240,
+            streak: 5,
+            improvement: 15
+          }} />
+
+          <QuizModeSelector 
+            selectedMode={quizMode}
+            onModeChange={setQuizMode}
+          />
+
+          <div className="enhanced-quiz-settings">
+            <div className="settings-card">
+              <h3>📝 Quiz Configuration</h3>
+              <div className="settings-row">
+                <div className="setting-group">
+                  <label className="setting-label">Questions</label>
+                  <input 
+                    type="number" 
+                    min={5} 
+                    max={20} 
+                    value={num} 
+                    onChange={(e) => setNum(e.target.valueAsNumber || 10)}
+                    className="setting-input-modern"
+                  />
+                </div>
+                <div className="setting-group">
+                  <label className="setting-label">Time per Question</label>
+                  <select 
+                    value={timePerQuestion} 
+                    onChange={(e) => setTimePerQuestion(Number(e.target.value))}
+                    className="setting-select-modern"
+                  >
+                    <option value={15}>15 seconds</option>
+                    <option value={30}>30 seconds</option>
+                    <option value={60}>1 minute</option>
+                    <option value={120}>2 minutes</option>
+                  </select>
+                </div>
+              </div>
+              <div className="adaptive-info">
+                <div className="info-badge">
+                  🧠 <strong>Adaptive Learning Enabled</strong>
+                  <span>Difficulty adjusts based on your performance</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {quizMode === 'topic' && (
+            <>
+              <TopicSelector 
+                selectedTopic={selectedTopic}
+                onTopicChange={setSelectedTopic}
+                availableTopics={availableTopics}
+              />
+              
+              <DifficultySelector 
+                selectedDifficulty={selectedDifficulty}
+                onDifficultyChange={setSelectedDifficulty}
+                userRecommendation={recommendedDifficulty}
+              />
+            </>
+          )}
+
+        </div>
+
+        <div className="config-actions">
+          <button className="btn-secondary" onClick={() => setCurrentStep('upload')}>
+            ← Back
+          </button>
+          <button className="btn-primary" onClick={handleStartQuiz}>
+            Start Quiz →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   if (currentStep === 'quiz') {
+    if (quizMode === 'topic') {
+      return (
+        <EnhancedQuiz 
+          quizConfig={getQuizConfig()}
+          onComplete={handleQuizComplete}
+        />
+      )
+    }
+    
+    // Document-based quiz with adaptive difficulty support
+    if (adaptiveDifficulty && questions.length > 0) {
+      return (
+        <AdaptiveQuiz 
+          questions={questions}
+          onComplete={handleQuizComplete}
+          timePerQuestion={timePerQuestion}
+        />
+      )
+    }
+    
+    // Legacy document-based quiz
     return (
       <div className="quiz-container">
         <div className="quiz-header">
@@ -168,7 +408,21 @@ function Home() {
     )
   }
 
+  if (currentStep === 'recommendations') {
+    return (
+      <PersonalizedRecommendations 
+        quizResults={lastQuizResults}
+        onGeneratePractice={handleGeneratePracticeQuiz}
+        onClose={handleCloseRecommendations}
+      />
+    )
+  }
+
   if (currentStep === 'results') {
+    // Check if this was an adaptive quiz
+    const latestQuizHistory = JSON.parse(localStorage.getItem('quizHistory') || '[]')[0]
+    const isAdaptiveQuiz = latestQuizHistory?.adaptiveStats && latestQuizHistory?.difficultyManager
+    
     return (
       <div className="results-container">
         <div className="results-header">
@@ -196,39 +450,91 @@ function Home() {
           </div>
         </div>
 
-        {questions.map((q, idx) => (
-          <div key={idx} className={`result-question ${answers[idx] === q.answerIndex ? 'correct' : 'incorrect'}`}>
-            <div className="result-question-header">
-              <span className="question-number">Q{idx + 1}</span>
-              <span className={`result-status ${answers[idx] === q.answerIndex ? 'correct' : 'incorrect'}`}>
-                {answers[idx] === q.answerIndex ? '✓ Correct' : '✗ Incorrect'}
-              </span>
-            </div>
-            
-            <h3 className="question-text">{q.question}</h3>
-            
-            <div className="answer-details">
-              <div className="your-answer">
-                <strong>Your answer:</strong> {answers[idx] !== undefined ? q.options[answers[idx]] : 'Not answered'}
+        {/* Adaptive Learning Statistics */}
+        {isAdaptiveQuiz && (
+          <DifficultyStatistics 
+            statistics={latestQuizHistory.adaptiveStats}
+            showTitle={true}
+          />
+        )}
+
+{/* Question Results - Show adaptive results if available, otherwise show legacy results */}
+        {isAdaptiveQuiz && latestQuizHistory?.results ? (
+          latestQuizHistory.results.map((result, idx) => (
+            <div key={idx} className={`result-question ${result.isCorrect ? 'correct' : 'incorrect'}`}>
+              <div className="result-question-header">
+                <span className="question-number">Q{idx + 1}</span>
+                <span className={`result-status ${result.isCorrect ? 'correct' : 'incorrect'}`}>
+                  {result.isCorrect ? '✓ Correct' : '✗ Incorrect'}
+                </span>
+                <span className="difficulty-badge" style={{ 
+                  backgroundColor: result.difficulty === 'Easy' ? '#22c55e' : 
+                                   result.difficulty === 'Medium' ? '#f59e0b' : '#ef4444',
+                  color: 'white',
+                  padding: '0.25rem 0.5rem',
+                  borderRadius: '0.5rem',
+                  fontSize: '0.8rem'
+                }}>
+                  {result.difficulty}
+                </span>
               </div>
-              <div className="correct-answer">
-                <strong>Correct answer:</strong> {q.options[q.answerIndex]}
-              </div>
-              {q.explanation && (
-                <div className="explanation">
-                  <strong>Explanation:</strong> {q.explanation}
+              
+              <h3 className="question-text">{result.question}</h3>
+              
+              <div className="answer-details">
+                <div className="your-answer">
+                  <strong>Your answer:</strong> {result.selectedAnswer || 'Not answered (Time up)'}
                 </div>
-              )}
+                <div className="correct-answer">
+                  <strong>Correct answer:</strong> {result.correctAnswer}
+                </div>
+                <div className="time-taken">
+                  <strong>Time taken:</strong> {result.timeTaken}s
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        ) : (
+          questions.map((q, idx) => (
+            <div key={idx} className={`result-question ${answers[idx] === q.answerIndex ? 'correct' : 'incorrect'}`}>
+              <div className="result-question-header">
+                <span className="question-number">Q{idx + 1}</span>
+                <span className={`result-status ${answers[idx] === q.answerIndex ? 'correct' : 'incorrect'}`}>
+                  {answers[idx] === q.answerIndex ? '✓ Correct' : '✗ Incorrect'}
+                </span>
+              </div>
+              
+              <h3 className="question-text">{q.question}</h3>
+              
+              <div className="answer-details">
+                <div className="your-answer">
+                  <strong>Your answer:</strong> {answers[idx] !== undefined ? q.options[answers[idx]] : 'Not answered'}
+                </div>
+                <div className="correct-answer">
+                  <strong>Correct answer:</strong> {q.options[q.answerIndex]}
+                </div>
+                {q.explanation && (
+                  <div className="explanation">
+                    <strong>Explanation:</strong> {q.explanation}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))
+        )}
 
         <div className="results-actions">
           <button className="btn-secondary" onClick={resetQuiz}>
             <span className="btn-icon">🔄</span>
             Take Another Quiz
           </button>
-          <a href="/dashboard" className="btn-primary">
+          {isAdaptiveQuiz && (
+            <button className="btn-adaptive" onClick={handleShowRecommendations}>
+              <span className="btn-icon">🧠</span>
+              Get AI Recommendations
+            </button>
+          )}
+          <a href="/app/dashboard" className="btn-primary">
             <span className="btn-icon">📊</span>
             View Dashboard
           </a>
@@ -308,8 +614,8 @@ function Home() {
               </>
             ) : (
               <>
-                <span className="btn-icon">🚀</span>
-                Generate Quiz
+                <span className="btn-icon">⚙️</span>
+                Configure Quiz
               </>
             )}
           </button>

@@ -475,4 +475,4 @@ For issues and questions, please create an issue in the repository.
 
 ---
 
-Made with ❤️ using React, FastAPI, and MongoDB
+**Made with ❤️ by [Krish Vaghani](https://github.com/krrishvaghani)**

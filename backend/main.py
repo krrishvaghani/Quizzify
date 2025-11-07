@@ -26,7 +26,7 @@ app = FastAPI(title="Quizzify API")
 # CORS Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -139,9 +139,33 @@ class QuizSubmission(BaseModel):
     answers: dict  # {question_index: [selected_option_indices]}
     time_taken: int  # seconds
 
+class QuizAttempt(BaseModel):
+    id: Optional[str] = None
+    quiz_id: str
+    student_name: str
+    student_email: str
+    answers: dict
+    score: int
+    total_questions: int
+    percentage: float
+    time_taken: int
+    correct_answers: List[int]  # indices of correct questions
+    incorrect_answers: List[int]  # indices of incorrect questions
+    unanswered: List[int]  # indices of unanswered questions
+    submitted_at: datetime
+
 # Helper Functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
+def format_time(seconds):
+    """Format time in seconds to readable format"""
+    minutes = seconds // 60
+    remaining_seconds = seconds % 60
+    if minutes > 0:
+        return f"{minutes} minute{'s' if minutes != 1 else ''} {remaining_seconds} second{'s' if remaining_seconds != 1 else ''}"
+    else:
+        return f"{remaining_seconds} second{'s' if remaining_seconds != 1 else ''}"
 
 def get_password_hash(password):
     return pwd_context.hash(password)
@@ -330,25 +354,34 @@ async def root():
 
 @app.post("/register", response_model=Token)
 async def register(user: UserRegister):
-    # Check if user exists
-    existing_user = await db.users.find_one({"email": user.email})
-    if existing_user:
+    # Check if email already exists
+    existing_email = await db.users.find_one({"email": user.email})
+    if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    # Create new user
-    user_dict = {
-        "username": user.username,
-        "email": user.email,
-        "full_name": user.full_name,
-        "hashed_password": get_password_hash(user.password),
-        "created_at": datetime.utcnow()
-    }
+    # Check if username already exists
+    existing_username = await db.users.find_one({"username": user.username})
+    if existing_username:
+        raise HTTPException(status_code=400, detail="Username already taken")
     
-    await db.users.insert_one(user_dict)
-    
-    # Create access token
-    access_token = create_access_token(data={"sub": user.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    try:
+        # Create new user
+        user_dict = {
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "hashed_password": get_password_hash(user.password),
+            "created_at": datetime.utcnow()
+        }
+        
+        await db.users.insert_one(user_dict)
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": user.email})
+        return {"access_token": access_token, "token_type": "bearer"}
+    except Exception as e:
+        print(f"Registration error: {e}")
+        raise HTTPException(status_code=500, detail="Registration failed. Please try again.")
 
 @app.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -841,7 +874,7 @@ async def get_public_quiz(quiz_id: str):
 
 @app.post("/public/quiz/submit")
 async def submit_quiz_public(submission: QuizSubmission):
-    """Submit quiz answers (no authentication required)"""
+    """Submit quiz answers with detailed scoring (no authentication required)"""
     from bson import ObjectId
     
     try:
@@ -850,48 +883,110 @@ async def submit_quiz_public(submission: QuizSubmission):
         if not quiz:
             raise HTTPException(status_code=404, detail="Quiz not found")
         
-        # Calculate score
+        # Detailed scoring analysis
         score = 0
         total_questions = len(quiz["questions"])
+        correct_answers = []
+        incorrect_answers = []
+        unanswered = []
+        question_details = []
         
         for question_index, question in enumerate(quiz["questions"]):
             user_answers = submission.answers.get(str(question_index), [])
             
-            # Find correct answers
-            correct_answers = []
+            # Find correct answer indices
+            correct_indices = []
             for option_index, option in enumerate(question["options"]):
                 if option["is_correct"]:
-                    correct_answers.append(option_index)
+                    correct_indices.append(option_index)
             
-            # Check if user's answers match correct answers
-            if set(user_answers) == set(correct_answers):
+            # Determine if answer is correct
+            is_correct = set(user_answers) == set(correct_indices) if user_answers else False
+            is_answered = len(user_answers) > 0
+            
+            if not is_answered:
+                unanswered.append(question_index)
+            elif is_correct:
+                correct_answers.append(question_index)
                 score += 1
+            else:
+                incorrect_answers.append(question_index)
+            
+            # Store question details for review
+            question_details.append({
+                "question_index": question_index,
+                "question": question["question"],
+                "options": [opt["text"] for opt in question["options"]],
+                "correct_indices": correct_indices,
+                "user_answers": user_answers,
+                "is_correct": is_correct,
+                "is_answered": is_answered,
+                "explanation": question.get("explanation", "")
+            })
         
-        # Save submission to database
-        submission_data = {
+        percentage = round((score / total_questions) * 100, 1)
+        
+        # Save detailed attempt to database
+        attempt_data = {
             "quiz_id": submission.quiz_id,
+            "quiz_title": quiz["title"],
             "student_name": submission.student_name,
             "student_email": submission.student_email,
             "answers": submission.answers,
             "score": score,
             "total_questions": total_questions,
+            "percentage": percentage,
             "time_taken": submission.time_taken,
+            "correct_answers": correct_answers,
+            "incorrect_answers": incorrect_answers,
+            "unanswered": unanswered,
+            "question_details": question_details,
             "submitted_at": datetime.utcnow()
         }
         
-        await db.quiz_submissions.insert_one(submission_data)
+        result = await db.quiz_attempts.insert_one(attempt_data)
+        attempt_id = str(result.inserted_id)
         
         return {
             "message": "Quiz submitted successfully",
+            "attempt_id": attempt_id,
             "score": score,
             "total_questions": total_questions,
-            "percentage": round((score / total_questions) * 100, 1)
+            "percentage": percentage,
+            "time_taken": submission.time_taken,
+            "correct_count": len(correct_answers),
+            "incorrect_count": len(incorrect_answers),
+            "unanswered_count": len(unanswered),
+            "time_formatted": format_time(submission.time_taken)
         }
         
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error submitting quiz: {str(e)}")
+
+@app.get("/public/attempt/{attempt_id}")
+async def get_attempt_details(attempt_id: str):
+    """Get detailed attempt results for answer review (no authentication required)"""
+    from bson import ObjectId
+    
+    try:
+        attempt = await db.quiz_attempts.find_one({"_id": ObjectId(attempt_id)})
+        if not attempt:
+            raise HTTPException(status_code=404, detail="Attempt not found")
+        
+        # Format the response
+        attempt["id"] = str(attempt["_id"])
+        del attempt["_id"]
+        
+        return {
+            "attempt": attempt
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Invalid attempt ID")
 
 @app.delete("/rooms/{room_id}")
 async def delete_room(room_id: str, current_user: dict = Depends(get_current_user)):

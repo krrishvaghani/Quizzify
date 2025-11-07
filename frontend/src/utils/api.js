@@ -96,6 +96,10 @@ export const quizAPI = {
     const response = await api.post('/public/quiz/submit', submission)
     return response.data
   },
+  getAttemptDetails: async (attemptId) => {
+    const response = await api.get(`/public/attempt/${attemptId}`)
+    return response.data
+  },
 }
 
 export const roomAPI = {

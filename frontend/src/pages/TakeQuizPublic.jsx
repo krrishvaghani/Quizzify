@@ -294,7 +294,7 @@ export default function TakeQuizPublic() {
   if (isSubmitted && result) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
-        <div className="max-w-2xl mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto px-4 py-12">
           <div className="text-center mb-8">
             <div className="bg-gradient-to-r from-green-600 to-blue-600 p-4 rounded-2xl shadow-lg inline-block mb-4">
               <Award className="h-12 w-12 text-white" />
@@ -307,40 +307,83 @@ export default function TakeQuizPublic() {
             </p>
           </div>
 
-          <div className="card">
+          <div className="card mb-6">
             <div className="text-center mb-6">
               <div className="text-6xl font-bold text-purple-600 mb-2">
-                {Math.round((result.score / result.total_questions) * 100)}%
+                {result.percentage}%
               </div>
-              <p className="text-lg text-gray-700">
+              <p className="text-lg text-gray-700 mb-4">
                 You scored {result.score} out of {result.total_questions} questions correctly
+              </p>
+              <p className="text-sm text-gray-500">
+                Time taken: {result.time_formatted}
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{result.score}</div>
+                <div className="text-3xl font-bold text-green-600">{result.correct_count}</div>
                 <div className="text-sm text-green-700">Correct</div>
               </div>
               <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-2xl font-bold text-red-600">{result.total_questions - result.score}</div>
+                <div className="text-3xl font-bold text-red-600">{result.incorrect_count}</div>
                 <div className="text-sm text-red-700">Incorrect</div>
+              </div>
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <div className="text-3xl font-bold text-gray-600">{result.unanswered_count}</div>
+                <div className="text-sm text-gray-700">Unanswered</div>
               </div>
             </div>
 
-            <div className="text-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
-                onClick={() => window.close()}
-                className="btn-secondary mr-4"
+                onClick={() => navigate(`/attempt/${result.attempt_id}/review`)}
+                className="btn-primary flex items-center justify-center gap-2"
               >
-                Close Window
+                <CheckCircle className="h-5 w-5" />
+                View Answers & Explanations
               </button>
               <button
                 onClick={() => window.location.reload()}
-                className="btn-primary"
+                className="btn-secondary flex items-center justify-center gap-2"
               >
+                <RotateCcw className="h-5 w-5" />
                 Retake Quiz
               </button>
+            </div>
+          </div>
+
+          {/* Performance Summary */}
+          <div className="card">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Summary</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Score:</span>
+                <span className="font-semibold">{result.score}/{result.total_questions} ({result.percentage}%)</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Time Taken:</span>
+                <span className="font-semibold">{result.time_formatted}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Accuracy:</span>
+                <span className="font-semibold">{result.percentage}%</span>
+              </div>
+              {result.percentage >= 80 && (
+                <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-green-800 font-medium">🎉 Excellent work! You've demonstrated strong understanding.</p>
+                </div>
+              )}
+              {result.percentage >= 60 && result.percentage < 80 && (
+                <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-yellow-800 font-medium">👍 Good job! There's room for improvement.</p>
+                </div>
+              )}
+              {result.percentage < 60 && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-800 font-medium">💪 Keep practicing! Review the explanations to improve.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

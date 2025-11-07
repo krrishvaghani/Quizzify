@@ -11,6 +11,7 @@ import RoomLobby from './pages/RoomLobby'
 import ManualQuizCreation from './pages/ManualQuizCreation'
 import Profile from './pages/Profile'
 import TakeQuizPublic from './pages/TakeQuizPublic'
+import AttemptReview from './pages/AttemptReview'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 function PrivateRoute({ children }) {
@@ -90,6 +91,7 @@ function App() {
             }
           />
           <Route path="/quiz/:quizId/start" element={<TakeQuizPublic />} />
+          <Route path="/attempt/:attemptId/review" element={<AttemptReview />} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </Router>

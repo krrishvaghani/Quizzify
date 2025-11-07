@@ -119,14 +119,34 @@ export default function TakeQuizPublic() {
     saveProgress(1800)
   }
 
+  // Detect if question has multiple correct answers
+  const hasMultipleCorrect = (question) => {
+    const correctCount = question.options.filter(opt => opt.is_correct).length
+    return correctCount > 1
+  }
+
   // Handle answer selection
   const handleAnswerChange = (optionIndex, isChecked = true) => {
     const question = quiz.questions[currentQuestion]
     const newAnswers = { ...answers }
+    const isMultipleChoice = hasMultipleCorrect(question)
 
-    // For now, treating all as single-select (radio buttons)
-    // Future enhancement: detect multiple correct answers for checkboxes
-    newAnswers[currentQuestion] = [optionIndex]
+    if (isMultipleChoice) {
+      // Multiple choice - use checkboxes
+      const currentAnswers = newAnswers[currentQuestion] || []
+      if (isChecked) {
+        // Add option if not already selected
+        if (!currentAnswers.includes(optionIndex)) {
+          newAnswers[currentQuestion] = [...currentAnswers, optionIndex]
+        }
+      } else {
+        // Remove option
+        newAnswers[currentQuestion] = currentAnswers.filter(idx => idx !== optionIndex)
+      }
+    } else {
+      // Single choice - use radio buttons
+      newAnswers[currentQuestion] = [optionIndex]
+    }
 
     setAnswers(newAnswers)
     saveProgress()
@@ -396,6 +416,7 @@ export default function TakeQuizPublic() {
     const question = quiz.questions[currentQuestion]
     const isLastQuestion = currentQuestion === quiz.questions.length - 1
     const userAnswer = answers[currentQuestion] || []
+    const isMultipleChoice = hasMultipleCorrect(question)
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
@@ -440,36 +461,62 @@ export default function TakeQuizPublic() {
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="card">
             {/* Question */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-purple-600">
+                  {isMultipleChoice ? '📋 Multiple Choice (Select all that apply)' : '📝 Single Choice'}
+                </span>
+                {userAnswer.length > 0 && (
+                  <span className="text-sm text-green-600 flex items-center gap-1">
+                    <CheckCircle className="h-4 w-4" />
+                    Answered
+                  </span>
+                )}
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">
                 {question.question}
               </h2>
             </div>
 
             {/* Options */}
             <div className="space-y-4 mb-8">
-              {question.options.map((option, index) => (
-                <label
-                  key={index}
-                  className={`block p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-purple-50 ${
-                    userAnswer.includes(index)
-                      ? 'border-purple-500 bg-purple-50'
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="radio"
-                      name={`question_${currentQuestion}`}
-                      value={index}
-                      checked={userAnswer.includes(index)}
-                      onChange={() => handleAnswerChange(index)}
-                      className="w-5 h-5 text-purple-600"
-                    />
-                    <span className="text-lg text-gray-900">{option.text}</span>
-                  </div>
-                </label>
-              ))}
+              {question.options.map((option, index) => {
+                const isSelected = userAnswer.includes(index)
+                
+                return (
+                  <label
+                    key={index}
+                    className={`block p-4 border-2 rounded-lg cursor-pointer transition-all hover:bg-purple-50 ${
+                      isSelected
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {isMultipleChoice ? (
+                        // Checkbox for multiple choice
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleAnswerChange(index, e.target.checked)}
+                          className="w-5 h-5 text-purple-600 rounded"
+                        />
+                      ) : (
+                        // Radio button for single choice
+                        <input
+                          type="radio"
+                          name={`question_${currentQuestion}`}
+                          value={index}
+                          checked={isSelected}
+                          onChange={() => handleAnswerChange(index)}
+                          className="w-5 h-5 text-purple-600"
+                        />
+                      )}
+                      <span className="text-lg text-gray-900">{option.text}</span>
+                    </div>
+                  </label>
+                )
+              })}
             </div>
 
             {/* Navigation */}

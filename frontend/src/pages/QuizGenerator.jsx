@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { quizAPI } from '../utils/api'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { quizAPI, roomAPI } from '../utils/api'
 import {
   Upload,
   FileText,
@@ -19,6 +19,11 @@ export default function QuizGenerator() {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const navigate = useNavigate()
+  const location = useLocation()
+  
+  // Check if we're coming from Create Room flow
+  const returnTo = location.state?.returnTo
+  const roomData = location.state?.roomData
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -70,9 +75,31 @@ export default function QuizGenerator() {
       clearInterval(progressInterval)
       setProgress(100)
       
-      setTimeout(() => {
-        navigate(`/quiz/${result.quiz.id}`)
-      }, 500)
+      // If coming from Create Room flow, create room and navigate to it
+      if (returnTo === 'create-room' && roomData) {
+        try {
+          // Create room with the generated quiz
+          const roomResult = await roomAPI.createRoom({
+            ...roomData,
+            quiz_id: result.quiz.id
+          })
+          
+          setTimeout(() => {
+            navigate(`/room/${roomResult.room.id}`)
+          }, 500)
+        } catch (roomError) {
+          console.error('Error creating room:', roomError)
+          alert('Quiz created but failed to create room. You can create a room manually from the dashboard.')
+          setTimeout(() => {
+            navigate(`/quiz/${result.quiz.id}`)
+          }, 500)
+        }
+      } else {
+        // Normal flow - navigate to quiz view
+        setTimeout(() => {
+          navigate(`/quiz/${result.quiz.id}`)
+        }, 500)
+      }
     } catch (error) {
       clearInterval(progressInterval)
       console.error('Error generating quiz:', error)
@@ -107,17 +134,34 @@ export default function QuizGenerator() {
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(returnTo === 'create-room' ? '/create-room' : '/dashboard')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span>Back to Dashboard</span>
+            <span>Back to {returnTo === 'create-room' ? 'Create Room' : 'Dashboard'}</span>
           </button>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Create Room Mode Banner */}
+        {returnTo === 'create-room' && (
+          <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-purple-600 p-2 rounded-lg">
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900">Creating Room: {roomData?.title}</h3>
+                <p className="text-sm text-gray-600">
+                  Generate a quiz to use in your room. After generation, the room will be created automatically.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <div className="text-center mb-8">
           <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
             Generate Quiz

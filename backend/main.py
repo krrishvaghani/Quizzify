@@ -574,6 +574,39 @@ async def delete_quiz(quiz_id: str, current_user: dict = Depends(get_current_use
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid quiz ID")
 
+@app.put("/quizzes/{quiz_id}")
+async def update_quiz(quiz_id: str, quiz_data: dict, current_user: dict = Depends(get_current_user)):
+    """Update an existing quiz"""
+    from bson import ObjectId
+    
+    try:
+        # Verify quiz exists and user owns it
+        existing_quiz = await db.quizzes.find_one({
+            "_id": ObjectId(quiz_id),
+            "created_by": current_user["email"]
+        })
+        
+        if not existing_quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found or you don't have permission to edit it")
+        
+        # Update quiz
+        update_data = {
+            "title": quiz_data.get("title", existing_quiz["title"]),
+            "questions": quiz_data.get("questions", existing_quiz["questions"]),
+            "updated_at": datetime.utcnow()
+        }
+        
+        await db.quizzes.update_one(
+            {"_id": ObjectId(quiz_id)},
+            {"$set": update_data}
+        )
+        
+        return {"message": "Quiz updated successfully", "quiz_id": quiz_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to update quiz: {str(e)}")
+
 class ManualQuizRequest(BaseModel):
     title: str
     questions: List[MCQuestion]

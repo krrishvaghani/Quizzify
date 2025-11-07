@@ -95,12 +95,15 @@ export default function CreateRoom() {
       setStep(2)
     } else if (step === 2) {
       if (!quizCreationMethod) {
-        setError('Please select a quiz creation method')
+        setError('Please select a quiz option')
         return
       }
-      if (quizCreationMethod === 'ai') {
+      if (quizCreationMethod === 'existing') {
         setStep(3)
-      } else {
+      } else if (quizCreationMethod === 'ai') {
+        // Navigate to AI quiz generation
+        navigate('/generate', { state: { returnTo: 'create-room', roomData: formData } })
+      } else if (quizCreationMethod === 'manual') {
         // Navigate to manual quiz creation
         navigate('/create-manual-quiz', { state: { returnTo: 'create-room', roomData: formData } })
       }
@@ -185,8 +188,8 @@ export default function CreateRoom() {
           </div>
           <div className="flex justify-center gap-16 mt-2">
             <p className="text-sm font-medium text-gray-700">Room Details</p>
-            <p className="text-sm font-medium text-gray-700">Quiz Method</p>
-            <p className="text-sm font-medium text-gray-700">Select Quiz</p>
+            <p className="text-sm font-medium text-gray-700">Quiz Option</p>
+            <p className="text-sm font-medium text-gray-700">Configure Room</p>
           </div>
         </div>
 
@@ -424,17 +427,58 @@ export default function CreateRoom() {
 
         {/* Step 2: Choose Quiz Creation Method */}
         {step === 2 && (
-          <div className="card max-w-3xl mx-auto">
+          <div className="card max-w-4xl mx-auto">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Choose Quiz Creation Method
+                Choose Quiz Option
               </h2>
               <p className="text-gray-600">
-                Select how you want to create your quiz
+                Select how you want to add a quiz to this room
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              {/* Select Existing Quiz Option */}
+              <button
+                onClick={() => setQuizCreationMethod('existing')}
+                className={`relative p-6 rounded-xl border-2 transition-all text-left ${
+                  quizCreationMethod === 'existing'
+                    ? 'border-purple-500 bg-purple-50 shadow-lg scale-105'
+                    : 'border-gray-300 hover:border-purple-400 hover:shadow-md'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-lg">
+                    <Bot className="h-8 w-8 text-white" />
+                  </div>
+                  {quizCreationMethod === 'existing' && (
+                    <CheckCircle className="h-6 w-6 text-purple-600" />
+                  )}
+                </div>
+
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  📚 Select Existing Quiz
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Choose from your previously created quizzes
+                </p>
+
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <ArrowRight className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>Quick setup</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ArrowRight className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>Use existing quizzes</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <ArrowRight className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <span>Start room instantly</span>
+                  </li>
+                </ul>
+              </button>
+
               {/* AI Generated Quiz Option */}
               <button
                 onClick={() => setQuizCreationMethod('ai')}
@@ -445,7 +489,7 @@ export default function CreateRoom() {
                 }`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-3 rounded-lg">
+                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-lg">
                     <Bot className="h-8 w-8 text-white" />
                   </div>
                   {quizCreationMethod === 'ai' && (
@@ -453,29 +497,25 @@ export default function CreateRoom() {
                   )}
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
                   🤖 AI Generated Quiz
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Upload documents and let AI generate questions automatically
+                  Upload documents and let AI generate questions
                 </p>
 
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <span>Upload PDF, DOCX, TXT, PPTX files</span>
+                    <span>Upload documents</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <span>Choose question types and difficulty</span>
+                    <span>AI generates questions</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <span>Edit generated questions</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
-                    <span>Add/remove questions as needed</span>
+                    <span>Edit & customize</span>
                   </li>
                 </ul>
               </button>
@@ -498,53 +538,50 @@ export default function CreateRoom() {
                   )}
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  ✍️ Manual Quiz Creation
+                <h3 className="text-lg font-bold text-gray-900 mb-2">
+                  ✏️ Create New Quiz
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Create questions manually with full control
+                  Build your quiz from scratch manually
                 </p>
 
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Add questions one by one</span>
+                    <span>Full control</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Set custom timers per question</span>
+                    <span>Custom questions</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <ArrowRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Multiple choice, fill blanks, true/false</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                    <span>Complete control over content</span>
+                    <span>Add explanations</span>
                   </li>
                 </ul>
               </button>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex justify-between">
               <button
                 onClick={() => setStep(1)}
-                className="flex-1 btn-secondary"
+                className="btn-secondary flex items-center gap-2"
               >
-                ← Back
+                <ArrowLeft className="h-4 w-4" />
+                Back
               </button>
               <button
                 onClick={handleNext}
                 disabled={!quizCreationMethod}
-                className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Next: Create Quiz →
+                {quizCreationMethod === 'existing' ? 'Next: Select Quiz' : 'Create Quiz'} →
               </button>
             </div>
           </div>
         )}
 
-        {/* Step 3: Choose Quiz */}
+        {/* Step 3: Select Quiz (only for existing quiz option) */}
         {step === 3 && (
           <div className="card max-w-2xl mx-auto">
             <div className="mb-6">

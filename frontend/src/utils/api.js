@@ -84,6 +84,10 @@ export const quizAPI = {
     const response = await api.get(`/quizzes/${id}`)
     return response.data
   },
+  updateQuiz: async (id, quizData) => {
+    const response = await api.put(`/quizzes/${id}`, quizData)
+    return response.data
+  },
   deleteQuiz: async (id) => {
     const response = await api.delete(`/quizzes/${id}`)
     return response.data

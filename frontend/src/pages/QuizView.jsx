@@ -9,6 +9,10 @@ import {
   BookOpen,
   Award,
   RotateCcw,
+  Edit3,
+  Share2,
+  Copy,
+  Check,
 } from 'lucide-react'
 
 export default function QuizView() {
@@ -20,6 +24,7 @@ export default function QuizView() {
   const [selectedAnswers, setSelectedAnswers] = useState({})
   const [showResults, setShowResults] = useState(false)
   const [score, setScore] = useState(0)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     fetchQuiz()
@@ -73,6 +78,14 @@ export default function QuizView() {
     setCurrentQuestion(0)
   }
 
+  const handleCopyLink = () => {
+    const quizLink = `${window.location.origin}/quiz/${id}/start`
+    navigator.clipboard.writeText(quizLink).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
   const getScoreColor = () => {
     const percentage = (score / quiz.questions.length) * 100
     if (percentage >= 80) return 'text-green-600'
@@ -104,18 +117,86 @@ export default function QuizView() {
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back to Dashboard</span>
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span>Back to Dashboard</span>
+            </button>
+            
+            {!showResults && (
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCopyLink}
+                  className="btn-secondary flex items-center gap-2"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="h-4 w-4" />
+                      Share Link
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => navigate(`/quiz/${id}/edit`)}
+                  className="btn-secondary flex items-center gap-2"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  Edit Quiz
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Share Link Section */}
+        {!showResults && (
+          <div className="card mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-600 p-2 rounded-lg">
+                  <Share2 className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Share Quiz with Students</h3>
+                  <p className="text-sm text-gray-600">Students can take this quiz without logging in</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCopyLink}
+                className="btn-primary flex items-center gap-2"
+              >
+                {copied ? (
+                  <>
+                    <Check className="h-4 w-4" />
+                    Link Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" />
+                    Copy Link
+                  </>
+                )}
+              </button>
+            </div>
+            <div className="mt-3 p-3 bg-white rounded-lg border border-purple-200">
+              <p className="text-sm text-gray-600 font-mono break-all">
+                {window.location.origin}/quiz/{id}/start
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Quiz Header */}
         <div className="card mb-8">
           <div className="flex items-start justify-between">

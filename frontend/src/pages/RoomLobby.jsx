@@ -40,7 +40,7 @@ export default function RoomLobby() {
       
       // If room started, redirect to quiz
       if (data.status === 'active' && data.quiz) {
-        navigate(`/quiz/${data.quiz_id}`)
+        navigate(`/quiz/${data.quiz_id}/start`)
       }
     } catch (error) {
       console.error('Error fetching room:', error)
@@ -59,7 +59,7 @@ export default function RoomLobby() {
     setStarting(true)
     try {
       await roomAPI.startRoom(id)
-      navigate(`/quiz/${room.quiz_id}`)
+      navigate(`/quiz/${room.quiz_id}/start`)
     } catch (error) {
       alert(error.response?.data?.detail || 'Failed to start room')
     } finally {

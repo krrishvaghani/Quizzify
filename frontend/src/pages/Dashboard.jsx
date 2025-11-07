@@ -14,11 +14,14 @@ import {
   Users,
   Home,
   PlusCircle,
+  Share2,
+  Check,
 } from 'lucide-react'
 
 export default function Dashboard() {
   const [quizzes, setQuizzes] = useState([])
   const [loading, setLoading] = useState(true)
+  const [copiedQuizId, setCopiedQuizId] = useState(null)
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
@@ -244,11 +247,22 @@ export default function Dashboard() {
                         onClick={() => {
                           const shareUrl = `${window.location.origin}/quiz/${quiz.id}/start`
                           navigator.clipboard.writeText(shareUrl)
-                          alert('Quiz link copied to clipboard!')
+                          setCopiedQuizId(quiz.id)
+                          setTimeout(() => setCopiedQuizId(null), 2000)
                         }}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                       >
-                        Share
+                        {copiedQuizId === quiz.id ? (
+                          <>
+                            <Check className="h-4 w-4" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="h-4 w-4" />
+                            Share
+                          </>
+                        )}
                       </button>
                       <button
                         onClick={() => handleDelete(quiz.id)}

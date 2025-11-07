@@ -42,9 +42,11 @@ export default function Signup() {
 
     try {
       const { confirmPassword, ...registerData } = formData
-      const data = await authAPI.register(registerData)
-      login(data.access_token)
-      navigate('/dashboard')
+      await authAPI.register(registerData)
+      
+      // Show success message and redirect to login
+      alert('Account created successfully! Please login with your credentials.')
+      navigate('/login')
     } catch (err) {
       setError(err.response?.data?.detail || 'Registration failed. Please try again.')
     } finally {

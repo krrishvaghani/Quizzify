@@ -16,6 +16,8 @@ import {
   PlusCircle,
   Share2,
   Check,
+  Download,
+  Edit3,
 } from 'lucide-react'
 
 export default function Dashboard() {
@@ -239,31 +241,11 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2">
                       <Link
                         to={`/quiz/${quiz.id}`}
-                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                        className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
                       >
-                        View Quiz
+                        <FileText className="h-4 w-4" />
+                        View
                       </Link>
-                      <button
-                        onClick={() => {
-                          const shareUrl = `${window.location.origin}/quiz/${quiz.id}/start`
-                          navigator.clipboard.writeText(shareUrl)
-                          setCopiedQuizId(quiz.id)
-                          setTimeout(() => setCopiedQuizId(null), 2000)
-                        }}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-                      >
-                        {copiedQuizId === quiz.id ? (
-                          <>
-                            <Check className="h-4 w-4" />
-                            Copied!
-                          </>
-                        ) : (
-                          <>
-                            <Share2 className="h-4 w-4" />
-                            Share
-                          </>
-                        )}
-                      </button>
                       <button
                         onClick={() => handleDelete(quiz.id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"

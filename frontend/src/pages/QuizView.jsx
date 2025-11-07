@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import { quizAPI } from '../utils/api'
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import {
   Share2,
   Copy,
   Check,
+  Download,
 } from 'lucide-react'
 
 export default function QuizView() {
@@ -128,9 +129,23 @@ export default function QuizView() {
             
             {!showResults && (
               <div className="flex gap-2">
+                <Link
+                  to={`/quiz/${id}/edit`}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  Edit
+                </Link>
+                <Link
+                  to={`/quiz/${id}/export`}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Export
+                </Link>
                 <button
                   onClick={handleCopyLink}
-                  className="btn-secondary flex items-center gap-2"
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
                 >
                   {copied ? (
                     <>
@@ -140,16 +155,9 @@ export default function QuizView() {
                   ) : (
                     <>
                       <Share2 className="h-4 w-4" />
-                      Share Link
+                      Share
                     </>
                   )}
-                </button>
-                <button
-                  onClick={() => navigate(`/quiz/${id}/edit`)}
-                  className="btn-secondary flex items-center gap-2"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  Edit Quiz
                 </button>
               </div>
             )}

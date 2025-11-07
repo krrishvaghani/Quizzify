@@ -104,6 +104,37 @@ export const quizAPI = {
     const response = await api.get(`/public/attempt/${attemptId}`)
     return response.data
   },
+  // Export/Share endpoints
+  getQuizAttempts: async (quizId) => {
+    const response = await api.get(`/quizzes/${quizId}/attempts`)
+    return response.data
+  },
+  exportCSV: async (quizId) => {
+    const response = await api.get(`/quizzes/${quizId}/export/csv`, {
+      responseType: 'blob'
+    })
+    return response.data
+  },
+  exportPDF: async (quizId) => {
+    const response = await api.get(`/quizzes/${quizId}/export/pdf`, {
+      responseType: 'blob'
+    })
+    return response.data
+  },
+  updateShareSettings: async (quizId, settings) => {
+    const response = await api.put(`/quizzes/${quizId}/share-settings`, settings)
+    return response.data
+  },
+  updateTimerSettings: async (quizId, settings) => {
+    const response = await api.put(`/quizzes/${quizId}/timer-settings`, settings)
+    return response.data
+  },
+  verifyQuizAccess: async (quizId, password) => {
+    const response = await api.post(`/public/quiz/${quizId}/verify-access`, 
+      password ? { password } : {}
+    )
+    return response.data
+  },
 }
 
 export const roomAPI = {

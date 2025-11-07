@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.responses import StreamingResponse
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
@@ -9,8 +10,15 @@ import os
 import jwt
 from passlib.context import CryptContext
 import io
+import csv
 from pathlib import Path
 from dotenv import load_dotenv
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
 # Load environment variables
 load_dotenv()
@@ -79,12 +87,27 @@ class QuizGenerate(BaseModel):
     num_questions: int = 5
     difficulty: str = "medium"
 
+class QuizShareSettings(BaseModel):
+    visibility: str = "unlisted"  # public, unlisted, password_protected
+    password: Optional[str] = None
+    allow_anonymous: bool = True
+
+class QuizTimerSettings(BaseModel):
+    enabled: bool = False
+    timer_type: str = "global"  # global or per_question
+    global_duration: int = 1800  # seconds (30 minutes default)
+    per_question_duration: int = 30  # seconds per question
+    auto_submit: bool = True  # auto-submit when time expires
+    show_timer: bool = True  # show countdown timer to students
+    
 class Quiz(BaseModel):
     id: Optional[str] = None
     title: str
     questions: List[MCQuestion]
     created_by: str
     created_at: datetime
+    share_settings: Optional[QuizShareSettings] = None
+    timer_settings: Optional[QuizTimerSettings] = None
 
 class RoomSettings(BaseModel):
     enable_timer: bool = False
@@ -366,19 +389,22 @@ async def register(user: UserRegister):
     
     try:
         # Create new user
+        hashed_pwd = get_password_hash(user.password)
+        print(f"Registration: Creating user {user.email} with hashed password")
+        
         user_dict = {
             "username": user.username,
             "email": user.email,
             "full_name": user.full_name,
-            "hashed_password": get_password_hash(user.password),
+            "hashed_password": hashed_pwd,
             "created_at": datetime.utcnow()
         }
         
-        await db.users.insert_one(user_dict)
+        result = await db.users.insert_one(user_dict)
+        print(f"Registration successful: User {user.email} created with ID {result.inserted_id}")
         
-        # Create access token
-        access_token = create_access_token(data={"sub": user.email})
-        return {"access_token": access_token, "token_type": "bearer"}
+        # Don't return token anymore since we want users to login manually
+        return {"access_token": "", "token_type": "bearer", "message": "Registration successful"}
     except Exception as e:
         print(f"Registration error: {e}")
         raise HTTPException(status_code=500, detail="Registration failed. Please try again.")
@@ -399,7 +425,18 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 @app.post("/login", response_model=Token)
 async def login_json(user_data: UserLogin):
     user = await db.users.find_one({"email": user_data.email})
-    if not user or not verify_password(user_data.password, user["hashed_password"]):
+    
+    if not user:
+        print(f"Login failed: User not found with email {user_data.email}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password"
+        )
+    
+    password_valid = verify_password(user_data.password, user["hashed_password"])
+    print(f"Login attempt for {user_data.email}: Password valid = {password_valid}")
+    
+    if not password_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
@@ -1038,6 +1075,352 @@ async def delete_room(room_id: str, current_user: dict = Depends(get_current_use
         return {"message": "Room deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid room ID")
+
+# ==================== Export/Share Endpoints ====================
+
+@app.get("/quizzes/{quiz_id}/attempts")
+async def get_quiz_attempts(quiz_id: str, current_user: dict = Depends(get_current_user)):
+    """Get all attempts for a quiz (teacher only)"""
+    from bson import ObjectId
+    
+    try:
+        # Verify quiz ownership
+        quiz = await db.quizzes.find_one({
+            "_id": ObjectId(quiz_id),
+            "created_by": current_user["email"]
+        })
+        
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found or unauthorized")
+        
+        # Get all attempts for this quiz
+        attempts_cursor = db.quiz_attempts.find({"quiz_id": quiz_id}).sort("submitted_at", -1)
+        attempts = await attempts_cursor.to_list(length=None)
+        
+        # Format attempts
+        formatted_attempts = []
+        for attempt in attempts:
+            formatted_attempts.append({
+                "id": str(attempt["_id"]),
+                "student_name": attempt.get("student_name", "Unknown"),
+                "student_email": attempt.get("student_email", "N/A"),
+                "score": attempt.get("score", 0),
+                "total_questions": attempt.get("total_questions", 0),
+                "percentage": attempt.get("percentage", 0),
+                "time_taken": attempt.get("time_taken", 0),
+                "submitted_at": attempt.get("submitted_at").isoformat() if attempt.get("submitted_at") else None
+            })
+        
+        return {
+            "quiz_id": quiz_id,
+            "quiz_title": quiz.get("title", "Untitled Quiz"),
+            "total_attempts": len(formatted_attempts),
+            "attempts": formatted_attempts
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error fetching attempts: {str(e)}")
+
+@app.get("/quizzes/{quiz_id}/export/csv")
+async def export_quiz_csv(quiz_id: str, current_user: dict = Depends(get_current_user)):
+    """Export quiz attempts as CSV"""
+    from bson import ObjectId
+    
+    try:
+        # Verify quiz ownership
+        quiz = await db.quizzes.find_one({
+            "_id": ObjectId(quiz_id),
+            "created_by": current_user["email"]
+        })
+        
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found or unauthorized")
+        
+        # Get all attempts
+        attempts_cursor = db.quiz_attempts.find({"quiz_id": quiz_id}).sort("submitted_at", -1)
+        attempts = await attempts_cursor.to_list(length=None)
+        
+        # Create CSV in memory
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write header
+        writer.writerow([
+            "Student Name",
+            "Email",
+            "Score",
+            "Total Questions",
+            "Percentage",
+            "Time Taken (seconds)",
+            "Time Taken (formatted)",
+            "Submitted At"
+        ])
+        
+        # Write data
+        for attempt in attempts:
+            time_taken = attempt.get("time_taken", 0)
+            minutes = time_taken // 60
+            seconds = time_taken % 60
+            time_formatted = f"{minutes}m {seconds}s"
+            
+            writer.writerow([
+                attempt.get("student_name", "Unknown"),
+                attempt.get("student_email", "N/A"),
+                attempt.get("score", 0),
+                attempt.get("total_questions", 0),
+                f"{attempt.get('percentage', 0):.1f}%",
+                time_taken,
+                time_formatted,
+                attempt.get("submitted_at").strftime("%Y-%m-%d %H:%M:%S") if attempt.get("submitted_at") else "N/A"
+            ])
+        
+        # Prepare response
+        output.seek(0)
+        filename = f"{quiz.get('title', 'quiz').replace(' ', '_')}_attempts.csv"
+        
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error exporting CSV: {str(e)}")
+
+@app.get("/quizzes/{quiz_id}/export/pdf")
+async def export_quiz_pdf(quiz_id: str, current_user: dict = Depends(get_current_user)):
+    """Export quiz with answers as PDF (for printing)"""
+    from bson import ObjectId
+    
+    try:
+        # Verify quiz ownership
+        quiz = await db.quizzes.find_one({
+            "_id": ObjectId(quiz_id),
+            "created_by": current_user["email"]
+        })
+        
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found or unauthorized")
+        
+        # Create PDF in memory
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.75*inch, bottomMargin=0.75*inch)
+        story = []
+        styles = getSampleStyleSheet()
+        
+        # Custom styles
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#4F46E5'),
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        
+        question_style = ParagraphStyle(
+            'Question',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#1F2937'),
+            spaceAfter=12,
+            spaceBefore=20
+        )
+        
+        option_style = ParagraphStyle(
+            'Option',
+            parent=styles['Normal'],
+            fontSize=11,
+            leftIndent=20,
+            spaceAfter=6
+        )
+        
+        correct_style = ParagraphStyle(
+            'Correct',
+            parent=styles['Normal'],
+            fontSize=11,
+            leftIndent=20,
+            textColor=colors.HexColor('#10B981'),
+            spaceAfter=6
+        )
+        
+        explanation_style = ParagraphStyle(
+            'Explanation',
+            parent=styles['Normal'],
+            fontSize=10,
+            leftIndent=20,
+            textColor=colors.HexColor('#6B7280'),
+            spaceAfter=12,
+            fontName='Helvetica-Oblique'
+        )
+        
+        # Add title
+        story.append(Paragraph(quiz.get("title", "Quiz"), title_style))
+        story.append(Paragraph(f"Created: {quiz.get('created_at', datetime.now()).strftime('%B %d, %Y')}", styles['Normal']))
+        story.append(Paragraph(f"Total Questions: {len(quiz.get('questions', []))}", styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Add questions
+        for idx, question in enumerate(quiz.get("questions", []), 1):
+            # Question text
+            story.append(Paragraph(f"<b>Question {idx}:</b> {question.get('question', '')}", question_style))
+            
+            # Options
+            for opt_idx, option in enumerate(question.get("options", []), 1):
+                option_text = option.get("text", "")
+                is_correct = option.get("is_correct", False)
+                
+                if is_correct:
+                    story.append(Paragraph(f"<b>{chr(64+opt_idx)}. {option_text} ✓</b>", correct_style))
+                else:
+                    story.append(Paragraph(f"{chr(64+opt_idx)}. {option_text}", option_style))
+            
+            # Explanation
+            if question.get("explanation"):
+                story.append(Spacer(1, 0.1*inch))
+                story.append(Paragraph(f"<b>Explanation:</b> {question.get('explanation')}", explanation_style))
+            
+            # Add some space between questions
+            story.append(Spacer(1, 0.2*inch))
+        
+        # Build PDF
+        doc.build(story)
+        buffer.seek(0)
+        
+        filename = f"{quiz.get('title', 'quiz').replace(' ', '_')}_with_answers.pdf"
+        
+        return StreamingResponse(
+            buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error exporting PDF: {str(e)}")
+
+@app.put("/quizzes/{quiz_id}/share-settings")
+async def update_share_settings(
+    quiz_id: str,
+    share_settings: QuizShareSettings,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update quiz sharing settings"""
+    from bson import ObjectId
+    
+    try:
+        # Verify quiz ownership
+        quiz = await db.quizzes.find_one({
+            "_id": ObjectId(quiz_id),
+            "created_by": current_user["email"]
+        })
+        
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found or unauthorized")
+        
+        # Hash password if provided
+        settings_dict = share_settings.dict()
+        if settings_dict.get("password"):
+            settings_dict["password"] = pwd_context.hash(settings_dict["password"])
+        
+        # Update quiz
+        await db.quizzes.update_one(
+            {"_id": ObjectId(quiz_id)},
+            {"$set": {"share_settings": settings_dict}}
+        )
+        
+        return {
+            "message": "Share settings updated successfully",
+            "settings": {
+                "visibility": settings_dict["visibility"],
+                "allow_anonymous": settings_dict["allow_anonymous"],
+                "has_password": bool(settings_dict.get("password"))
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error updating share settings: {str(e)}")
+
+@app.put("/quizzes/{quiz_id}/timer-settings")
+async def update_timer_settings(
+    quiz_id: str,
+    timer_settings: QuizTimerSettings,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update quiz timer settings"""
+    from bson import ObjectId
+    
+    try:
+        # Verify quiz ownership
+        quiz = await db.quizzes.find_one({
+            "_id": ObjectId(quiz_id),
+            "created_by": current_user["email"]
+        })
+        
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found or unauthorized")
+        
+        settings_dict = timer_settings.dict()
+        
+        # Update quiz
+        await db.quizzes.update_one(
+            {"_id": ObjectId(quiz_id)},
+            {"$set": {"timer_settings": settings_dict}}
+        )
+        
+        return {
+            "message": "Timer settings updated successfully",
+            "settings": settings_dict
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error updating timer settings: {str(e)}")
+
+
+@app.post("/public/quiz/{quiz_id}/verify-access")
+async def verify_quiz_access(quiz_id: str, password: Optional[str] = None):
+    """Verify access to a password-protected quiz"""
+    from bson import ObjectId
+    
+    try:
+        quiz = await db.quizzes.find_one({"_id": ObjectId(quiz_id)})
+        
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found")
+        
+        share_settings = quiz.get("share_settings", {})
+        
+        # Check if quiz is password protected
+        if share_settings.get("visibility") == "password_protected":
+            if not password:
+                raise HTTPException(status_code=401, detail="Password required")
+            
+            stored_password = share_settings.get("password")
+            if not stored_password or not verify_password(password, stored_password):
+                raise HTTPException(status_code=401, detail="Incorrect password")
+        
+        return {
+            "access_granted": True,
+            "message": "Access granted"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Error verifying access: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

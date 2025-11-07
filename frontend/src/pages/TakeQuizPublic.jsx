@@ -32,6 +32,7 @@ export default function TakeQuizPublic() {
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState({})
   const [timeLeft, setTimeLeft] = useState(null)
+  const [questionTimeLeft, setQuestionTimeLeft] = useState(null)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [result, setResult] = useState(null)
   
@@ -56,6 +57,9 @@ export default function TakeQuizPublic() {
           if (parsed.hasStarted && parsed.timeLeft) {
             setTimeLeft(parsed.timeLeft)
           }
+          if (parsed.hasStarted && parsed.questionTimeLeft) {
+            setQuestionTimeLeft(parsed.questionTimeLeft)
+          }
         }
       } catch (err) {
         setError('Failed to load quiz. Please check the link and try again.')
@@ -69,14 +73,19 @@ export default function TakeQuizPublic() {
     }
   }, [quizId, storageKey])
 
-  // Timer effect
+  // Global timer effect
   useEffect(() => {
-    if (timeLeft > 0 && hasStarted && !isSubmitted) {
+    const timerSettings = quiz?.timer_settings
+    const isGlobalTimer = timerSettings?.enabled && timerSettings?.timer_type === 'global'
+    
+    if (timeLeft > 0 && hasStarted && !isSubmitted && isGlobalTimer) {
       const timer = setInterval(() => {
         setTimeLeft(prev => {
           const newTime = prev - 1
           if (newTime <= 0) {
-            handleSubmit()
+            if (timerSettings?.auto_submit) {
+              handleSubmit()
+            }
             return 0
           }
           // Save progress every 5 seconds
@@ -89,10 +98,32 @@ export default function TakeQuizPublic() {
 
       return () => clearInterval(timer)
     }
-  }, [timeLeft, hasStarted, isSubmitted])
+  }, [timeLeft, hasStarted, isSubmitted, quiz])
+
+  // Per-question timer effect
+  useEffect(() => {
+    const timerSettings = quiz?.timer_settings
+    const isPerQuestionTimer = timerSettings?.enabled && timerSettings?.timer_type === 'per_question'
+    
+    if (questionTimeLeft > 0 && hasStarted && !isSubmitted && isPerQuestionTimer) {
+      const timer = setInterval(() => {
+        setQuestionTimeLeft(prev => {
+          const newTime = prev - 1
+          if (newTime <= 0) {
+            // Auto-move to next question when time expires
+            goToNext()
+            return timerSettings?.per_question_duration || 30
+          }
+          return newTime
+        })
+      }, 1000)
+
+      return () => clearInterval(timer)
+    }
+  }, [questionTimeLeft, hasStarted, isSubmitted, currentQuestion, quiz])
 
   // Save progress to localStorage
-  const saveProgress = useCallback((currentTime = timeLeft) => {
+  const saveProgress = useCallback((currentTime = timeLeft, currentQuestionTime = questionTimeLeft) => {
     if (hasStarted) {
       localStorage.setItem(storageKey, JSON.stringify({
         studentInfo,
@@ -100,10 +131,11 @@ export default function TakeQuizPublic() {
         currentQuestion,
         hasStarted,
         timeLeft: currentTime,
+        questionTimeLeft: currentQuestionTime,
         timestamp: Date.now()
       }))
     }
-  }, [storageKey, studentInfo, answers, currentQuestion, hasStarted, timeLeft])
+  }, [storageKey, studentInfo, answers, currentQuestion, hasStarted, timeLeft, questionTimeLeft])
 
   // Start quiz
   const handleStartQuiz = () => {
@@ -113,8 +145,18 @@ export default function TakeQuizPublic() {
     }
 
     setHasStarted(true)
-    // Set timer to 30 minutes (1800 seconds) - can be made configurable
-    setTimeLeft(1800)
+    const timerSettings = quiz?.timer_settings
+    
+    // Initialize timers based on settings
+    if (timerSettings?.enabled) {
+      if (timerSettings.timer_type === 'global') {
+        setTimeLeft(timerSettings.global_duration || 1800)
+        saveProgress(timerSettings.global_duration || 1800, null)
+      } else if (timerSettings.timer_type === 'per_question') {
+        setQuestionTimeLeft(timerSettings.per_question_duration || 30)
+        saveProgress(null, timerSettings.per_question_duration || 30)
+      }
+    }
     setError('')
     saveProgress(1800)
   }
@@ -156,13 +198,33 @@ export default function TakeQuizPublic() {
   const goToNext = () => {
     if (currentQuestion < quiz.questions.length - 1) {
       setCurrentQuestion(prev => prev + 1)
+      
+      // Reset per-question timer if enabled
+      const timerSettings = quiz?.timer_settings
+      if (timerSettings?.enabled && timerSettings?.timer_type === 'per_question') {
+        setQuestionTimeLeft(timerSettings.per_question_duration || 30)
+      }
+      
       saveProgress()
+    } else if (currentQuestion === quiz.questions.length - 1) {
+      // Last question - auto submit if per-question timer and time expired
+      const timerSettings = quiz?.timer_settings
+      if (timerSettings?.enabled && timerSettings?.timer_type === 'per_question' && timerSettings?.auto_submit) {
+        handleSubmit()
+      }
     }
   }
 
   const goToPrevious = () => {
     if (currentQuestion > 0) {
       setCurrentQuestion(prev => prev - 1)
+      
+      // Reset per-question timer if enabled
+      const timerSettings = quiz?.timer_settings
+      if (timerSettings?.enabled && timerSettings?.timer_type === 'per_question') {
+        setQuestionTimeLeft(timerSettings.per_question_duration || 30)
+      }
+      
       saveProgress()
     }
   }
@@ -417,6 +479,7 @@ export default function TakeQuizPublic() {
     const isLastQuestion = currentQuestion === quiz.questions.length - 1
     const userAnswer = answers[currentQuestion] || []
     const isMultipleChoice = hasMultipleCorrect(question)
+    const timerSettings = quiz.timer_settings
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
@@ -434,13 +497,28 @@ export default function TakeQuizPublic() {
                   Question {currentQuestion + 1} of {quiz.questions.length}
                 </div>
                 
-                {timeLeft > 0 && (
+                {/* Global Timer */}
+                {timerSettings?.enabled && timerSettings?.show_timer && timerSettings?.timer_type === 'global' && timeLeft !== null && (
                   <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
                     timeLeft < 300 ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'
                   }`}>
                     <Clock className="h-4 w-4" />
+                    <div className="text-xs font-medium">Total Time</div>
                     <span className="font-mono font-semibold">
                       {formatTime(timeLeft)}
+                    </span>
+                  </div>
+                )}
+                
+                {/* Per-Question Timer */}
+                {timerSettings?.enabled && timerSettings?.show_timer && timerSettings?.timer_type === 'per_question' && questionTimeLeft !== null && (
+                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                    questionTimeLeft < 10 ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-orange-100 text-orange-700'
+                  }`}>
+                    <Clock className="h-4 w-4" />
+                    <div className="text-xs font-medium">Time Left</div>
+                    <span className="font-mono font-semibold text-lg">
+                      {questionTimeLeft}s
                     </span>
                   </div>
                 )}

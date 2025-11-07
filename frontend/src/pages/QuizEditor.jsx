@@ -35,9 +35,10 @@ export default function QuizEditor() {
     try {
       setLoading(true)
       const data = await quizAPI.getQuiz(quizId)
-      setQuiz(data.quiz)
+      setQuiz(data) // Backend returns quiz directly, not wrapped
     } catch (err) {
-      setError('Failed to load quiz')
+      console.error('Error loading quiz:', err)
+      setError('Failed to load quiz. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -197,12 +198,13 @@ export default function QuizEditor() {
     )
   }
 
-  if (!quiz) {
+  if (error || !quiz) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Not Found</h2>
+          <p className="text-gray-600 mb-4">{error || 'The quiz you are looking for does not exist.'}</p>
           <button onClick={() => navigate('/dashboard')} className="btn-primary">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Dashboard

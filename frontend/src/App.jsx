@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import QuizGenerator from './pages/QuizGenerator'
 import QuizView from './pages/QuizView'
 import QuizEditor from './pages/QuizEditor'
+import QuizExport from './pages/QuizExport'
 import CreateRoom from './pages/CreateRoom'
 import RoomsList from './pages/RoomsList'
 import RoomLobby from './pages/RoomLobby'
@@ -56,6 +57,14 @@ function App() {
             element={
               <PrivateRoute>
                 <QuizEditor />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/quiz/:id/export"
+            element={
+              <PrivateRoute>
+                <QuizExport />
               </PrivateRoute>
             }
           />

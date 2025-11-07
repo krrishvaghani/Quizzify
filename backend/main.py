@@ -1422,6 +1422,425 @@ async def verify_quiz_access(quiz_id: str, password: Optional[str] = None):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Error verifying access: {str(e)}")
 
+# ==================== ANALYTICS ENDPOINTS ====================
+
+def calculate_statistics(values):
+    """Calculate mean, median, and standard deviation"""
+    import statistics
+    
+    if not values:
+        return {"mean": 0, "median": 0, "std_dev": 0}
+    
+    return {
+        "mean": round(statistics.mean(values), 2),
+        "median": round(statistics.median(values), 2),
+        "std_dev": round(statistics.stdev(values), 2) if len(values) > 1 else 0
+    }
+
+def calculate_discrimination_index(top_scores, bottom_scores):
+    """
+    Calculate discrimination index comparing top 27% vs bottom 27% performers
+    Ranges from -1 to 1. Higher is better (>0.3 is good)
+    """
+    if not top_scores or not bottom_scores:
+        return 0
+    
+    top_correct_rate = sum(top_scores) / len(top_scores)
+    bottom_correct_rate = sum(bottom_scores) / len(bottom_scores)
+    
+    return round(top_correct_rate - bottom_correct_rate, 2)
+
+@app.get("/quizzes/{quiz_id}/analytics")
+async def get_quiz_analytics(
+    quiz_id: str,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get comprehensive analytics for a quiz"""
+    from bson import ObjectId
+    from datetime import datetime
+    
+    try:
+        # Verify quiz ownership
+        quiz = await db.quizzes.find_one({
+            "_id": ObjectId(quiz_id),
+            "created_by": current_user["email"]
+        })
+        
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found or unauthorized")
+        
+        # Build query filter
+        query = {"quiz_id": quiz_id}
+        if start_date or end_date:
+            date_filter = {}
+            if start_date:
+                date_filter["$gte"] = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            if end_date:
+                date_filter["$lte"] = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            if date_filter:
+                query["submitted_at"] = date_filter
+        
+        # Get all attempts
+        attempts_cursor = db.quiz_attempts.find(query).sort("submitted_at", -1)
+        attempts = await attempts_cursor.to_list(length=None)
+        
+        if not attempts:
+            return {
+                "quiz_id": quiz_id,
+                "quiz_title": quiz.get("title", "Untitled Quiz"),
+                "total_questions": len(quiz.get("questions", [])),
+                "total_attempts": 0,
+                "summary": {},
+                "question_metrics": [],
+                "score_distribution": [],
+                "attempts_over_time": []
+            }
+        
+        # Extract scores and percentages
+        scores = [attempt.get("score", 0) for attempt in attempts]
+        percentages = [attempt.get("percentage", 0) for attempt in attempts]
+        time_taken_list = [attempt.get("time_taken", 0) for attempt in attempts]
+        
+        # Calculate summary statistics
+        score_stats = calculate_statistics(scores)
+        percentage_stats = calculate_statistics(percentages)
+        time_stats = calculate_statistics(time_taken_list)
+        
+        # Per-question analysis
+        total_questions = len(quiz.get("questions", []))
+        question_metrics = []
+        
+        for q_index in range(total_questions):
+            question = quiz["questions"][q_index]
+            
+            # Collect data for this question across all attempts
+            correct_count = 0
+            incorrect_count = 0
+            skipped_count = 0
+            total_attempts_for_q = 0
+            time_per_question = []
+            
+            # For discrimination index
+            question_results = []  # Store (score, is_correct) tuples
+            
+            for attempt in attempts:
+                total_attempts_for_q += 1
+                
+                # Check if question was answered correctly
+                if q_index in attempt.get("correct_answers", []):
+                    correct_count += 1
+                    question_results.append((attempt.get("percentage", 0), 1))
+                elif q_index in attempt.get("incorrect_answers", []):
+                    incorrect_count += 1
+                    question_results.append((attempt.get("percentage", 0), 0))
+                elif q_index in attempt.get("unanswered", []):
+                    skipped_count += 1
+                    question_results.append((attempt.get("percentage", 0), 0))
+            
+            # Calculate metrics
+            correct_percentage = round((correct_count / total_attempts_for_q * 100), 1) if total_attempts_for_q > 0 else 0
+            skip_rate = round((skipped_count / total_attempts_for_q * 100), 1) if total_attempts_for_q > 0 else 0
+            
+            # Calculate discrimination index (top 27% vs bottom 27%)
+            question_results.sort(key=lambda x: x[0], reverse=True)
+            split_point = max(1, int(len(question_results) * 0.27))
+            top_performers = [result[1] for result in question_results[:split_point]]
+            bottom_performers = [result[1] for result in question_results[-split_point:]]
+            discrimination = calculate_discrimination_index(top_performers, bottom_performers)
+            
+            # Identify problematic questions
+            issues = []
+            if correct_percentage < 40:
+                issues.append(f"Low correct rate ({correct_percentage}%)")
+            if skip_rate > 20:
+                issues.append(f"High skip rate ({skip_rate}%)")
+            if discrimination < 0.2 and len(attempts) >= 10:
+                issues.append(f"Low discrimination ({discrimination})")
+            
+            # Action suggestions
+            suggestions = []
+            if correct_percentage < 30:
+                suggestions.append("Consider rewording or removing this question")
+            elif correct_percentage < 40:
+                suggestions.append("Review question clarity and answer options")
+            if skip_rate > 30:
+                suggestions.append("Question may be too difficult or unclear")
+            if discrimination < 0.1 and len(attempts) >= 10:
+                suggestions.append("Question doesn't discriminate well between strong and weak students")
+            
+            question_metrics.append({
+                "question_index": q_index,
+                "question_text": question.get("question", "")[:100] + "..." if len(question.get("question", "")) > 100 else question.get("question", ""),
+                "correct_count": correct_count,
+                "incorrect_count": incorrect_count,
+                "skipped_count": skipped_count,
+                "total_attempts": total_attempts_for_q,
+                "correct_percentage": correct_percentage,
+                "skip_rate": skip_rate,
+                "discrimination_index": discrimination,
+                "issues": issues,
+                "suggestions": suggestions,
+                "is_problematic": len(issues) > 0
+            })
+        
+        # Score distribution (for histogram)
+        score_distribution = {}
+        for score in scores:
+            score_distribution[score] = score_distribution.get(score, 0) + 1
+        
+        score_dist_list = [{"score": k, "count": v} for k, v in sorted(score_distribution.items())]
+        
+        # Attempts over time (for trend chart)
+        attempts_by_date = {}
+        for attempt in attempts:
+            submitted_at = attempt.get("submitted_at")
+            if submitted_at:
+                date_key = submitted_at.strftime("%Y-%m-%d")
+                if date_key not in attempts_by_date:
+                    attempts_by_date[date_key] = []
+                attempts_by_date[date_key].append(attempt.get("percentage", 0))
+        
+        attempts_over_time = []
+        for date_key, percentages_list in sorted(attempts_by_date.items()):
+            attempts_over_time.append({
+                "date": date_key,
+                "attempts_count": len(percentages_list),
+                "average_score": round(sum(percentages_list) / len(percentages_list), 1)
+            })
+        
+        # Identify problematic questions (for quick reference)
+        problematic_questions = [q for q in question_metrics if q["is_problematic"]]
+        
+        return {
+            "quiz_id": quiz_id,
+            "quiz_title": quiz.get("title", "Untitled Quiz"),
+            "total_questions": total_questions,
+            "total_attempts": len(attempts),
+            "date_range": {
+                "start": start_date,
+                "end": end_date
+            },
+            "summary": {
+                "score": {
+                    **score_stats,
+                    "max": max(scores),
+                    "min": min(scores)
+                },
+                "percentage": {
+                    **percentage_stats,
+                    "max": max(percentages),
+                    "min": min(percentages)
+                },
+                "time_taken": {
+                    **time_stats,
+                    "max": max(time_taken_list),
+                    "min": min(time_taken_list),
+                    "average_formatted": format_time(int(time_stats["mean"]))
+                },
+                "problematic_questions_count": len(problematic_questions)
+            },
+            "question_metrics": question_metrics,
+            "problematic_questions": problematic_questions,
+            "score_distribution": score_dist_list,
+            "attempts_over_time": attempts_over_time
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating analytics: {str(e)}")
+
+@app.get("/quizzes/{quiz_id}/analytics/export/csv")
+async def export_analytics_csv(quiz_id: str, current_user: dict = Depends(get_current_user)):
+    """Export analytics data as CSV"""
+    from bson import ObjectId
+    import io
+    
+    try:
+        # Verify quiz ownership
+        quiz = await db.quizzes.find_one({
+            "_id": ObjectId(quiz_id),
+            "created_by": current_user["email"]
+        })
+        
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found or unauthorized")
+        
+        # Get all attempts
+        attempts_cursor = db.quiz_attempts.find({"quiz_id": quiz_id}).sort("submitted_at", -1)
+        attempts = await attempts_cursor.to_list(length=None)
+        
+        # Create CSV
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write headers
+        headers = [
+            "Attempt ID", "Student Name", "Student Email", "Score", "Total Questions",
+            "Percentage", "Time Taken (seconds)", "Time Taken (formatted)",
+            "Correct Answers", "Incorrect Answers", "Unanswered", "Submitted At"
+        ]
+        writer.writerow(headers)
+        
+        # Write data
+        for attempt in attempts:
+            writer.writerow([
+                str(attempt["_id"]),
+                attempt.get("student_name", "Unknown"),
+                attempt.get("student_email", "N/A"),
+                attempt.get("score", 0),
+                attempt.get("total_questions", 0),
+                f"{attempt.get('percentage', 0)}%",
+                attempt.get("time_taken", 0),
+                format_time(attempt.get("time_taken", 0)),
+                len(attempt.get("correct_answers", [])),
+                len(attempt.get("incorrect_answers", [])),
+                len(attempt.get("unanswered", [])),
+                attempt.get("submitted_at").isoformat() if attempt.get("submitted_at") else "N/A"
+            ])
+        
+        # Return as streaming response
+        output.seek(0)
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=quiz_{quiz_id}_analytics.csv"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error exporting CSV: {str(e)}")
+
+@app.get("/quizzes/{quiz_id}/analytics/export/pdf")
+async def export_analytics_pdf(quiz_id: str, current_user: dict = Depends(get_current_user)):
+    """Export analytics report as PDF"""
+    from bson import ObjectId
+    import io
+    
+    try:
+        # Get analytics data
+        analytics = await get_quiz_analytics(quiz_id, None, None, current_user)
+        
+        # Create PDF
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter, topMargin=0.5*inch, bottomMargin=0.5*inch)
+        story = []
+        styles = getSampleStyleSheet()
+        
+        # Title
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=30,
+            alignment=TA_CENTER
+        )
+        story.append(Paragraph(f"Analytics Report: {analytics['quiz_title']}", title_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Summary Statistics
+        story.append(Paragraph("Summary Statistics", styles['Heading2']))
+        summary_data = [
+            ["Metric", "Value"],
+            ["Total Attempts", str(analytics['total_attempts'])],
+            ["Total Questions", str(analytics['total_questions'])],
+            ["Average Score", f"{analytics['summary']['score']['mean']}/{analytics['total_questions']}"],
+            ["Average Percentage", f"{analytics['summary']['percentage']['mean']}%"],
+            ["Median Percentage", f"{analytics['summary']['percentage']['median']}%"],
+            ["Std Deviation", f"{analytics['summary']['percentage']['std_dev']}%"],
+            ["Average Time", analytics['summary']['time_taken']['average_formatted']],
+            ["Problematic Questions", str(analytics['summary']['problematic_questions_count'])]
+        ]
+        
+        summary_table = Table(summary_data, colWidths=[3*inch, 3*inch])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Question Metrics
+        story.append(Paragraph("Per-Question Analysis", styles['Heading2']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        question_data = [["Q#", "Correct %", "Skip %", "Disc. Index", "Status"]]
+        for q in analytics['question_metrics']:
+            status = "⚠️ Issues" if q['is_problematic'] else "✓ Good"
+            question_data.append([
+                f"Q{q['question_index'] + 1}",
+                f"{q['correct_percentage']}%",
+                f"{q['skip_rate']}%",
+                str(q['discrimination_index']),
+                status
+            ])
+        
+        question_table = Table(question_data, colWidths=[0.8*inch, 1.2*inch, 1.2*inch, 1.3*inch, 1.5*inch])
+        question_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 9)
+        ]))
+        story.append(question_table)
+        story.append(PageBreak())
+        
+        # Problematic Questions Details
+        if analytics['problematic_questions']:
+            story.append(Paragraph("Problematic Questions - Detailed Analysis", styles['Heading2']))
+            story.append(Spacer(1, 0.1*inch))
+            
+            for q in analytics['problematic_questions']:
+                story.append(Paragraph(f"<b>Question {q['question_index'] + 1}:</b> {q['question_text']}", styles['Normal']))
+                story.append(Spacer(1, 0.05*inch))
+                
+                issues_text = "<b>Issues:</b> " + ", ".join(q['issues']) if q['issues'] else "<b>Issues:</b> None"
+                story.append(Paragraph(issues_text, styles['Normal']))
+                
+                suggestions_text = "<b>Suggestions:</b><br/>" + "<br/>".join([f"• {s}" for s in q['suggestions']]) if q['suggestions'] else ""
+                if suggestions_text:
+                    story.append(Paragraph(suggestions_text, styles['Normal']))
+                
+                story.append(Spacer(1, 0.15*inch))
+        
+        # Build PDF
+        doc.build(story)
+        buffer.seek(0)
+        
+        return StreamingResponse(
+            buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename=quiz_{quiz_id}_analytics_report.pdf"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error exporting PDF: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -14,6 +14,7 @@ import {
   Copy,
   Check,
   Download,
+  BarChart3,
 } from 'lucide-react'
 
 export default function QuizView() {
@@ -135,6 +136,13 @@ export default function QuizView() {
                 >
                   <Edit3 className="h-4 w-4" />
                   Edit
+                </Link>
+                <Link
+                  to={`/quiz/${id}/analytics`}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  Analytics
                 </Link>
                 <Link
                   to={`/quiz/${id}/export`}

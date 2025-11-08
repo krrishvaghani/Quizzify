@@ -97,10 +97,10 @@ const Analytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <Activity className="w-10 h-10 animate-spin text-black mx-auto mb-3" />
-          <p className="text-gray-500">Loading...</p>
+          <Activity className="w-12 h-12 animate-spin text-black mx-auto mb-4" />
+          <p className="text-gray-700 font-bold text-lg">Loading analytics...</p>
         </div>
       </div>
     );
@@ -108,14 +108,16 @@ const Analytics = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg border border-gray-200 max-w-md text-center">
-          <AlertTriangle className="w-10 h-10 text-red-600 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-black mb-2">Something went wrong</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white p-10 rounded-3xl border-2 border-gray-200 max-w-md text-center shadow-xl">
+          <div className="bg-red-50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <AlertTriangle className="w-10 h-10 text-red-600" />
+          </div>
+          <h2 className="text-2xl font-black text-black mb-3">Something went wrong</h2>
+          <p className="text-gray-600 mb-6 font-medium">{error}</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
+            className="px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
           >
             Back to Dashboard
           </button>
@@ -363,9 +365,9 @@ const Analytics = () => {
 
         {/* Performance Summary */}
         {allQuizzes.filter(q => q.hasAttempts).length > 0 && (
-          <div className="mt-6 bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5" />
+          <div className="mt-8 bg-white rounded-3xl shadow-xl p-8 border-2 border-gray-200">
+            <h3 className="text-2xl font-black text-black mb-6 flex items-center gap-3">
+              <TrendingUp className="w-7 h-7" />
               Performance Summary
             </h3>
             
@@ -381,13 +383,13 @@ const Analytics = () => {
                   , null);
 
                 return bestQuiz && (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Award className="w-5 h-5 text-green-600" />
-                      <h4 className="font-semibold text-green-800">Best Performing</h4>
+                  <div className="p-6 bg-green-50 border-2 border-green-300 rounded-2xl shadow-md hover:shadow-lg transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Award className="w-6 h-6 text-green-600" />
+                      <h4 className="font-black text-green-800 text-lg">Best Performing</h4>
                     </div>
-                    <p className="text-gray-700 font-medium mb-1">{bestQuiz.title}</p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="text-gray-800 font-bold mb-2">{bestQuiz.title}</p>
+                    <p className="text-3xl font-black text-green-600">
                       {Math.round(bestQuiz.analytics.summary.percentage.mean)}%
                     </p>
                   </div>
@@ -405,13 +407,13 @@ const Analytics = () => {
                   , null);
 
                 return mostAttempts && (
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Users className="w-5 h-5 text-blue-600" />
-                      <h4 className="font-semibold text-blue-800">Most Popular</h4>
+                  <div className="p-6 bg-blue-50 border-2 border-blue-300 rounded-2xl shadow-md hover:shadow-lg transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Users className="w-6 h-6 text-blue-600" />
+                      <h4 className="font-black text-blue-800 text-lg">Most Popular</h4>
                     </div>
-                    <p className="text-gray-700 font-medium mb-1">{mostAttempts.title}</p>
-                    <p className="text-2xl font-bold text-blue-600">
+                    <p className="text-gray-800 font-bold mb-2">{mostAttempts.title}</p>
+                    <p className="text-3xl font-black text-blue-600">
                       {mostAttempts.analytics.total_attempts} attempts
                     </p>
                   </div>
@@ -429,24 +431,24 @@ const Analytics = () => {
                   , null);
 
                 return needsAttention ? (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle className="w-5 h-5 text-red-600" />
-                      <h4 className="font-semibold text-red-800">Needs Attention</h4>
+                  <div className="p-6 bg-red-50 border-2 border-red-300 rounded-2xl shadow-md hover:shadow-lg transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <AlertTriangle className="w-6 h-6 text-red-600" />
+                      <h4 className="font-black text-red-800 text-lg">Needs Attention</h4>
                     </div>
-                    <p className="text-gray-700 font-medium mb-1">{needsAttention.title}</p>
-                    <p className="text-2xl font-bold text-red-600">
+                    <p className="text-gray-800 font-bold mb-2">{needsAttention.title}</p>
+                    <p className="text-3xl font-black text-red-600">
                       {needsAttention.analytics.summary.problematic_questions_count} issues
                     </p>
                   </div>
                 ) : (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <h4 className="font-semibold text-green-800">All Good!</h4>
+                  <div className="p-6 bg-green-50 border-2 border-green-300 rounded-2xl shadow-md hover:shadow-lg transition-all">
+                    <div className="flex items-center gap-3 mb-3">
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                      <h4 className="font-black text-green-800 text-lg">All Good!</h4>
                     </div>
-                    <p className="text-gray-700 font-medium mb-1">No issues found</p>
-                    <p className="text-sm text-green-600">
+                    <p className="text-gray-800 font-bold mb-2">No issues found</p>
+                    <p className="text-sm text-green-700 font-semibold">
                       All quizzes are performing well
                     </p>
                   </div>

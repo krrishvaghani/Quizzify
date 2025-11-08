@@ -255,9 +255,13 @@ async def generate_mcqs_with_ai(text: str, num_questions: int, difficulty: str) 
     """Generate MCQs using AI (Gemini or fallback to simple generation)"""
     
     prompt = f"""
-    Based on the following content, generate EXACTLY {num_questions} multiple-choice questions with {difficulty} difficulty level.
+    Based on the following content, generate EXACTLY {num_questions} multiple-choice questions (MCQs) with {difficulty} difficulty level.
     
-    IMPORTANT: You must generate exactly {num_questions} questions, no more, no less.
+    IMPORTANT INSTRUCTIONS:
+    - Generate ONLY Multiple Choice Questions (MCQs), NOT Fill in the Blank questions
+    - You must generate exactly {num_questions} questions, no more, no less
+    - Each question should be a complete question with a clear answer
+    - Create 4 distinct, plausible options for each question
     
     Content:
     {text[:4000]}
@@ -265,21 +269,23 @@ async def generate_mcqs_with_ai(text: str, num_questions: int, difficulty: str) 
     Format the response as a JSON array with the following structure:
     [
         {{
-            "question": "Question text here?",
+            "question": "What is the main concept discussed in the text?",
             "options": [
-                {{"text": "Option A", "is_correct": false}},
-                {{"text": "Option B", "is_correct": true}},
-                {{"text": "Option C", "is_correct": false}},
-                {{"text": "Option D", "is_correct": false}}
+                {{"text": "First plausible answer", "is_correct": false}},
+                {{"text": "Correct answer here", "is_correct": true}},
+                {{"text": "Another plausible option", "is_correct": false}},
+                {{"text": "Fourth plausible option", "is_correct": false}}
             ],
             "explanation": "Why the correct answer is correct"
         }}
     ]
     
     Requirements:
-    - Generate EXACTLY {num_questions} questions
+    - Generate EXACTLY {num_questions} complete MCQ questions
     - Each question must have exactly 4 options
     - Only one correct answer per question
+    - Make all options plausible and related to the content
+    - Avoid Fill in the Blank format
     - Return ONLY the JSON array, no additional text
     """
     
@@ -321,33 +327,63 @@ def generate_simple_mcqs(text: str, num_questions: int) -> List[dict]:
     questions = []
     sentence_index = 0
     
+    # Common question templates for MCQs
+    mcq_templates = [
+        "According to the text, what can be inferred about",
+        "Which of the following best describes",
+        "What is the main idea regarding",
+        "Based on the information provided, which statement is true about",
+        "What does the text suggest about"
+    ]
+    
     while len(questions) < num_questions and sentence_index < len(sentences):
         sentence = sentences[sentence_index]
         words = sentence.split()
         
         if len(words) >= 5:
-            # Create a fill-in-the-blank question
-            blank_index = len(words) // 2
-            correct_answer = words[blank_index]
-            question_text = ' '.join(words[:blank_index] + ['_____'] + words[blank_index + 1:]) + '?'
+            # Create a proper MCQ question based on the sentence
+            # Extract key terms (nouns/important words)
+            key_words = [w for w in words if len(w) > 4 and w[0].isupper()]
             
-            # Generate plausible wrong answers
-            wrong_answers = [
-                f"{correct_answer}s" if not correct_answer.endswith('s') else correct_answer[:-1],
-                f"not {correct_answer}",
-                "none of these"
-            ]
-            
-            questions.append({
-                "question": f"Fill in the blank: {question_text}",
-                "options": [
-                    {"text": correct_answer, "is_correct": True},
-                    {"text": wrong_answers[0], "is_correct": False},
-                    {"text": wrong_answers[1], "is_correct": False},
-                    {"text": wrong_answers[2], "is_correct": False}
-                ],
-                "explanation": f"The correct answer is '{correct_answer}' based on the context."
-            })
+            if key_words:
+                key_term = key_words[0] if key_words else words[len(words) // 3]
+                template = mcq_templates[sentence_index % len(mcq_templates)]
+                
+                # Create question based on sentence content
+                question_text = f"{template} {key_term.lower()}?"
+                
+                # Use part of the sentence as the correct answer
+                correct_answer = ' '.join(words[:min(8, len(words))])
+                
+                # Generate plausible wrong answers
+                wrong_answers = [
+                    f"It is not mentioned in the text",
+                    f"The opposite of what is stated",
+                    f"An unrelated concept"
+                ]
+                
+                questions.append({
+                    "question": question_text,
+                    "options": [
+                        {"text": correct_answer, "is_correct": True},
+                        {"text": wrong_answers[0], "is_correct": False},
+                        {"text": wrong_answers[1], "is_correct": False},
+                        {"text": wrong_answers[2], "is_correct": False}
+                    ],
+                    "explanation": f"Based on the content: '{sentence}'"
+                })
+            else:
+                # Generate a generic MCQ if no key terms found
+                questions.append({
+                    "question": f"According to the content, which statement is most accurate?",
+                    "options": [
+                        {"text": sentence[:60] + "..." if len(sentence) > 60 else sentence, "is_correct": True},
+                        {"text": "This is not discussed in the text", "is_correct": False},
+                        {"text": "The content suggests otherwise", "is_correct": False},
+                        {"text": "None of the above", "is_correct": False}
+                    ],
+                    "explanation": f"The text states: '{sentence}'"
+                })
         
         sentence_index += 1
         

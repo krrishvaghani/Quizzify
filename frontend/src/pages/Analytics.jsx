@@ -294,7 +294,7 @@ const Analytics = () => {
                         <td className="px-6 py-4 text-center">
                           {hasData ? (
                             <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getScoreColor(analytics.summary.percentage.mean)}`}>
-                              {analytics.summary.percentage.mean}%
+                              {Math.round(analytics.summary.percentage.mean)}%
                             </span>
                           ) : (
                             <span className="text-gray-400">-</span>
@@ -381,7 +381,7 @@ const Analytics = () => {
                     </div>
                     <p className="text-gray-700 font-medium mb-1">{bestQuiz.title}</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {bestQuiz.analytics.summary.percentage.mean}%
+                      {Math.round(bestQuiz.analytics.summary.percentage.mean)}%
                     </p>
                   </div>
                 );

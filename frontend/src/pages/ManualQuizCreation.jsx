@@ -31,6 +31,7 @@ export default function ManualQuizCreation() {
         { text: '', is_correct: false },
       ],
       explanation: '',
+      tags: [],
     },
   ])
   const [saving, setSaving] = useState(false)
@@ -48,6 +49,7 @@ export default function ManualQuizCreation() {
           { text: '', is_correct: false },
         ],
         explanation: '',
+        tags: [],
       },
     ])
   }
@@ -133,6 +135,7 @@ export default function ManualQuizCreation() {
           question: q.question,
           options: q.options.filter(opt => opt.text.trim()),
           explanation: q.explanation || null,
+          tags: q.tags || [],
         })),
       }
 
@@ -334,6 +337,26 @@ export default function ManualQuizCreation() {
                   rows={2}
                   className="input-field resize-none"
                 />
+              </div>
+
+              {/* Tags/Topics */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tags/Topics <span className="text-gray-400">(Optional - for analytics)</span>
+                </label>
+                <input
+                  type="text"
+                  value={question.tags?.join(', ') || ''}
+                  onChange={(e) => {
+                    const tagsArray = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+                    updateQuestion(qIndex, 'tags', tagsArray);
+                  }}
+                  placeholder="e.g., Algebra, Geometry, History (comma-separated)"
+                  className="input-field"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Add topics to track performance by category in analytics
+                </p>
               </div>
             </div>
           ))}

@@ -11,6 +11,7 @@ const QuizAnalytics = () => {
   const { quizId } = useParams();
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
+  const [topicAnalytics, setTopicAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
@@ -19,6 +20,7 @@ const QuizAnalytics = () => {
 
   useEffect(() => {
     fetchAnalytics();
+    fetchTopicAnalytics();
   }, [quizId]);
 
   const fetchAnalytics = async (startDate = '', endDate = '') => {
@@ -35,6 +37,16 @@ const QuizAnalytics = () => {
       setError(err.response?.data?.detail || 'Failed to load analytics');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTopicAnalytics = async () => {
+    try {
+      const response = await api.get(`/quizzes/${quizId}/analytics/topics`);
+      setTopicAnalytics(response.data);
+    } catch (err) {
+      console.error('Failed to load topic analytics:', err);
+      // Don't set error, just log it - topic analytics is optional
     }
   };
 
@@ -289,6 +301,262 @@ const QuizAnalytics = () => {
             })}
           </div>
           <div className="text-center text-sm text-gray-600 mt-4">Score (out of {analytics.total_questions})</div>
+        </div>
+
+        {/* Topic-wise Performance */}
+        {topicAnalytics && topicAnalytics.topic_performance && topicAnalytics.topic_performance.length > 0 && (
+          <>
+            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <Target className="w-6 h-6" />
+                Topic-wise Performance
+              </h2>
+              
+              {/* Topic Performance Bar Chart */}
+              <div className="mb-6">
+                <div className="flex items-end justify-start gap-3 h-64 border-l border-b border-gray-300 overflow-x-auto pb-2">
+                  {topicAnalytics.topic_performance.map((topic, idx) => {
+                    const height = topic.average_score;
+                    const color = topic.average_score >= 80 ? 'bg-green-600' : 
+                                  topic.average_score >= 60 ? 'bg-yellow-500' : 'bg-red-500';
+                    return (
+                      <div key={idx} className="flex flex-col items-center gap-2 min-w-[80px]">
+                        <div className="text-xs font-semibold text-gray-700">
+                          {topic.average_score}%
+                        </div>
+                        <div
+                          className={`w-16 ${color} rounded-t-lg transition-all hover:opacity-80`}
+                          style={{ height: `${height}%` }}
+                          title={`${topic.topic}: ${topic.average_score}% avg score`}
+                        />
+                        <div className="text-xs text-gray-600 text-center max-w-[80px] break-words">
+                          {topic.topic}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          {topic.total_questions} Q
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-center text-sm text-gray-600 mt-2">Topics / Average Score</div>
+              </div>
+
+              {/* Weak Topics Alert */}
+              {topicAnalytics.weak_topics && topicAnalytics.weak_topics.length > 0 && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg mb-4">
+                  <div className="flex items-start">
+                    <AlertTriangle className="w-5 h-5 text-red-500 mt-0.5" />
+                    <div className="ml-3">
+                      <h3 className="text-red-800 font-semibold text-sm">
+                        Weak Topics Identified
+                      </h3>
+                      <div className="mt-2 space-y-2">
+                        {topicAnalytics.weak_topics.map((topic, idx) => (
+                          <div key={idx} className="flex items-center justify-between bg-white p-2 rounded">
+                            <span className="text-sm font-medium text-gray-800">{topic.topic}</span>
+                            <div className="flex items-center gap-3">
+                              <span className="text-xs text-gray-600">
+                                {topic.correct_count}/{topic.total_attempts} correct
+                              </span>
+                              <span className="px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded">
+                                {topic.average_score}% avg
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-red-700 text-xs mt-2">
+                        💡 Focus on these topics in upcoming lessons or create targeted practice quizzes.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Strong Topics */}
+              {topicAnalytics.strong_topics && topicAnalytics.strong_topics.length > 0 && (
+                <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-lg">
+                  <div className="flex items-start">
+                    <Award className="w-5 h-5 text-green-500 mt-0.5" />
+                    <div className="ml-3">
+                      <h3 className="text-green-800 font-semibold text-sm">
+                        Strong Topics
+                      </h3>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {topicAnalytics.strong_topics.map((topic, idx) => (
+                          <div key={idx} className="flex items-center justify-between bg-white p-2 rounded">
+                            <span className="text-sm font-medium text-gray-800">{topic.topic}</span>
+                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded">
+                              {topic.average_score}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Detailed Topic Table */}
+            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Detailed Topic Breakdown</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Topic
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Questions
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Avg Score
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Accuracy
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Correct
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Incorrect
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Skipped
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {topicAnalytics.topic_performance.map((topic, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="text-sm font-medium text-gray-900">{topic.topic}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {topic.total_questions}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded ${getSeverityColor(topic.average_score)}`}>
+                            {topic.average_score}%
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 py-1 text-xs font-semibold rounded ${getSeverityColor(topic.accuracy_percentage)}`}>
+                            {topic.accuracy_percentage}%
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className="text-green-600 font-medium">{topic.correct_count}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className="text-red-600 font-medium">{topic.incorrect_count}</span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <span className="text-gray-600 font-medium">{topic.skipped_count}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Time Analytics */}
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Clock className="w-6 h-6" />
+            Time Analysis Per Question
+          </h2>
+          
+          {/* Time per Question Bar Chart */}
+          <div className="mb-6">
+            <div className="flex items-end justify-start gap-2 h-64 border-l border-b border-gray-300 overflow-x-auto pb-2">
+              {analytics.question_metrics
+                .filter(q => q.time_samples > 0)
+                .map((question, idx) => {
+                  const maxTime = Math.max(...analytics.question_metrics.map(q => q.avg_time_seconds));
+                  const height = (question.avg_time_seconds / maxTime) * 100;
+                  const color = question.avg_time_seconds > 120 ? 'bg-red-500' :
+                                question.avg_time_seconds > 60 ? 'bg-yellow-500' : 'bg-green-500';
+                  return (
+                    <div key={idx} className="flex flex-col items-center gap-2 min-w-[60px]">
+                      <div className="text-xs font-semibold text-gray-700">
+                        {Math.round(question.avg_time_seconds)}s
+                      </div>
+                      <div
+                        className={`w-12 ${color} rounded-t-lg transition-all hover:opacity-80 cursor-pointer`}
+                        style={{ height: `${height}%` }}
+                        title={`Q${question.question_index + 1}: ${Math.round(question.avg_time_seconds)}s avg (${question.time_samples} samples)`}
+                      />
+                      <div className="text-xs text-gray-600 text-center">
+                        Q{question.question_index + 1}
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        {question.correct_percentage}%
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+            <div className="text-center text-sm text-gray-600 mt-2">
+              Question / Avg Time (seconds) / Correct %
+            </div>
+          </div>
+
+          {/* Top 5 Slowest Questions */}
+          <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
+            <div className="flex items-start">
+              <Clock className="w-5 h-5 text-yellow-500 mt-0.5" />
+              <div className="ml-3 w-full">
+                <h3 className="text-yellow-800 font-semibold text-sm mb-3">
+                  Top 5 Slowest Questions (May Be Confusing)
+                </h3>
+                <div className="space-y-2">
+                  {[...analytics.question_metrics]
+                    .filter(q => q.time_samples > 0)
+                    .sort((a, b) => b.avg_time_seconds - a.avg_time_seconds)
+                    .slice(0, 5)
+                    .map((question, idx) => (
+                      <div key={idx} className="bg-white p-3 rounded-lg">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="px-2 py-1 bg-gray-900 text-white text-xs font-bold rounded">
+                                Q{question.question_index + 1}
+                              </span>
+                              <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded">
+                                {Math.round(question.avg_time_seconds)}s avg
+                              </span>
+                              <span className={`px-2 py-1 text-xs font-semibold rounded ${
+                                question.correct_percentage >= 60 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                              }`}>
+                                {question.correct_percentage}% correct
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700 line-clamp-2">
+                              {question.question_text}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-xs text-gray-500">
+                              {question.time_samples} attempts
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+                <p className="text-yellow-700 text-xs mt-3">
+                  💡 Questions taking longer may indicate confusion or complexity. Consider revising wording or providing hints.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Attempts Over Time */}

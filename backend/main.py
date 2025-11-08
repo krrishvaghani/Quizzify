@@ -82,6 +82,7 @@ class MCQuestion(BaseModel):
     question: str
     options: List[MCQOption]
     explanation: Optional[str] = None
+    tags: Optional[List[str]] = []  # Topics/tags for the question
 
 class QuizGenerate(BaseModel):
     num_questions: int = 5
@@ -161,6 +162,7 @@ class QuizSubmission(BaseModel):
     student_email: str
     answers: dict  # {question_index: [selected_option_indices]}
     time_taken: int  # seconds
+    time_per_question: Optional[dict] = {}  # {question_index: time_in_seconds}
 
 class QuizAttempt(BaseModel):
     id: Optional[str] = None
@@ -172,6 +174,7 @@ class QuizAttempt(BaseModel):
     total_questions: int
     percentage: float
     time_taken: int
+    time_per_question: Optional[dict] = {}  # {question_index: time_in_seconds}
     correct_answers: List[int]  # indices of correct questions
     incorrect_answers: List[int]  # indices of incorrect questions
     unanswered: List[int]  # indices of unanswered questions
@@ -1007,6 +1010,7 @@ async def submit_quiz_public(submission: QuizSubmission):
             "total_questions": total_questions,
             "percentage": percentage,
             "time_taken": submission.time_taken,
+            "time_per_question": submission.time_per_question,
             "correct_answers": correct_answers,
             "incorrect_answers": incorrect_answers,
             "unanswered": unanswered,
@@ -1520,13 +1524,18 @@ async def get_quiz_analytics(
             incorrect_count = 0
             skipped_count = 0
             total_attempts_for_q = 0
-            time_per_question = []
+            time_per_question_list = []
             
             # For discrimination index
             question_results = []  # Store (score, is_correct) tuples
             
             for attempt in attempts:
                 total_attempts_for_q += 1
+                
+                # Collect time data if available
+                time_data = attempt.get("time_per_question", {})
+                if str(q_index) in time_data:
+                    time_per_question_list.append(time_data[str(q_index)])
                 
                 # Check if question was answered correctly
                 if q_index in attempt.get("correct_answers", []):
@@ -1570,6 +1579,9 @@ async def get_quiz_analytics(
             if discrimination < 0.1 and len(attempts) >= 10:
                 suggestions.append("Question doesn't discriminate well between strong and weak students")
             
+            # Calculate time statistics
+            avg_time = round(sum(time_per_question_list) / len(time_per_question_list), 1) if time_per_question_list else 0
+            
             question_metrics.append({
                 "question_index": q_index,
                 "question_text": question.get("question", "")[:100] + "..." if len(question.get("question", "")) > 100 else question.get("question", ""),
@@ -1580,6 +1592,8 @@ async def get_quiz_analytics(
                 "correct_percentage": correct_percentage,
                 "skip_rate": skip_rate,
                 "discrimination_index": discrimination,
+                "avg_time_seconds": avg_time,
+                "time_samples": len(time_per_question_list),
                 "issues": issues,
                 "suggestions": suggestions,
                 "is_problematic": len(issues) > 0
@@ -1653,6 +1667,141 @@ async def get_quiz_analytics(
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error generating analytics: {str(e)}")
+
+@app.get("/quizzes/{quiz_id}/analytics/topics")
+async def get_topic_analytics(
+    quiz_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get topic-wise and tag-based performance analytics"""
+    from bson import ObjectId
+    from collections import defaultdict
+    
+    try:
+        # Verify quiz ownership
+        quiz = await db.quizzes.find_one({
+            "_id": ObjectId(quiz_id),
+            "created_by": current_user["email"]
+        })
+        
+        if not quiz:
+            raise HTTPException(status_code=404, detail="Quiz not found or unauthorized")
+        
+        # Get all attempts for this quiz
+        attempts_cursor = db.quiz_attempts.find({"quiz_id": quiz_id})
+        attempts = await attempts_cursor.to_list(length=None)
+        
+        if not attempts:
+            return {
+                "quiz_id": quiz_id,
+                "quiz_title": quiz.get("title", "Untitled Quiz"),
+                "total_attempts": 0,
+                "topic_performance": [],
+                "weak_topics": [],
+                "strong_topics": []
+            }
+        
+        # Collect topic-wise performance data
+        topic_stats = defaultdict(lambda: {
+            "total_questions": 0,
+            "correct_count": 0,
+            "incorrect_count": 0,
+            "skipped_count": 0,
+            "scores": []
+        })
+        
+        # Process each question's tags
+        questions = quiz.get("questions", [])
+        for q_index, question in enumerate(questions):
+            tags = question.get("tags", [])
+            
+            # If no tags, assign a default "Untagged" category
+            if not tags:
+                tags = ["Untagged"]
+            
+            # For each tag in this question
+            for tag in tags:
+                topic_stats[tag]["total_questions"] += 1
+                
+                # Check performance across all attempts for this question
+                for attempt in attempts:
+                    if q_index in attempt.get("correct_answers", []):
+                        topic_stats[tag]["correct_count"] += 1
+                        topic_stats[tag]["scores"].append(100)
+                    elif q_index in attempt.get("incorrect_answers", []):
+                        topic_stats[tag]["incorrect_count"] += 1
+                        topic_stats[tag]["scores"].append(0)
+                    elif q_index in attempt.get("unanswered", []):
+                        topic_stats[tag]["skipped_count"] += 1
+                        topic_stats[tag]["scores"].append(0)
+        
+        # Calculate metrics for each topic
+        topic_performance = []
+        for topic, stats in topic_stats.items():
+            total_responses = stats["correct_count"] + stats["incorrect_count"] + stats["skipped_count"]
+            
+            if total_responses > 0:
+                avg_score = round(sum(stats["scores"]) / len(stats["scores"]), 1)
+                accuracy = round((stats["correct_count"] / total_responses * 100), 1)
+                skip_rate = round((stats["skipped_count"] / total_responses * 100), 1)
+            else:
+                avg_score = 0
+                accuracy = 0
+                skip_rate = 0
+            
+            topic_performance.append({
+                "topic": topic,
+                "total_questions": stats["total_questions"],
+                "total_attempts": total_responses,
+                "correct_count": stats["correct_count"],
+                "incorrect_count": stats["incorrect_count"],
+                "skipped_count": stats["skipped_count"],
+                "average_score": avg_score,
+                "accuracy_percentage": accuracy,
+                "skip_rate": skip_rate
+            })
+        
+        # Sort by average score
+        topic_performance.sort(key=lambda x: x["average_score"], reverse=True)
+        
+        # Identify weak and strong topics
+        # Weak topics: bottom 30% or score < 60%
+        weak_threshold = 60.0
+        strong_threshold = 80.0
+        
+        weak_topics = [
+            t for t in topic_performance 
+            if t["average_score"] < weak_threshold and t["total_attempts"] > 0
+        ]
+        weak_topics.sort(key=lambda x: x["average_score"])  # Weakest first
+        
+        strong_topics = [
+            t for t in topic_performance 
+            if t["average_score"] >= strong_threshold
+        ]
+        strong_topics.sort(key=lambda x: x["average_score"], reverse=True)  # Strongest first
+        
+        return {
+            "quiz_id": quiz_id,
+            "quiz_title": quiz.get("title", "Untitled Quiz"),
+            "total_attempts": len(attempts),
+            "total_topics": len(topic_performance),
+            "topic_performance": topic_performance,
+            "weak_topics": weak_topics[:5],  # Top 5 weak topics
+            "strong_topics": strong_topics[:5],  # Top 5 strong topics
+            "chart_data": {
+                "labels": [t["topic"] for t in topic_performance],
+                "scores": [t["average_score"] for t in topic_performance],
+                "accuracy": [t["accuracy_percentage"] for t in topic_performance]
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error generating topic analytics: {str(e)}")
 
 @app.get("/quizzes/{quiz_id}/analytics/export/csv")
 async def export_analytics_csv(quiz_id: str, current_user: dict = Depends(get_current_user)):

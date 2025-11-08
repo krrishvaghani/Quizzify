@@ -12,7 +12,12 @@ import {
   AlertCircle,
   Copy,
   PenTool,
+  Home,
+  BarChart3,
+  PlusCircle,
+  Users,
 } from 'lucide-react'
+import AnimatedTabs from '../components/AnimatedTabs'
 
 export default function ManualQuizCreation() {
   const navigate = useNavigate()
@@ -161,34 +166,50 @@ export default function ManualQuizCreation() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <header className="bg-black text-white border-b border-gray-800 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate(returnTo === 'create-room' ? '/create-room' : '/dashboard')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-white hover:text-gray-300 text-base"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-6 w-6" />
               <span>Back</span>
             </button>
 
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="btn-primary flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="h-5 w-5" />
-                  Save Quiz
-                </>
-              )}
-            </button>
+            <div className="flex items-center gap-6">
+              <AnimatedTabs
+                tabs={[
+                  { label: 'Dashboard', value: 'dashboard' },
+                  { label: 'Analytics', value: 'analytics' },
+                  { label: 'Create Quiz', value: 'generate' },
+                  { label: 'Room', value: 'create-room' },
+                  { label: 'Rooms', value: 'rooms' }
+                ]}
+                variant="underline"
+                activeTab="generate"
+                isDark={true}
+                onTabChange={(value) => navigate(`/${value}`)}
+              />
+
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-6 py-3 bg-white text-black rounded-xl font-bold hover:bg-gray-100 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ml-4"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-5 w-5" />
+                    Save Quiz
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </header>

@@ -114,10 +114,10 @@ export default function Signup() {
       {/* Back Button */}
       <button
         onClick={() => navigate('/')}
-        className="absolute top-8 left-8 flex items-center gap-2 text-white hover:text-gray-300 transition-colors z-50"
+        className="absolute top-8 left-8 flex items-center gap-2 text-black hover:text-gray-700 transition-colors z-50 px-4 py-2 rounded-lg hover:bg-gray-100"
       >
         <ArrowLeft className="w-5 h-5" />
-        <span className="font-semibold">Back to Home</span>
+        <span className="font-bold">Back to Home</span>
       </button>
 
       {/* Main Content */}

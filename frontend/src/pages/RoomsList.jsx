@@ -11,7 +11,11 @@ import {
   Clock,
   User,
   KeyRound,
+  Home,
+  BarChart3,
+  PlusCircle,
 } from 'lucide-react'
+import AnimatedTabs from '../components/AnimatedTabs'
 
 export default function RoomsList() {
   const [rooms, setRooms] = useState([])
@@ -68,20 +72,36 @@ export default function RoomsList() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-black text-white border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-white hover:text-gray-300"
+              className="flex items-center gap-2 text-white hover:text-gray-300 text-base"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-6 w-6" />
               <span>Back</span>
             </button>
 
-            <Link to="/create-room" className="px-4 py-2 bg-white text-black rounded-lg font-medium hover:bg-gray-100 flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Create Room
-            </Link>
+            <div className="flex items-center gap-6">
+              <AnimatedTabs
+                tabs={[
+                  { label: 'Dashboard', value: 'dashboard' },
+                  { label: 'Analytics', value: 'analytics' },
+                  { label: 'Create Quiz', value: 'generate' },
+                  { label: 'Room', value: 'create-room' },
+                  { label: 'Rooms', value: 'rooms' }
+                ]}
+                variant="underline"
+                activeTab="rooms"
+                isDark={true}
+                onTabChange={(value) => navigate(`/${value}`)}
+              />
+
+              <Link to="/create-room" className="px-5 py-2.5 bg-white text-black rounded-lg font-medium hover:bg-gray-100 flex items-center gap-2 text-base ml-4">
+                <Plus className="h-5 w-5" />
+                Create Room
+              </Link>
+            </div>
           </div>
         </div>
       </header>

@@ -14,7 +14,13 @@ import {
   Eye,
   EyeOff,
   Lock,
+  Home,
+  BarChart3,
+  Plus,
+  PlusCircle,
+  Users as UsersIcon,
 } from 'lucide-react'
+import AnimatedTabs from '../components/AnimatedTabs'
 
 export default function Profile() {
   const navigate = useNavigate()
@@ -132,14 +138,30 @@ export default function Profile() {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-black text-white border-b border-gray-800">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-white hover:text-gray-300"
-          >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Back</span>
-          </button>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="flex items-center gap-2 text-white hover:text-gray-300 text-base"
+            >
+              <ArrowLeft className="h-6 w-6" />
+              <span>Back</span>
+            </button>
+            
+            <AnimatedTabs
+              tabs={[
+                { label: 'Dashboard', value: 'dashboard' },
+                { label: 'Analytics', value: 'analytics' },
+                { label: 'Create Quiz', value: 'generate' },
+                { label: 'Room', value: 'create-room' },
+                { label: 'Rooms', value: 'rooms' }
+              ]}
+              variant="underline"
+              activeTab=""
+              isDark={true}
+              onTabChange={(value) => navigate(`/${value}`)}
+            />
+          </div>
         </div>
       </header>
 

@@ -22,6 +22,11 @@ export default function Login() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetEmail, setResetEmail] = useState('')
+  const [resetSuccess, setResetSuccess] = useState(false)
+  const [resetError, setResetError] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
   const navigate = useNavigate()
   const { login } = useAuth()
 
@@ -38,6 +43,28 @@ export default function Login() {
       setError(err.response?.data?.detail || 'Invalid email or password')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault()
+    setResetError('')
+    setResetLoading(true)
+
+    try {
+      // For now, we'll just show a success message
+      // In a real app, you'd call an API endpoint to send a reset email
+      await new Promise(resolve => setTimeout(resolve, 1000)) // Simulate API call
+      setResetSuccess(true)
+      setTimeout(() => {
+        setShowForgotPassword(false)
+        setResetSuccess(false)
+        setResetEmail('')
+      }, 3000)
+    } catch (err) {
+      setResetError('Failed to send reset email. Please try again.')
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -206,6 +233,7 @@ export default function Login() {
                   </label>
                   <button
                     type="button"
+                    onClick={() => setShowForgotPassword(true)}
                     className="text-sm font-bold text-black hover:underline"
                   >
                     Forgot password?
@@ -285,6 +313,104 @@ export default function Login() {
       {/* Decorative Elements */}
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
       <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative">
+            <button
+              onClick={() => {
+                setShowForgotPassword(false)
+                setResetEmail('')
+                setResetError('')
+                setResetSuccess(false)
+              }}
+              className="absolute top-4 right-4 text-gray-400 hover:text-black transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="mb-6">
+              <div className="w-14 h-14 bg-black rounded-xl flex items-center justify-center mb-4">
+                <Lock className="w-7 h-7 text-white" />
+              </div>
+              <h3 className="text-2xl font-black text-black mb-2">
+                Reset Your Password
+              </h3>
+              <p className="text-gray-600">
+                Enter your email address and we'll send you a link to reset your password.
+              </p>
+            </div>
+
+            {resetSuccess ? (
+              <div className="bg-green-50 border-2 border-green-200 text-green-700 px-4 py-4 rounded-xl flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold mb-1">Email Sent!</p>
+                  <p className="text-sm">Check your inbox for password reset instructions.</p>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPassword} className="space-y-6">
+                {resetError && (
+                  <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-4 rounded-xl flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                    <span className="text-sm font-medium">{resetError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label htmlFor="reset-email" className="block text-sm font-bold text-black mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 group-focus-within:text-black transition-colors" />
+                    <input
+                      id="reset-email"
+                      type="email"
+                      required
+                      value={resetEmail}
+                      onChange={(e) => setResetEmail(e.target.value)}
+                      className="w-full pl-12 pr-4 py-4 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-black focus:border-black transition-all font-medium text-black placeholder:text-gray-400"
+                      placeholder="you@example.com"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowForgotPassword(false)
+                      setResetEmail('')
+                      setResetError('')
+                    }}
+                    className="flex-1 px-6 py-3 border-2 border-gray-300 text-black rounded-xl hover:border-black font-bold transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={resetLoading}
+                    className="flex-1 px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {resetLoading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Sending...
+                      </span>
+                    ) : (
+                      'Send Reset Link'
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

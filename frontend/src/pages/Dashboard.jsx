@@ -19,6 +19,7 @@ import {
   Sparkles,
   Target,
 } from 'lucide-react';
+import AnimatedTabs from '../components/AnimatedTabs';
 
 export default function Dashboard() {
   const [quizzes, setQuizzes] = useState([]);
@@ -75,64 +76,42 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-white">
       <header className="bg-black text-white border-b border-gray-800 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-6 w-6" />
-              <h1 className="text-xl font-bold">Quizzify</h1>
+            <div className="flex items-center gap-3">
+              <Sparkles className="h-7 w-7" />
+              <h1 className="text-2xl font-bold">Quizzify</h1>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Link
-                to="/dashboard"
-                className="flex items-center gap-2 px-3 py-2 bg-white text-black rounded-lg text-sm font-medium"
-              >
-                <Home className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Link>
-              <Link
-                to="/analytics"
-                className="flex items-center gap-2 px-3 py-2 text-white hover:bg-gray-900 rounded-lg text-sm font-medium"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span>Analytics</span>
-              </Link>
-              <Link
-                to="/generate"
-                className="flex items-center gap-2 px-3 py-2 text-white hover:bg-gray-900 rounded-lg text-sm font-medium"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Create Quiz</span>
-              </Link>
-              <Link
-                to="/create-room"
-                className="flex items-center gap-2 px-3 py-2 text-white hover:bg-gray-900 rounded-lg text-sm font-medium"
-              >
-                <PlusCircle className="h-4 w-4" />
-                <span>Room</span>
-              </Link>
-              <Link
-                to="/rooms"
-                className="flex items-center gap-2 px-3 py-2 text-white hover:bg-gray-900 rounded-lg text-sm font-medium"
-              >
-                <Users className="h-4 w-4" />
-                <span>Rooms</span>
-              </Link>
+            <div className="flex items-center gap-6">
+              <AnimatedTabs
+                tabs={[
+                  { label: 'Dashboard', value: 'dashboard' },
+                  { label: 'Analytics', value: 'analytics' },
+                  { label: 'Create Quiz', value: 'generate' },
+                  { label: 'Room', value: 'create-room' },
+                  { label: 'Rooms', value: 'rooms' }
+                ]}
+                variant="underline"
+                activeTab="dashboard"
+                isDark={true}
+                onTabChange={(value) => navigate(`/${value}`)}
+              />
               
-              <div className="border-l border-gray-700 pl-2 ml-2 flex items-center gap-2">
+              <div className="border-l border-gray-700 pl-3 ml-3 flex items-center gap-2">
                 <Link
                   to="/profile"
-                  className="flex items-center gap-2 text-white hover:bg-gray-900 rounded-lg px-3 py-2 text-sm font-medium"
+                  className="flex items-center gap-2 text-white hover:bg-gray-900 rounded-lg px-4 py-2.5 text-base font-medium"
                 >
-                  <User className="h-4 w-4" />
+                  <User className="h-5 w-5" />
                   <span>{user?.username || 'User'}</span>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="p-2 text-white hover:bg-gray-900 rounded-lg"
+                  className="p-2.5 text-white hover:bg-gray-900 rounded-lg"
                   title="Logout"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-5 w-5" />
                 </button>
               </div>
             </div>

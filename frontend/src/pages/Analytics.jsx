@@ -3,10 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { 
   BarChart3, TrendingUp, Users, Clock, AlertTriangle, Download, 
   ArrowLeft, FileText, Calendar, CheckCircle, XCircle, MinusCircle,
-  Award, Target, Activity, BookOpen, Home, Eye
+  Award, Target, Activity, BookOpen, Home, Eye, LogOut, User, Plus, PlusCircle
 } from 'lucide-react';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import AnimatedTabs from '../components/AnimatedTabs';
 
 const Analytics = () => {
   const navigate = useNavigate();
@@ -129,26 +130,44 @@ const Analytics = () => {
     <div className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-black text-white border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/dashboard')}
                 className="text-white hover:text-gray-300"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-xl font-bold">Analytics</h1>
+                <h1 className="text-2xl font-bold">Analytics</h1>
               </div>
             </div>
-            <Link
-              to="/dashboard"
-              className="flex items-center gap-2 px-3 py-2 bg-white text-black rounded-lg text-sm font-medium"
-            >
-              <Home className="w-4 h-4" />
-              Dashboard
-            </Link>
+            <div className="flex items-center gap-6">
+              <AnimatedTabs
+                tabs={[
+                  { label: 'Dashboard', value: 'dashboard' },
+                  { label: 'Analytics', value: 'analytics' },
+                  { label: 'Create Quiz', value: 'generate' },
+                  { label: 'Room', value: 'create-room' },
+                  { label: 'Rooms', value: 'rooms' }
+                ]}
+                variant="underline"
+                activeTab="analytics"
+                isDark={true}
+                onTabChange={(value) => navigate(`/${value}`)}
+              />
+              
+              <div className="border-l border-gray-700 pl-3 ml-3 flex items-center gap-2">
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 text-white hover:bg-gray-900 rounded-lg px-4 py-2.5 text-base font-medium"
+                >
+                  <User className="h-5 w-5" />
+                  <span>{user?.username || 'User'}</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </header>

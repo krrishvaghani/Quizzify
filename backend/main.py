@@ -29,7 +29,7 @@ from pptx import Presentation
 from docx import Document
 import google.generativeai as genai
 
-app = FastAPI(title="Quizzify API")
+app = FastAPI(title="Quizify API")
 
 # CORS Configuration
 app.add_middleware(

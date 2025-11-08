@@ -129,9 +129,9 @@ export default function QuizGenerator() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => navigate(returnTo === 'create-room' ? '/create-room' : '/dashboard')}
@@ -147,9 +147,9 @@ export default function QuizGenerator() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Create Room Mode Banner */}
         {returnTo === 'create-room' && (
-          <div className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+          <div className="mb-6 bg-gray-100 border border-gray-300 rounded-lg p-4">
             <div className="flex items-center gap-3">
-              <div className="bg-purple-600 p-2 rounded-lg">
+              <div className="bg-gray-900 p-2 rounded-lg">
                 <CheckCircle className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -163,7 +163,7 @@ export default function QuizGenerator() {
         )}
         
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Generate Quiz
           </h1>
           <p className="text-lg text-gray-600">
@@ -171,7 +171,7 @@ export default function QuizGenerator() {
           </p>
         </div>
 
-        <div className="card max-w-2xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-2xl mx-auto">
           {/* File Upload Area */}
           <div className="mb-8">
             <label className="block text-sm font-medium text-gray-700 mb-3">
@@ -179,10 +179,10 @@ export default function QuizGenerator() {
             </label>
             
             <div
-              className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+              className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-all ${
                 selectedFile
-                  ? 'border-primary-500 bg-primary-50'
-                  : 'border-gray-300 hover:border-primary-400 bg-gray-50'
+                  ? 'border-gray-900 bg-gray-50'
+                  : 'border-gray-300 hover:border-gray-400 bg-gray-50'
               }`}
             >
               <input
@@ -245,7 +245,7 @@ export default function QuizGenerator() {
                 max="20"
                 value={numQuestions}
                 onChange={(e) => setNumQuestions(parseInt(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-gray-900"
                 disabled={loading}
               />
               <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -266,8 +266,8 @@ export default function QuizGenerator() {
                     disabled={loading}
                     className={`py-3 px-4 rounded-lg font-medium capitalize transition-all ${
                       difficulty === level
-                        ? 'bg-primary-600 text-white shadow-md'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-gray-900 text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     {level}
@@ -284,13 +284,13 @@ export default function QuizGenerator() {
                 <span className="text-sm font-medium text-gray-700">
                   Generating quiz...
                 </span>
-                <span className="text-sm font-medium text-primary-600">
+                <span className="text-sm font-medium text-gray-900">
                   {progress}%
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
                 <div
-                  className="bg-primary-600 h-3 rounded-full transition-all duration-300 ease-out"
+                  className="bg-gray-900 h-3 rounded-full transition-all duration-300 ease-out"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -301,7 +301,7 @@ export default function QuizGenerator() {
           <button
             onClick={handleGenerate}
             disabled={!selectedFile || loading}
-            className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -317,8 +317,8 @@ export default function QuizGenerator() {
           </button>
 
           {/* Info */}
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-800">
+          <div className="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg">
+            <p className="text-sm text-gray-700">
               <strong>Tip:</strong> For best results, upload documents with clear,
               well-structured content. The AI will analyze your document and generate
               relevant multiple-choice questions.

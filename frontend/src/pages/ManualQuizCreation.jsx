@@ -156,7 +156,7 @@ export default function ManualQuizCreation() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-teal-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -195,7 +195,7 @@ export default function ManualQuizCreation() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-r from-green-600 to-teal-600 p-4 rounded-2xl shadow-lg">
+            <div className="bg-gray-900 p-4 rounded-lg shadow-lg">
               <PenTool className="h-12 w-12 text-white" />
             </div>
           </div>
@@ -351,7 +351,7 @@ export default function ManualQuizCreation() {
         </div>
 
         {/* Summary */}
-        <div className="card mt-6 bg-gradient-to-r from-green-50 to-teal-50 border-2 border-green-200">
+        <div className="card mt-6 bg-gray-100 border-2 border-green-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Questions</p>

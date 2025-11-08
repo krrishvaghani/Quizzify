@@ -55,16 +55,16 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-white to-primary-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
           <div className="flex justify-center">
-            <div className="bg-primary-600 p-3 rounded-2xl shadow-lg">
+            <div className="bg-gray-900 p-3 rounded-lg shadow-sm">
               <BookOpen className="h-12 w-12 text-white" />
             </div>
           </div>
-          <h2 className="mt-6 text-4xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-3xl font-bold text-gray-900">
             Create Account
           </h2>
           <p className="mt-2 text-sm text-gray-600">
@@ -73,7 +73,7 @@ export default function Signup() {
         </div>
 
         {/* Form */}
-        <div className="card">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
           <form className="space-y-5" onSubmit={handleSubmit}>
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
@@ -183,7 +183,7 @@ export default function Signup() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'Creating Account...' : 'Create Account'}
               </button>
@@ -205,7 +205,7 @@ export default function Signup() {
             <div className="mt-6">
               <Link
                 to="/login"
-                className="w-full flex justify-center py-3 px-4 border border-primary-300 rounded-lg text-sm font-medium text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors duration-200"
+                className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
               >
                 Sign In Instead
               </Link>

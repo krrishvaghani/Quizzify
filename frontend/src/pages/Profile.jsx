@@ -129,9 +129,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => navigate('/dashboard')}
@@ -148,11 +148,11 @@ export default function Profile() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-2xl shadow-lg">
+            <div className="bg-gray-900 p-4 rounded-lg shadow-sm">
               <UserCircle className="h-16 w-16 text-white" />
             </div>
           </div>
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Profile Settings
           </h1>
           <p className="text-lg text-gray-600">
@@ -177,12 +177,12 @@ export default function Profile() {
 
         {/* Tabs */}
         <div className="mb-6 max-w-2xl mx-auto">
-          <div className="flex gap-2 border-b">
+          <div className="flex gap-2 border-b border-gray-200">
             <button
               onClick={() => setActiveTab('profile')}
               className={`px-6 py-3 font-semibold transition-colors ${
                 activeTab === 'profile'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
+                  ? 'text-gray-900 border-b-2 border-gray-900'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -195,7 +195,7 @@ export default function Profile() {
               onClick={() => setActiveTab('password')}
               className={`px-6 py-3 font-semibold transition-colors ${
                 activeTab === 'password'
-                  ? 'text-purple-600 border-b-2 border-purple-600'
+                  ? 'text-gray-900 border-b-2 border-gray-900'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -209,7 +209,7 @@ export default function Profile() {
 
         {/* Profile Form */}
         {activeTab === 'profile' && (
-          <div className="card max-w-2xl mx-auto">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-2xl mx-auto">
             <form onSubmit={handleProfileUpdate} className="space-y-6">
               {/* Username */}
               <div>
@@ -273,7 +273,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
@@ -293,7 +293,7 @@ export default function Profile() {
 
         {/* Password Form */}
         {activeTab === 'password' && (
-          <div className="card max-w-2xl mx-auto">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-2xl mx-auto">
             <form onSubmit={handlePasswordUpdate} className="space-y-6">
               {/* Current Password */}
               <div>
@@ -387,7 +387,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>

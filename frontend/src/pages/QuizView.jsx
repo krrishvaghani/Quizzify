@@ -115,7 +115,7 @@ export default function QuizView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-primary-100">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -177,7 +177,7 @@ export default function QuizView() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Share Link Section */}
         {!showResults && (
-          <div className="card mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+          <div className="card mb-6 bg-gray-100 border-purple-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-purple-600 p-2 rounded-lg">

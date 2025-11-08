@@ -266,7 +266,7 @@ export default function TakeQuizPublic() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading quiz...</p>
@@ -277,7 +277,7 @@ export default function TakeQuizPublic() {
 
   if (error && !quiz) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Not Found</h2>
@@ -297,10 +297,10 @@ export default function TakeQuizPublic() {
   // Student info form (before starting)
   if (!hasStarted && quiz) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-2xl mx-auto px-4 py-12">
           <div className="text-center mb-8">
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-2xl shadow-lg inline-block mb-4">
+            <div className="bg-gray-900 p-4 rounded-lg shadow-lg inline-block mb-4">
               <BookOpen className="h-12 w-12 text-white" />
             </div>
             <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
@@ -375,10 +375,10 @@ export default function TakeQuizPublic() {
   // Quiz results
   if (isSubmitted && result) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 py-12">
           <div className="text-center mb-8">
-            <div className="bg-gradient-to-r from-green-600 to-blue-600 p-4 rounded-2xl shadow-lg inline-block mb-4">
+            <div className="bg-gradient-to-r from-green-600 to-blue-600 p-4 rounded-lg shadow-lg inline-block mb-4">
               <Award className="h-12 w-12 text-white" />
             </div>
             <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
@@ -482,7 +482,7 @@ export default function TakeQuizPublic() {
     const timerSettings = quiz.timer_settings
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="min-h-screen bg-gray-50">
         {/* Timer and Progress Header */}
         <div className="bg-white shadow-sm sticky top-0 z-10">
           <div className="max-w-4xl mx-auto px-4 py-4">
@@ -528,7 +528,7 @@ export default function TakeQuizPublic() {
             {/* Progress Bar */}
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-purple-600 to-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-gray-900 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               ></div>
             </div>

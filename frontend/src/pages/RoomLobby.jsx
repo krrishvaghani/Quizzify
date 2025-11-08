@@ -69,7 +69,7 @@ export default function RoomLobby() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="h-12 w-12 text-purple-600 animate-spin" />
       </div>
     )
@@ -77,7 +77,7 @@ export default function RoomLobby() {
 
   if (!room) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Room not found</h2>
           <button onClick={() => navigate('/dashboard')} className="btn-primary">
@@ -91,7 +91,7 @@ export default function RoomLobby() {
   const isHost = room.host_email === user?.email
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -296,7 +296,7 @@ export default function RoomLobby() {
 
             {/* Waiting Message (Participants) */}
             {!isHost && (
-              <div className="card bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200">
+              <div className="card bg-gray-100 border-2 border-purple-200">
                 <p className="text-center text-purple-900 font-medium">
                   Waiting for host to start the quiz...
                 </p>

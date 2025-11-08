@@ -131,7 +131,7 @@ export default function CreateRoom() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -150,7 +150,7 @@ export default function CreateRoom() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-2xl shadow-lg">
+            <div className="bg-gray-900 p-4 rounded-lg shadow-lg">
               <Users className="h-12 w-12 text-white" />
             </div>
           </div>
@@ -448,7 +448,7 @@ export default function CreateRoom() {
                 }`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-3 rounded-lg">
+                  <div className="bg-gray-900 p-3 rounded-lg">
                     <Bot className="h-8 w-8 text-white" />
                   </div>
                   {quizCreationMethod === 'existing' && (
@@ -489,7 +489,7 @@ export default function CreateRoom() {
                 }`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-lg">
+                  <div className="bg-gray-900 p-3 rounded-lg">
                     <Bot className="h-8 w-8 text-white" />
                   </div>
                   {quizCreationMethod === 'ai' && (
@@ -530,7 +530,7 @@ export default function CreateRoom() {
                 }`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gradient-to-r from-green-600 to-teal-600 p-3 rounded-lg">
+                  <div className="bg-gray-900 p-3 rounded-lg">
                     <PenTool className="h-8 w-8 text-white" />
                   </div>
                   {quizCreationMethod === 'manual' && (

@@ -96,10 +96,10 @@ const Analytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <Activity className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading analytics...</p>
+          <Activity className="w-10 h-10 animate-spin text-black mx-auto mb-3" />
+          <p className="text-gray-500">Loading...</p>
         </div>
       </div>
     );
@@ -107,14 +107,14 @@ const Analytics = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-lg shadow-lg max-w-md text-center">
-          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Error</h2>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg border border-gray-200 max-w-md text-center">
+          <AlertTriangle className="w-10 h-10 text-red-600 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-black mb-2">Something went wrong</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => navigate('/dashboard')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800"
           >
             Back to Dashboard
           </button>
@@ -126,221 +126,209 @@ const Analytics = () => {
   const overallStats = calculateOverallStats();
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="bg-black text-white border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate('/dashboard')}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="text-white hover:text-gray-300"
               >
-                <ArrowLeft className="w-6 h-6" />
+                <ArrowLeft className="w-5 h-5" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold text-gray-800">Overall Analytics</h1>
-                <p className="text-gray-600 mt-1">Comprehensive view of all your quizzes</p>
+                <h1 className="text-xl font-bold">Analytics</h1>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Link
-                to="/dashboard"
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <Home className="w-5 w-5" />
-                Dashboard
-              </Link>
-            </div>
+            <Link
+              to="/dashboard"
+              className="flex items-center gap-2 px-3 py-2 bg-white text-black rounded-lg text-sm font-medium"
+            >
+              <Home className="w-4 h-4" />
+              Dashboard
+            </Link>
           </div>
         </div>
+      </header>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Overall Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <BookOpen className="w-6 h-6 text-blue-600" />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <BookOpen className="w-7 h-7 text-black" />
             </div>
-            <h3 className="text-gray-600 text-sm mb-1">Total Quizzes</h3>
-            <p className="text-3xl font-bold text-gray-800">{overallStats.totalQuizzes}</p>
-            <p className="text-sm text-gray-500 mt-1">
+            <h3 className="text-gray-500 text-sm mb-2">Total Quizzes</h3>
+            <p className="text-4xl font-bold text-black">{overallStats.totalQuizzes}</p>
+            <p className="text-sm text-gray-400 mt-2">
               {overallStats.quizzesWithAttempts} with attempts
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Users className="w-6 h-6 text-green-600" />
-              </div>
+          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <Users className="w-7 h-7 text-black" />
             </div>
-            <h3 className="text-gray-600 text-sm mb-1">Total Attempts</h3>
-            <p className="text-3xl font-bold text-gray-800">{overallStats.totalAttempts}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Across all quizzes
+            <h3 className="text-gray-500 text-sm mb-2">Total Attempts</h3>
+            <p className="text-4xl font-bold text-black">{overallStats.totalAttempts}</p>
+            <p className="text-sm text-gray-400 mt-2">
+              people took quizzes
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Award className="w-6 h-6 text-yellow-600" />
-              </div>
+          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <Award className="w-7 h-7 text-black" />
             </div>
-            <h3 className="text-gray-600 text-sm mb-1">Average Score</h3>
-            <p className="text-3xl font-bold text-gray-800">
+            <h3 className="text-gray-500 text-sm mb-2">Average Score</h3>
+            <p className="text-4xl font-bold text-black">
               {overallStats.avgScore}%
             </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Overall performance
+            <p className="text-sm text-gray-400 mt-2">
+              average performance
             </p>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex items-center justify-between mb-2">
-              <div className="p-3 bg-red-100 rounded-lg">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
+          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
+            <div className="flex items-center justify-between mb-3">
+              <AlertTriangle className="w-7 h-7 text-black" />
             </div>
-            <h3 className="text-gray-600 text-sm mb-1">Issues Found</h3>
-            <p className="text-3xl font-bold text-gray-800">
+            <h3 className="text-gray-500 text-sm mb-2">Issues Found</h3>
+            <p className="text-4xl font-bold text-black">
               {overallStats.totalProblematicQuestions}
             </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Problematic questions
+            <p className="text-sm text-gray-400 mt-2">
+              tricky questions
             </p>
           </div>
         </div>
 
         {/* No Data Message */}
         {allQuizzes.length === 0 && (
-          <div className="bg-white rounded-lg shadow-lg p-12 text-center">
-            <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">No Quizzes Yet</h3>
-            <p className="text-gray-600 mb-6">Create your first quiz to see analytics</p>
+          <div className="bg-white rounded-xl border-2 border-gray-200 p-16 text-center">
+            <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-6" />
+            <h3 className="text-2xl font-bold text-black mb-3">No quizzes yet</h3>
+            <p className="text-lg text-gray-500 mb-8">Create one to see analytics</p>
             <Link
               to="/generate"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-black text-white rounded-xl hover:bg-gray-800 text-lg font-medium border-2 border-black"
             >
               <FileText className="w-5 h-5" />
-              Generate Quiz
+              Create one
             </Link>
           </div>
         )}
 
         {/* Quiz List with Analytics */}
         {allQuizzes.length > 0 && (
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 bg-gray-100">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <BarChart3 className="w-6 h-6" />
-                Quiz Performance Overview
-              </h2>
+          <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
+            <div className="px-8 py-5 border-b-2 border-gray-200">
+              <h2 className="text-2xl font-bold text-black">Quiz Performance</h2>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-100 border-b-2 border-gray-300">
+                <thead className="bg-gray-50 border-b-2 border-gray-200">
                   <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Quiz Title</th>
-                    <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Questions</th>
-                    <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Attempts</th>
-                    <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Avg Score</th>
-                    <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Issues</th>
-                    <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Created</th>
-                    <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Actions</th>
+                    <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase">Quiz</th>
+                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Questions</th>
+                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Attempts</th>
+                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Avg Score</th>
+                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Issues</th>
+                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Created</th>
+                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y-2 divide-gray-200">
                   {allQuizzes.map((quiz) => {
                     const hasData = quiz.hasAttempts;
                     const analytics = quiz.analytics;
 
                     return (
                       <tr key={quiz.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4">
+                        <td className="px-8 py-5">
                           <div className="flex items-center gap-3">
-                            <BookOpen className="w-5 h-5 text-blue-600" />
+                            <BookOpen className="w-6 h-6 text-black" />
                             <div>
-                              <p className="font-medium text-gray-800">{quiz.title}</p>
+                              <p className="font-medium text-gray-800 text-base">{quiz.title}</p>
                               {!hasData && (
-                                <p className="text-xs text-gray-500">No attempts yet</p>
+                                <p className="text-sm text-gray-500">No attempts yet</p>
                               )}
                             </div>
                           </div>
                         </td>
                         
-                        <td className="px-6 py-4 text-center">
-                          <span className="text-gray-700 font-medium">
+                        <td className="px-8 py-5 text-center">
+                          <span className="text-gray-700 font-medium text-base">
                             {quiz.questions?.length || 0}
                           </span>
                         </td>
 
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-8 py-5 text-center">
                           {hasData ? (
-                            <div className="flex items-center justify-center gap-1">
-                              <Users className="w-4 h-4 text-gray-500" />
-                              <span className="font-medium text-gray-800">
+                            <div className="flex items-center justify-center gap-2">
+                              <Users className="w-5 h-5 text-gray-500" />
+                              <span className="font-medium text-gray-800 text-base">
                                 {analytics.total_attempts}
                               </span>
                             </div>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-gray-400 text-base">-</span>
                           )}
                         </td>
 
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-8 py-5 text-center">
                           {hasData ? (
-                            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getScoreColor(analytics.summary.percentage.mean)}`}>
+                            <span className={`px-4 py-2 rounded-full text-base font-semibold ${getScoreColor(analytics.summary.percentage.mean)}`}>
                               {Math.round(analytics.summary.percentage.mean)}%
                             </span>
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-gray-400 text-base">-</span>
                           )}
                         </td>
 
-                        <td className="px-6 py-4 text-center">
+                        <td className="px-8 py-5 text-center">
                           {hasData ? (
                             analytics.summary.problematic_questions_count > 0 ? (
-                              <div className="flex items-center justify-center gap-1">
-                                <AlertTriangle className="w-4 h-4 text-red-500" />
-                                <span className="text-red-600 font-semibold">
+                              <div className="flex items-center justify-center gap-2">
+                                <AlertTriangle className="w-5 h-5 text-red-500" />
+                                <span className="text-red-600 font-semibold text-base">
                                   {analytics.summary.problematic_questions_count}
                                 </span>
                               </div>
                             ) : (
-                              <div className="flex items-center justify-center gap-1">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                                <span className="text-green-600 font-semibold">0</span>
+                              <div className="flex items-center justify-center gap-2">
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                                <span className="text-green-600 font-semibold text-base">0</span>
                               </div>
                             )
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-gray-400 text-base">-</span>
                           )}
                         </td>
 
-                        <td className="px-6 py-4 text-center text-sm text-gray-600">
+                        <td className="px-8 py-5 text-center text-base text-gray-600">
                           {formatDate(quiz.created_at)}
                         </td>
 
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="px-8 py-5 text-center">
+                          <div className="flex items-center justify-center gap-3">
                             <Link
                               to={`/quiz/${quiz.id}`}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                              className="p-3 text-black hover:bg-gray-100 rounded-xl transition-colors border-2 border-gray-200"
                               title="View Quiz"
                             >
-                              <Eye className="w-5 h-5" />
+                              <Eye className="w-6 h-6" />
                             </Link>
                             {hasData && (
                               <Link
                                 to={`/quiz/${quiz.id}/analytics`}
-                                className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                className="p-3 text-black hover:bg-gray-100 rounded-xl transition-colors border-2 border-gray-200"
                                 title="Detailed Analytics"
                               >
-                                <BarChart3 className="w-5 h-5" />
+                                <BarChart3 className="w-6 h-6" />
                               </Link>
                             )}
                           </div>

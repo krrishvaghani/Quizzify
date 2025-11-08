@@ -63,7 +63,7 @@ export default function AttemptReview() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
           <p className="text-gray-600">Loading results...</p>
         </div>
       </div>
@@ -104,7 +104,7 @@ export default function AttemptReview() {
             </button>
             
             <div className="flex items-center gap-3">
-              <BookOpen className="h-6 w-6 text-purple-600" />
+              <BookOpen className="h-6 w-6 text-black" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">{attempt.quiz_title}</h1>
                 <p className="text-sm text-gray-500">Answer Review</p>
@@ -128,20 +128,20 @@ export default function AttemptReview() {
             
             <div className="mt-4 lg:mt-0 flex items-center gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">{attempt.percentage}%</div>
+                <div className="text-2xl font-bold text-black">{attempt.percentage}%</div>
                 <div className="text-sm text-gray-500">Score</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{formatTime(attempt.time_taken)}</div>
+                <div className="text-2xl font-bold text-black">{formatTime(attempt.time_taken)}</div>
                 <div className="text-sm text-gray-500">Time Taken</div>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-xl font-bold text-purple-600">{attempt.score}/{attempt.total_questions}</div>
-              <div className="text-sm text-purple-700">Total Score</div>
+            <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
+              <div className="text-xl font-bold text-black">{attempt.score}/{attempt.total_questions}</div>
+              <div className="text-sm text-gray-600">Total Score</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="text-xl font-bold text-green-600">{attempt.correct_answers.length}</div>

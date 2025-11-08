@@ -129,143 +129,119 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-black text-white border-b border-gray-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-white hover:text-gray-300"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span>Back to Dashboard</span>
+            <span>Back</span>
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-gray-900 p-4 rounded-lg shadow-sm">
-              <UserCircle className="h-16 w-16 text-white" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Profile Settings
-          </h1>
-          <p className="text-lg text-gray-600">
-            Manage your account information
-          </p>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-black mb-2">Your Profile</h1>
+          <p className="text-gray-500">Update your info and password</p>
         </div>
 
         {/* Success/Error Messages */}
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center gap-2 max-w-2xl mx-auto">
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center gap-2">
             <CheckCircle className="h-5 w-5" />
             <span>{success}</span>
           </div>
         )}
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2 max-w-2xl mx-auto">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Tabs */}
-        <div className="mb-6 max-w-2xl mx-auto">
-          <div className="flex gap-2 border-b border-gray-200">
+        <div className="mb-6">
+          <div className="flex gap-4 border-b border-gray-200">
             <button
               onClick={() => setActiveTab('profile')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-4 py-3 font-medium text-sm ${
                 activeTab === 'profile'
-                  ? 'text-gray-900 border-b-2 border-gray-900'
+                  ? 'text-black border-b-2 border-black'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Profile Information
-              </div>
+              Profile Info
             </button>
             <button
               onClick={() => setActiveTab('password')}
-              className={`px-6 py-3 font-semibold transition-colors ${
+              className={`px-4 py-3 font-medium text-sm ${
                 activeTab === 'password'
-                  ? 'text-gray-900 border-b-2 border-gray-900'
+                  ? 'text-black border-b-2 border-black'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Lock className="h-5 w-5" />
-                Change Password
-              </div>
+              Change Password
             </button>
           </div>
         </div>
 
         {/* Profile Form */}
         {activeTab === 'profile' && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-2xl mx-auto">
-            <form onSubmit={handleProfileUpdate} className="space-y-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <form onSubmit={handleProfileUpdate} className="space-y-5">
               {/* Username */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    Username
-                  </div>
+                <label className="block text-sm font-medium text-black mb-2">
+                  Username
                 </label>
                 <input
                   type="text"
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  className="input-field"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   required
                 />
               </div>
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    Email
-                  </div>
+                <label className="block text-sm font-medium text-black mb-2">
+                  Email
                 </label>
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="input-field"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
                   required
                   disabled
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  Email cannot be changed
+                <p className="text-xs text-gray-400 mt-1">
+                  Can't change this
                 </p>
               </div>
 
               {/* Full Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center gap-2">
-                    <UserCircle className="h-4 w-4" />
-                    Full Name
-                  </div>
+                <label className="block text-sm font-medium text-black mb-2">
+                  Full Name
                 </label>
                 <input
                   type="text"
                   name="full_name"
                   value={formData.full_name}
                   onChange={handleChange}
-                  className="input-field"
-                  placeholder="Enter your full name"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  placeholder="Your name"
                 />
               </div>
 
@@ -273,12 +249,12 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-black text-white rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    Updating...
+                    Saving...
                   </>
                 ) : (
                   <>
@@ -293,11 +269,11 @@ export default function Profile() {
 
         {/* Password Form */}
         {activeTab === 'password' && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 max-w-2xl mx-auto">
-            <form onSubmit={handlePasswordUpdate} className="space-y-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <form onSubmit={handlePasswordUpdate} className="space-y-5">
               {/* Current Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   Current Password
                 </label>
                 <div className="relative">
@@ -306,7 +282,7 @@ export default function Profile() {
                     name="current_password"
                     value={passwordData.current_password}
                     onChange={handlePasswordChange}
-                    className="input-field pr-10"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent pr-10"
                     required
                   />
                   <button
@@ -315,9 +291,9 @@ export default function Profile() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
                     {showPasswords.current ? (
-                      <EyeOff className="h-5 w-5" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </button>
                 </div>
@@ -325,7 +301,7 @@ export default function Profile() {
 
               {/* New Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   New Password
                 </label>
                 <div className="relative">
@@ -334,7 +310,7 @@ export default function Profile() {
                     name="new_password"
                     value={passwordData.new_password}
                     onChange={handlePasswordChange}
-                    className="input-field pr-10"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent pr-10"
                     required
                     minLength={6}
                   />
@@ -344,20 +320,20 @@ export default function Profile() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
                     {showPasswords.new ? (
-                      <EyeOff className="h-5 w-5" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </button>
                 </div>
-                <p className="text-sm text-gray-500 mt-1">
-                  Must be at least 6 characters
+                <p className="text-xs text-gray-400 mt-1">
+                  At least 6 characters
                 </p>
               </div>
 
               {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-black mb-2">
                   Confirm New Password
                 </label>
                 <div className="relative">
@@ -366,7 +342,7 @@ export default function Profile() {
                     name="confirm_password"
                     value={passwordData.confirm_password}
                     onChange={handlePasswordChange}
-                    className="input-field pr-10"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent pr-10"
                     required
                   />
                   <button
@@ -375,9 +351,9 @@ export default function Profile() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                   >
                     {showPasswords.confirm ? (
-                      <EyeOff className="h-5 w-5" />
+                      <EyeOff className="h-4 w-4" />
                     ) : (
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-4 w-4" />
                     )}
                   </button>
                 </div>
@@ -387,7 +363,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-black text-white rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <>

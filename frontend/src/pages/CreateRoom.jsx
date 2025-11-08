@@ -146,19 +146,14 @@ export default function CreateRoom() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-gray-900 p-4 rounded-lg shadow-lg">
-              <Users className="h-12 w-12 text-white" />
-            </div>
-          </div>
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">
-            Create Room
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-black mb-2">
+            Create a Room
           </h1>
-          <p className="text-lg text-gray-600">
-            Set up your multiplayer quiz room
+          <p className="text-gray-500">
+            Set up a quiz room for people to join
           </p>
         </div>
 
@@ -168,34 +163,34 @@ export default function CreateRoom() {
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center">
                 <div
-                  className={`flex items-center justify-center w-10 h-10 rounded-full font-bold transition-all ${
+                  className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold text-base ${
                     s <= step
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-200 text-gray-500'
+                      ? 'bg-black text-white'
+                      : 'bg-gray-100 text-gray-400'
                   }`}
                 >
                   {s}
                 </div>
                 {s < 3 && (
                   <div
-                    className={`w-20 h-1 mx-2 transition-all ${
-                      s < step ? 'bg-purple-600' : 'bg-gray-200'
+                    className={`w-16 h-0.5 mx-2 ${
+                      s < step ? 'bg-black' : 'bg-gray-200'
                     }`}
                   />
                 )}
               </div>
             ))}
           </div>
-          <div className="flex justify-center gap-16 mt-2">
-            <p className="text-sm font-medium text-gray-700">Room Details</p>
-            <p className="text-sm font-medium text-gray-700">Quiz Option</p>
-            <p className="text-sm font-medium text-gray-700">Configure Room</p>
+          <div className="flex justify-center gap-12 mt-3 text-xs text-gray-500">
+            <p>Details</p>
+            <p>Quiz</p>
+            <p>Settings</p>
           </div>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2 max-w-2xl mx-auto">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center gap-2">
             <AlertCircle className="h-5 w-5" />
             <span>{error}</span>
           </div>
@@ -206,7 +201,7 @@ export default function CreateRoom() {
           <div className="card max-w-2xl mx-auto space-y-6">
             <div>
               <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <SettingsIcon className="h-6 w-6 text-purple-600" />
+                <SettingsIcon className="h-6 w-6 text-black" />
                 Room Details & Settings
               </h2>
             </div>
@@ -251,9 +246,9 @@ export default function CreateRoom() {
 
               {/* Enable Timer */}
               <div className="mb-4">
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-purple-600" />
+                    <Clock className="h-5 w-5 text-black" />
                     <div>
                       <p className="font-medium text-gray-900">Enable Timer</p>
                       <p className="text-sm text-gray-500">
@@ -265,7 +260,7 @@ export default function CreateRoom() {
                     onClick={() => handleSettingToggle('enable_timer')}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                       formData.settings.enable_timer
-                        ? 'bg-purple-600'
+                        ? 'bg-black'
                         : 'bg-gray-300'
                     }`}
                   >
@@ -293,7 +288,7 @@ export default function CreateRoom() {
                       onChange={(e) =>
                         handleSettingChange('timer_duration', parseInt(e.target.value))
                       }
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
                     />
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
                       <span>15s</span>
@@ -304,9 +299,9 @@ export default function CreateRoom() {
               </div>
 
               {/* Shuffle Questions */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4 border border-gray-200">
                 <div className="flex items-center gap-3">
-                  <Shuffle className="h-5 w-5 text-purple-600" />
+                  <Shuffle className="h-5 w-5 text-black" />
                   <div>
                     <p className="font-medium text-gray-900">Shuffle Questions</p>
                     <p className="text-sm text-gray-500">
@@ -318,7 +313,7 @@ export default function CreateRoom() {
                   onClick={() => handleSettingToggle('shuffle_questions')}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     formData.settings.shuffle_questions
-                      ? 'bg-purple-600'
+                      ? 'bg-black'
                       : 'bg-gray-300'
                   }`}
                 >
@@ -333,9 +328,9 @@ export default function CreateRoom() {
               </div>
 
               {/* Shuffle Options */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4 border border-gray-200">
                 <div className="flex items-center gap-3">
-                  <RotateCw className="h-5 w-5 text-purple-600" />
+                  <RotateCw className="h-5 w-5 text-black" />
                   <div>
                     <p className="font-medium text-gray-900">Shuffle Options</p>
                     <p className="text-sm text-gray-500">
@@ -347,7 +342,7 @@ export default function CreateRoom() {
                   onClick={() => handleSettingToggle('shuffle_options')}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     formData.settings.shuffle_options
-                      ? 'bg-purple-600'
+                      ? 'bg-black'
                       : 'bg-gray-300'
                   }`}
                 >
@@ -362,12 +357,12 @@ export default function CreateRoom() {
               </div>
 
               {/* Show Results Immediately */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mb-4 border border-gray-200">
                 <div className="flex items-center gap-3">
                   {formData.settings.show_results_immediately ? (
-                    <Eye className="h-5 w-5 text-purple-600" />
+                    <Eye className="h-5 w-5 text-black" />
                   ) : (
-                    <EyeOff className="h-5 w-5 text-purple-600" />
+                    <EyeOff className="h-5 w-5 text-black" />
                   )}
                   <div>
                     <p className="font-medium text-gray-900">Show Results Immediately</p>
@@ -380,7 +375,7 @@ export default function CreateRoom() {
                   onClick={() => handleSettingToggle('show_results_immediately')}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     formData.settings.show_results_immediately
-                      ? 'bg-purple-600'
+                      ? 'bg-black'
                       : 'bg-gray-300'
                   }`}
                 >
@@ -395,9 +390,9 @@ export default function CreateRoom() {
               </div>
 
               {/* Attempts Allowed */}
-              <div className="p-4 bg-gray-50 rounded-lg">
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <label className="block text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-purple-600" />
+                  <Trophy className="h-5 w-5 text-black" />
                   Attempts Allowed
                 </label>
                 <div className="flex gap-3">
@@ -405,10 +400,10 @@ export default function CreateRoom() {
                     <button
                       key={num}
                       onClick={() => handleSettingChange('attempts_allowed', num)}
-                      className={`flex-1 py-3 rounded-lg font-medium transition-all ${
+                      className={`flex-1 py-3 rounded-lg font-medium transition-all border ${
                         formData.settings.attempts_allowed === num
-                          ? 'bg-purple-600 text-white shadow-md'
-                          : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-300'
+                          ? 'bg-black text-white border-black'
+                          : 'bg-white text-gray-700 hover:bg-gray-100 border-gray-300'
                       }`}
                     >
                       {num}
@@ -443,21 +438,21 @@ export default function CreateRoom() {
                 onClick={() => setQuizCreationMethod('existing')}
                 className={`relative p-6 rounded-xl border-2 transition-all text-left ${
                   quizCreationMethod === 'existing'
-                    ? 'border-purple-500 bg-purple-50 shadow-lg scale-105'
-                    : 'border-gray-300 hover:border-purple-400 hover:shadow-md'
+                    ? 'border-black bg-gray-50'
+                    : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gray-900 p-3 rounded-lg">
+                  <div className="bg-black p-3 rounded-lg">
                     <Bot className="h-8 w-8 text-white" />
                   </div>
                   {quizCreationMethod === 'existing' && (
-                    <CheckCircle className="h-6 w-6 text-purple-600" />
+                    <CheckCircle className="h-6 w-6 text-black" />
                   )}
                 </div>
 
                 <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  📚 Select Existing Quiz
+                  Select Existing Quiz
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Choose from your previously created quizzes
@@ -465,15 +460,15 @@ export default function CreateRoom() {
 
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-black mt-0.5 flex-shrink-0" />
                     <span>Quick setup</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-black mt-0.5 flex-shrink-0" />
                     <span>Use existing quizzes</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-black mt-0.5 flex-shrink-0" />
                     <span>Start room instantly</span>
                   </li>
                 </ul>
@@ -484,21 +479,21 @@ export default function CreateRoom() {
                 onClick={() => setQuizCreationMethod('ai')}
                 className={`relative p-6 rounded-xl border-2 transition-all text-left ${
                   quizCreationMethod === 'ai'
-                    ? 'border-purple-500 bg-purple-50 shadow-lg scale-105'
-                    : 'border-gray-300 hover:border-purple-400 hover:shadow-md'
+                    ? 'border-black bg-gray-50'
+                    : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gray-900 p-3 rounded-lg">
+                  <div className="bg-black p-3 rounded-lg">
                     <Bot className="h-8 w-8 text-white" />
                   </div>
                   {quizCreationMethod === 'ai' && (
-                    <CheckCircle className="h-6 w-6 text-purple-600" />
+                    <CheckCircle className="h-6 w-6 text-black" />
                   )}
                 </div>
 
                 <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  🤖 AI Generated Quiz
+                  AI Generated Quiz
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Upload documents and let AI generate questions
@@ -506,15 +501,15 @@ export default function CreateRoom() {
 
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-black mt-0.5 flex-shrink-0" />
                     <span>Upload documents</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-black mt-0.5 flex-shrink-0" />
                     <span>AI generates questions</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-black mt-0.5 flex-shrink-0" />
                     <span>Edit & customize</span>
                   </li>
                 </ul>
@@ -525,21 +520,21 @@ export default function CreateRoom() {
                 onClick={() => setQuizCreationMethod('manual')}
                 className={`relative p-6 rounded-xl border-2 transition-all text-left ${
                   quizCreationMethod === 'manual'
-                    ? 'border-purple-500 bg-purple-50 shadow-lg scale-105'
-                    : 'border-gray-300 hover:border-purple-400 hover:shadow-md'
+                    ? 'border-black bg-gray-50'
+                    : 'border-gray-300 hover:border-gray-400'
                 }`}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="bg-gray-900 p-3 rounded-lg">
+                  <div className="bg-black p-3 rounded-lg">
                     <PenTool className="h-8 w-8 text-white" />
                   </div>
                   {quizCreationMethod === 'manual' && (
-                    <CheckCircle className="h-6 w-6 text-purple-600" />
+                    <CheckCircle className="h-6 w-6 text-black" />
                   )}
                 </div>
 
                 <h3 className="text-lg font-bold text-gray-900 mb-2">
-                  ✏️ Create New Quiz
+                  Create New Quiz
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
                   Build your quiz from scratch manually
@@ -547,15 +542,15 @@ export default function CreateRoom() {
 
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-black mt-0.5 flex-shrink-0" />
                     <span>Full control</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-black mt-0.5 flex-shrink-0" />
                     <span>Custom questions</span>
                   </li>
                   <li className="flex items-start gap-2">
-                    <ArrowRight className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                    <ArrowRight className="h-4 w-4 text-black mt-0.5 flex-shrink-0" />
                     <span>Add explanations</span>
                   </li>
                 </ul>

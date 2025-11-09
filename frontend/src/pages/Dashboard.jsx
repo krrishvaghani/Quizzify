@@ -18,6 +18,7 @@ import {
   Edit3,
   Sparkles,
   Target,
+  Eye,
 } from 'lucide-react';
 import AnimatedTabs from '../components/AnimatedTabs';
 
@@ -87,10 +88,10 @@ export default function Dashboard() {
               <AnimatedTabs
                 tabs={[
                   { label: 'Dashboard', value: 'dashboard' },
-                  { label: 'Analytics', value: 'analytics' },
                   { label: 'Create Quiz', value: 'generate' },
                   { label: 'Room', value: 'create-room' },
-                  { label: 'Rooms', value: 'rooms' }
+                  { label: 'Rooms', value: 'rooms' },
+                  { label: 'Analytics', value: 'analytics' }
                 ]}
                 variant="underline"
                 activeTab="dashboard"
@@ -219,13 +220,6 @@ export default function Dashboard() {
               <PlusCircle className="h-5 w-5 text-black" />
               <span className="text-sm font-medium text-black">New Room</span>
             </Link>
-            <Link
-              to="/analytics"
-              className="flex flex-col items-center gap-2 p-4 bg-gray-100 rounded-lg hover:bg-gray-200 border border-gray-200"
-            >
-              <BarChart3 className="h-5 w-5 text-black" />
-              <span className="text-sm font-medium text-black">Analytics</span>
-            </Link>
           </div>
         </div>
 
@@ -292,17 +286,10 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2">
                       <Link
                         to={`/quiz/${quiz.id}`}
-                        className="px-3 py-2 bg-black text-white rounded-lg hover:bg-gray-800 flex items-center gap-2 text-sm font-medium border border-black"
+                        className="px-3 py-2 bg-black text-white rounded-lg hover:bg-gray-800 flex items-center gap-2 text-sm font-medium"
                       >
-                        <FileText className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                         View
-                      </Link>
-                      <Link
-                        to={`/quiz/${quiz.id}/analytics`}
-                        className="px-3 py-2 bg-white text-black border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-sm font-medium"
-                      >
-                        <BarChart3 className="h-4 w-4" />
-                        Analytics
                       </Link>
                       <button
                         onClick={() => handleDelete(quiz.id)}

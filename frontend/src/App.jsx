@@ -8,8 +8,6 @@ import QuizGenerator from './pages/QuizGenerator'
 import QuizView from './pages/QuizView'
 import QuizEditor from './pages/QuizEditor'
 import QuizExport from './pages/QuizExport'
-import Analytics from './pages/Analytics'
-import QuizAnalytics from './pages/QuizAnalytics'
 import CreateRoom from './pages/CreateRoom'
 import RoomsList from './pages/RoomsList'
 import RoomLobby from './pages/RoomLobby'
@@ -17,6 +15,8 @@ import ManualQuizCreation from './pages/ManualQuizCreation'
 import Profile from './pages/Profile'
 import TakeQuizPublic from './pages/TakeQuizPublic'
 import AttemptReview from './pages/AttemptReview'
+import Analytics from './pages/Analytics'
+import QuizAnalytics from './pages/QuizAnalytics'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 function PrivateRoute({ children }) {
@@ -37,14 +37,6 @@ function App() {
             element={
               <PrivateRoute>
                 <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/analytics"
-            element={
-              <PrivateRoute>
-                <Analytics />
               </PrivateRoute>
             }
           />
@@ -77,14 +69,6 @@ function App() {
             element={
               <PrivateRoute>
                 <QuizExport />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/quiz/:quizId/analytics"
-            element={
-              <PrivateRoute>
-                <QuizAnalytics />
               </PrivateRoute>
             }
           />
@@ -125,6 +109,22 @@ function App() {
             element={
               <PrivateRoute>
                 <Profile />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/analytics"
+            element={
+              <PrivateRoute>
+                <Analytics />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/analytics/:quizId"
+            element={
+              <PrivateRoute>
+                <QuizAnalytics />
               </PrivateRoute>
             }
           />

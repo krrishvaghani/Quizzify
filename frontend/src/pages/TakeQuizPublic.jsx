@@ -255,32 +255,35 @@ export default function TakeQuizPublic() {
   const handleSubmit = async () => {
     try {
       setLoading(true)
+      setError('')
       
       // Save time for current question before submitting
+      let finalTimePerQuestion = { ...timePerQuestion }
       if (questionStartTime) {
         const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000)
-        const finalTimePerQuestion = {
-          ...timePerQuestion,
-          [currentQuestion]: (timePerQuestion[currentQuestion] || 0) + timeSpent
-        }
-        
-        const submission = {
-          quiz_id: quizId,
-          student_name: studentInfo.name,
-          student_email: studentInfo.email,
-          answers: answers,
-          time_taken: timeLeft !== null ? (1800 - timeLeft) : 0,
-          time_per_question: finalTimePerQuestion
-        }
-
-        const result = await quizAPI.submitQuizPublic(submission)
-        setResult(result)
-        setIsSubmitted(true)
-        
-        // Clear saved progress
-        localStorage.removeItem(storageKey)
+        finalTimePerQuestion[currentQuestion] = (finalTimePerQuestion[currentQuestion] || 0) + timeSpent
       }
+      
+      const submission = {
+        quiz_id: quizId,
+        student_name: studentInfo.name,
+        student_email: studentInfo.email,
+        answers: answers,
+        time_taken: timeLeft !== null ? (1800 - timeLeft) : 0,
+        time_per_question: finalTimePerQuestion
+      }
+
+      console.log('📤 Submitting quiz:', submission)
+      const result = await quizAPI.submitQuizPublic(submission)
+      console.log('✅ Quiz submitted successfully:', result)
+      
+      setResult(result)
+      setIsSubmitted(true)
+      
+      // Clear saved progress
+      localStorage.removeItem(storageKey)
     } catch (err) {
+      console.error('❌ Submit error:', err)
       setError('Failed to submit quiz. Please try again.')
     } finally {
       setLoading(false)

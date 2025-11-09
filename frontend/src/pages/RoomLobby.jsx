@@ -16,6 +16,10 @@ import {
   ArrowLeft,
   UserCheck,
   Settings,
+  Medal,
+  Timer,
+  Target,
+  TrendingUp,
 } from 'lucide-react'
 
 export default function RoomLobby() {
@@ -26,12 +30,21 @@ export default function RoomLobby() {
   const [loading, setLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [starting, setStarting] = useState(false)
+  const [activeTab, setActiveTab] = useState('participants')
+  const [leaderboard, setLeaderboard] = useState(null)
+  const [loadingLeaderboard, setLoadingLeaderboard] = useState(false)
 
   useEffect(() => {
     fetchRoom()
-    const interval = setInterval(fetchRoom, 3000) // Poll every 3 seconds
+    fetchLeaderboard()
+    const interval = setInterval(() => {
+      fetchRoom()
+      if (activeTab === 'leaderboard') {
+        fetchLeaderboard()
+      }
+    }, 3000) // Poll every 3 seconds
     return () => clearInterval(interval)
-  }, [id])
+  }, [id, activeTab])
 
   const fetchRoom = async () => {
     try {
@@ -46,6 +59,19 @@ export default function RoomLobby() {
       console.error('Error fetching room:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchLeaderboard = async () => {
+    if (loadingLeaderboard) return
+    setLoadingLeaderboard(true)
+    try {
+      const data = await roomAPI.getLeaderboard(id)
+      setLeaderboard(data)
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error)
+    } finally {
+      setLoadingLeaderboard(false)
     }
   }
 
@@ -167,46 +193,176 @@ export default function RoomLobby() {
               )}
             </div>
 
-            {/* Participants Card */}
+            {/* Participants & Leaderboard Card */}
             <div className="card">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                  <Users className="h-6 w-6 text-purple-600" />
-                  Participants ({room.participants_details?.length || 0}/{room.max_participants})
-                </h2>
+              {/* Tabs */}
+              <div className="flex border-b border-gray-200 mb-6">
+                <button
+                  onClick={() => setActiveTab('participants')}
+                  className={`flex-1 py-3 px-4 text-center font-medium transition-colors flex items-center justify-center gap-2 ${
+                    activeTab === 'participants'
+                      ? 'text-purple-600 border-b-2 border-purple-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Users className="h-5 w-5" />
+                  Participants ({room.participants_details?.length || 0})
+                </button>
+                <button
+                  onClick={() => setActiveTab('leaderboard')}
+                  className={`flex-1 py-3 px-4 text-center font-medium transition-colors flex items-center justify-center gap-2 ${
+                    activeTab === 'leaderboard'
+                      ? 'text-purple-600 border-b-2 border-purple-600'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Trophy className="h-5 w-5" />
+                  Leaderboard
+                </button>
               </div>
 
-              <div className="space-y-2">
-                {room.participants_details?.map((participant) => (
-                  <div
-                    key={participant.email}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
-                  >
-                    <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                      {participant.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">
-                        {participant.username}
-                        {participant.email === room.host_email && (
-                          <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
-                            Host
-                          </span>
+              {/* Participants Tab */}
+              {activeTab === 'participants' && (
+                <div className="space-y-2">
+                  {room.participants_details?.map((participant) => (
+                    <div
+                      key={participant.email}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                        {participant.username.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">
+                          {participant.username}
+                          {participant.email === room.host_email && (
+                            <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+                              Host
+                            </span>
+                          )}
+                        </p>
+                        {participant.full_name && (
+                          <p className="text-sm text-gray-500">{participant.full_name}</p>
                         )}
-                      </p>
-                      {participant.full_name && (
-                        <p className="text-sm text-gray-500">{participant.full_name}</p>
-                      )}
+                      </div>
+                      <UserCheck className="h-5 w-5 text-green-600" />
                     </div>
-                    <UserCheck className="h-5 w-5 text-green-600" />
-                  </div>
-                ))}
-              </div>
+                  ))}
 
-              {room.participants_details?.length === 0 && (
-                <p className="text-center text-gray-500 py-8">
-                  Waiting for participants to join...
-                </p>
+                  {room.participants_details?.length === 0 && (
+                    <p className="text-center text-gray-500 py-8">
+                      Waiting for participants to join...
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Leaderboard Tab */}
+              {activeTab === 'leaderboard' && (
+                <div>
+                  {loadingLeaderboard && !leaderboard ? (
+                    <div className="flex justify-center py-8">
+                      <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
+                    </div>
+                  ) : leaderboard && leaderboard.leaderboard.length > 0 ? (
+                    <div className="space-y-3">
+                      {leaderboard.leaderboard.map((entry, idx) => {
+                        const getRankIcon = (rank) => {
+                          if (rank === 1) return <Medal className="h-6 w-6 text-yellow-500" />
+                          if (rank === 2) return <Medal className="h-6 w-6 text-gray-400" />
+                          if (rank === 3) return <Medal className="h-6 w-6 text-amber-600" />
+                          return <span className="text-gray-500 font-bold text-lg">{rank}</span>
+                        }
+
+                        return (
+                          <div
+                            key={entry.email}
+                            className={`p-4 rounded-lg border-2 transition-all ${
+                              entry.has_submitted
+                                ? idx === 0
+                                  ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300'
+                                  : 'bg-white border-gray-200 hover:border-purple-300'
+                                : 'bg-gray-50 border-gray-200 opacity-75'
+                            }`}
+                          >
+                            <div className="flex items-center gap-4">
+                              {/* Rank */}
+                              <div className="w-10 flex justify-center">
+                                {getRankIcon(entry.rank)}
+                              </div>
+
+                              {/* User Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <p className="font-bold text-gray-900 truncate">
+                                    {entry.username}
+                                  </p>
+                                  {entry.email === user?.email && (
+                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                                      You
+                                    </span>
+                                  )}
+                                </div>
+                                {entry.has_submitted ? (
+                                  <div className="flex items-center gap-3 mt-1 text-sm">
+                                    <span className="flex items-center gap-1 text-gray-600">
+                                      <Target className="h-3.5 w-3.5" />
+                                      {entry.correct_answers}/{entry.total_questions}
+                                    </span>
+                                    <span className="flex items-center gap-1 text-gray-600">
+                                      <Timer className="h-3.5 w-3.5" />
+                                      {entry.time_taken}s
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-gray-500 mt-1">Not submitted yet</p>
+                                )}
+                              </div>
+
+                              {/* Score */}
+                              {entry.has_submitted && (
+                                <div className="text-right">
+                                  <p className="text-2xl font-bold text-gray-900">
+                                    {entry.score}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    {entry.percentage}%
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+
+                      {/* Stats Summary */}
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="text-center p-3 bg-purple-50 rounded-lg">
+                            <p className="text-sm text-gray-600 mb-1">Completed</p>
+                            <p className="text-2xl font-bold text-purple-600">
+                              {leaderboard.leaderboard.filter(e => e.has_submitted).length}
+                            </p>
+                          </div>
+                          <div className="text-center p-3 bg-gray-100 rounded-lg">
+                            <p className="text-sm text-gray-600 mb-1">In Progress</p>
+                            <p className="text-2xl font-bold text-gray-700">
+                              {leaderboard.leaderboard.filter(e => !e.has_submitted).length}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-gray-500">No quiz attempts yet</p>
+                      <p className="text-sm text-gray-400 mt-1">
+                        Scores will appear here once participants start the quiz
+                      </p>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

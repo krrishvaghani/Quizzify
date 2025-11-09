@@ -175,6 +175,10 @@ export const roomAPI = {
     const response = await api.delete(`/rooms/${id}`)
     return response.data
   },
+  getLeaderboard: async (id) => {
+    const response = await api.get(`/rooms/${id}/leaderboard`)
+    return response.data
+  },
 }
 
 export default api

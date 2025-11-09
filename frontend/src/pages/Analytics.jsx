@@ -1,465 +1,257 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { 
-  BarChart3, TrendingUp, Users, Clock, AlertTriangle, Download, 
-  ArrowLeft, FileText, Calendar, CheckCircle, XCircle, MinusCircle,
-  Award, Target, Activity, BookOpen, Home, Eye, LogOut, User, Plus, PlusCircle
-} from 'lucide-react';
-import api from '../utils/api';
+﻿import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import AnimatedTabs from '../components/AnimatedTabs';
+import { 
+  BarChart3, 
+  ArrowLeft, 
+  Loader2, 
+  Trophy, 
+  Users, 
+  FileText, 
+  TrendingUp,
+  Activity,
+  Clock
+} from 'lucide-react';
 
-const Analytics = () => {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const [allQuizzes, setAllQuizzes] = useState([]);
+const API_URL = 'http://localhost:8000';
+
+export default function Analytics() {
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
-    fetchAllQuizzesAnalytics();
+    fetchAnalytics();
   }, []);
 
-  const fetchAllQuizzesAnalytics = async () => {
+  const fetchAnalytics = async () => {
     try {
-      setLoading(true);
-      const response = await api.get('/quizzes');
-      const quizzes = response.data.quizzes || [];
-      
-      // Fetch analytics for each quiz
-      const quizzesWithAnalytics = await Promise.all(
-        quizzes.map(async (quiz) => {
-          try {
-            const analyticsResponse = await api.get(`/quizzes/${quiz.id}/analytics`);
-            return {
-              ...quiz,
-              analytics: analyticsResponse.data,
-              hasAttempts: analyticsResponse.data.total_attempts > 0
-            };
-          } catch (err) {
-            return {
-              ...quiz,
-              analytics: null,
-              hasAttempts: false
-            };
-          }
-        })
-      );
-      
-      setAllQuizzes(quizzesWithAnalytics);
-      setError('');
-    } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to load analytics');
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/analytics/user/overview`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch analytics');
+
+      const data = await response.json();
+      setAnalytics(data);
+    } catch (error) {
+      console.error('Error fetching analytics:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const calculateOverallStats = () => {
-    const quizzesWithAttempts = allQuizzes.filter(q => q.hasAttempts);
-    
-    if (quizzesWithAttempts.length === 0) {
-      return {
-        totalQuizzes: allQuizzes.length,
-        totalAttempts: 0,
-        avgScore: 0,
-        totalProblematicQuestions: 0,
-        quizzesWithAttempts: 0
-      };
-    }
-
-    const totalAttempts = quizzesWithAttempts.reduce((sum, q) => sum + q.analytics.total_attempts, 0);
-    const avgScore = quizzesWithAttempts.reduce((sum, q) => sum + q.analytics.summary.percentage.mean, 0) / quizzesWithAttempts.length;
-    const totalProblematicQuestions = quizzesWithAttempts.reduce((sum, q) => sum + q.analytics.summary.problematic_questions_count, 0);
-
-    return {
-      totalQuizzes: allQuizzes.length,
-      totalAttempts,
-      avgScore: avgScore.toFixed(1),
-      totalProblematicQuestions,
-      quizzesWithAttempts: quizzesWithAttempts.length
-    };
-  };
-
-  const getScoreColor = (percentage) => {
-    if (percentage >= 70) return 'text-green-600 bg-green-50';
-    if (percentage >= 40) return 'text-yellow-600 bg-yellow-50';
-    return 'text-red-600 bg-red-50';
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <Activity className="w-12 h-12 animate-spin text-black mx-auto mb-4" />
-          <p className="text-gray-700 font-bold text-lg">Loading analytics...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white p-10 rounded-3xl border-2 border-gray-200 max-w-md text-center shadow-xl">
-          <div className="bg-red-50 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-10 h-10 text-red-600" />
-          </div>
-          <h2 className="text-2xl font-black text-black mb-3">Something went wrong</h2>
-          <p className="text-gray-600 mb-6 font-medium">{error}</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 bg-black text-white rounded-xl hover:bg-gray-800 font-bold shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-          >
-            Back to Dashboard
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const overallStats = calculateOverallStats();
-
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-black text-white border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
+      <div className="border-b border-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="text-white hover:text-gray-300"
+              <Link
+                to="/dashboard"
+                className="p-2 hover:bg-gray-100 rounded-lg border border-black"
               >
-                <ArrowLeft className="w-6 h-6" />
-              </button>
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
               <div>
-                <h1 className="text-2xl font-bold">Analytics</h1>
-              </div>
-            </div>
-            <div className="flex items-center gap-6">
-              <AnimatedTabs
-                tabs={[
-                  { label: 'Dashboard', value: 'dashboard' },
-                  { label: 'Analytics', value: 'analytics' },
-                  { label: 'Create Quiz', value: 'generate' },
-                  { label: 'Room', value: 'create-room' },
-                  { label: 'Rooms', value: 'rooms' }
-                ]}
-                variant="underline"
-                activeTab="analytics"
-                isDark={true}
-                onTabChange={(value) => navigate(`/${value}`)}
-              />
-              
-              <div className="border-l border-gray-700 pl-3 ml-3 flex items-center gap-2">
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-2 text-white hover:bg-gray-900 rounded-lg px-4 py-2.5 text-base font-medium"
-                >
-                  <User className="h-5 w-5" />
-                  <span>{user?.username || 'User'}</span>
-                </Link>
+                <h1 className="text-3xl font-bold text-black">Analytics</h1>
+                <p className="text-gray-600 mt-1">View MCQ performance statistics</p>
               </div>
             </div>
           </div>
         </div>
-      </header>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Overall Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <BookOpen className="w-7 h-7 text-black" />
-            </div>
-            <h3 className="text-gray-500 text-sm mb-2">Total Quizzes</h3>
-            <p className="text-4xl font-bold text-black">{overallStats.totalQuizzes}</p>
-            <p className="text-sm text-gray-400 mt-2">
-              {overallStats.quizzesWithAttempts} with attempts
-            </p>
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-8 w-8 animate-spin text-black" />
           </div>
-
-          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <Users className="w-7 h-7 text-black" />
-            </div>
-            <h3 className="text-gray-500 text-sm mb-2">Total Attempts</h3>
-            <p className="text-4xl font-bold text-black">{overallStats.totalAttempts}</p>
-            <p className="text-sm text-gray-400 mt-2">
-              people took quizzes
-            </p>
-          </div>
-
-          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <Award className="w-7 h-7 text-black" />
-            </div>
-            <h3 className="text-gray-500 text-sm mb-2">Average Score</h3>
-            <p className="text-4xl font-bold text-black">
-              {overallStats.avgScore}%
-            </p>
-            <p className="text-sm text-gray-400 mt-2">
-              average performance
-            </p>
-          </div>
-
-          <div className="bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <AlertTriangle className="w-7 h-7 text-black" />
-            </div>
-            <h3 className="text-gray-500 text-sm mb-2">Issues Found</h3>
-            <p className="text-4xl font-bold text-black">
-              {overallStats.totalProblematicQuestions}
-            </p>
-            <p className="text-sm text-gray-400 mt-2">
-              tricky questions
-            </p>
-          </div>
-        </div>
-
-        {/* No Data Message */}
-        {allQuizzes.length === 0 && (
-          <div className="bg-white rounded-xl border-2 border-gray-200 p-16 text-center">
-            <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-6" />
-            <h3 className="text-2xl font-bold text-black mb-3">No quizzes yet</h3>
-            <p className="text-lg text-gray-500 mb-8">Create one to see analytics</p>
+        ) : !analytics || analytics.total_quizzes === 0 ? (
+          <div className="text-center py-20">
+            <BarChart3 className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-xl font-semibold text-black mb-2">No Quizzes Yet</h3>
+            <p className="text-gray-600 mb-6">Create a quiz to see analytics</p>
             <Link
-              to="/generate"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-black text-white rounded-xl hover:bg-gray-800 text-lg font-medium border-2 border-black"
+              to="/dashboard"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 border border-black"
             >
-              <FileText className="w-5 h-5" />
-              Create one
+              Go to Dashboard
             </Link>
           </div>
-        )}
+        ) : (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <FileText className="h-6 w-6 text-black" />
+                  <span className="text-gray-600 text-sm font-medium">Total Quizzes</span>
+                </div>
+                <p className="text-3xl font-bold text-black">{analytics.total_quizzes}</p>
+              </div>
 
-        {/* Quiz List with Analytics */}
-        {allQuizzes.length > 0 && (
-          <div className="bg-white rounded-xl border-2 border-gray-200 overflow-hidden">
-            <div className="px-8 py-5 border-b-2 border-gray-200">
-              <h2 className="text-2xl font-bold text-black">Quiz Performance</h2>
+              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <Activity className="h-6 w-6 text-black" />
+                  <span className="text-gray-600 text-sm font-medium">Total Attempts</span>
+                </div>
+                <p className="text-3xl font-bold text-black">{analytics.total_attempts}</p>
+              </div>
+
+              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <Users className="h-6 w-6 text-black" />
+                  <span className="text-gray-600 text-sm font-medium">Total Students</span>
+                </div>
+                <p className="text-3xl font-bold text-black">{analytics.total_students}</p>
+              </div>
+
+              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <Trophy className="h-6 w-6 text-black" />
+                  <span className="text-gray-600 text-sm font-medium">Average Score</span>
+                </div>
+                <p className="text-3xl font-bold text-black">{analytics.average_score}%</p>
+              </div>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b-2 border-gray-200">
-                  <tr>
-                    <th className="px-8 py-4 text-left text-sm font-medium text-gray-500 uppercase">Quiz</th>
-                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Questions</th>
-                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Attempts</th>
-                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Avg Score</th>
-                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Issues</th>
-                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Created</th>
-                    <th className="px-8 py-4 text-center text-sm font-medium text-gray-500 uppercase">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y-2 divide-gray-200">
-                  {allQuizzes.map((quiz) => {
-                    const hasData = quiz.hasAttempts;
-                    const analytics = quiz.analytics;
-
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Score Distribution Chart */}
+              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+                <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  Score Distribution
+                </h3>
+                <div className="space-y-3">
+                  {Object.entries(analytics.score_distribution).map(([range, count]) => {
+                    const maxCount = Math.max(...Object.values(analytics.score_distribution));
+                    const percentage = maxCount > 0 ? (count / maxCount) * 100 : 0;
+                    
                     return (
-                      <tr key={quiz.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-3">
-                            <BookOpen className="w-6 h-6 text-black" />
-                            <div>
-                              <p className="font-medium text-gray-800 text-base">{quiz.title}</p>
-                              {!hasData && (
-                                <p className="text-sm text-gray-500">No attempts yet</p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        
-                        <td className="px-8 py-5 text-center">
-                          <span className="text-gray-700 font-medium text-base">
-                            {quiz.questions?.length || 0}
-                          </span>
-                        </td>
-
-                        <td className="px-8 py-5 text-center">
-                          {hasData ? (
-                            <div className="flex items-center justify-center gap-2">
-                              <Users className="w-5 h-5 text-gray-500" />
-                              <span className="font-medium text-gray-800 text-base">
-                                {analytics.total_attempts}
+                      <div key={range}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-gray-700">{range}%</span>
+                          <span className="text-sm font-bold text-black">{count} attempts</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-6">
+                          <div
+                            className="bg-black h-6 rounded-full flex items-center justify-end pr-2 transition-all"
+                            style={{ width: `${Math.max(percentage, 5)}%` }}
+                          >
+                            {count > 0 && (
+                              <span className="text-xs font-medium text-white">
+                                {Math.round((count / analytics.total_attempts) * 100)}%
                               </span>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 text-base">-</span>
-                          )}
-                        </td>
-
-                        <td className="px-8 py-5 text-center">
-                          {hasData ? (
-                            <span className={`px-4 py-2 rounded-full text-base font-semibold ${getScoreColor(analytics.summary.percentage.mean)}`}>
-                              {Math.round(analytics.summary.percentage.mean)}%
-                            </span>
-                          ) : (
-                            <span className="text-gray-400 text-base">-</span>
-                          )}
-                        </td>
-
-                        <td className="px-8 py-5 text-center">
-                          {hasData ? (
-                            analytics.summary.problematic_questions_count > 0 ? (
-                              <div className="flex items-center justify-center gap-2">
-                                <AlertTriangle className="w-5 h-5 text-red-500" />
-                                <span className="text-red-600 font-semibold text-base">
-                                  {analytics.summary.problematic_questions_count}
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="flex items-center justify-center gap-2">
-                                <CheckCircle className="w-5 h-5 text-green-500" />
-                                <span className="text-green-600 font-semibold text-base">0</span>
-                              </div>
-                            )
-                          ) : (
-                            <span className="text-gray-400 text-base">-</span>
-                          )}
-                        </td>
-
-                        <td className="px-8 py-5 text-center text-base text-gray-600">
-                          {formatDate(quiz.created_at)}
-                        </td>
-
-                        <td className="px-8 py-5 text-center">
-                          <div className="flex items-center justify-center gap-3">
-                            <Link
-                              to={`/quiz/${quiz.id}`}
-                              className="p-3 text-black hover:bg-gray-100 rounded-xl transition-colors border-2 border-gray-200"
-                              title="View Quiz"
-                            >
-                              <Eye className="w-6 h-6" />
-                            </Link>
-                            {hasData && (
-                              <Link
-                                to={`/quiz/${quiz.id}/analytics`}
-                                className="p-3 text-black hover:bg-gray-100 rounded-xl transition-colors border-2 border-gray-200"
-                                title="Detailed Analytics"
-                              >
-                                <BarChart3 className="w-6 h-6" />
-                              </Link>
                             )}
                           </div>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              </div>
+
+              {/* Quiz Performance Chart */}
+              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+                <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Quiz Performance
+                </h3>
+                <div className="space-y-3">
+                  {analytics.quiz_performance.slice(0, 5).map((quiz) => {
+                    // Cap the display percentage at 100% for proper UI rendering
+                    const displayScore = Math.min(Math.max(quiz.avg_score, 0), 100);
+                    const barWidth = Math.min(displayScore, 100);
+                    
+                    return (
+                      <div key={quiz.quiz_id}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-sm font-medium text-gray-700 truncate flex-1 max-w-[200px]" title={quiz.quiz_title}>
+                            {quiz.quiz_title}
+                          </span>
+                          <span className="text-sm font-bold text-black ml-2">{displayScore.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
+                          <div
+                            className="bg-black h-6 rounded-full flex items-center justify-end pr-2 transition-all duration-300"
+                            style={{ width: `${barWidth}%` }}
+                          >
+                            {quiz.attempts > 0 && barWidth > 15 && (
+                              <span className="text-xs font-medium text-white whitespace-nowrap">
+                                {quiz.attempts} {quiz.attempts === 1 ? 'attempt' : 'attempts'}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        {quiz.attempts > 0 && barWidth <= 15 && (
+                          <div className="text-xs text-gray-500 mt-1 text-right">
+                            {quiz.attempts} {quiz.attempts === 1 ? 'attempt' : 'attempts'}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {analytics.quiz_performance.length === 0 && (
+                    <p className="text-center text-gray-500 py-4">No quiz attempts yet</p>
+                  )}
+                </div>
+              </div>
             </div>
-          </div>
-        )}
 
-        {/* Performance Summary */}
-        {allQuizzes.filter(q => q.hasAttempts).length > 0 && (
-          <div className="mt-8 bg-white rounded-3xl shadow-xl p-8 border-2 border-gray-200">
-            <h3 className="text-2xl font-black text-black mb-6 flex items-center gap-3">
-              <TrendingUp className="w-7 h-7" />
-              Performance Summary
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Best Performing Quiz */}
-              {(() => {
-                const bestQuiz = allQuizzes
-                  .filter(q => q.hasAttempts)
-                  .reduce((best, current) => 
-                    !best || current.analytics.summary.percentage.mean > best.analytics.summary.percentage.mean 
-                      ? current 
-                      : best
-                  , null);
-
-                return bestQuiz && (
-                  <div className="p-6 bg-green-50 border-2 border-green-300 rounded-2xl shadow-md hover:shadow-lg transition-all">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Award className="w-6 h-6 text-green-600" />
-                      <h4 className="font-black text-green-800 text-lg">Best Performing</h4>
-                    </div>
-                    <p className="text-gray-800 font-bold mb-2">{bestQuiz.title}</p>
-                    <p className="text-3xl font-black text-green-600">
-                      {Math.round(bestQuiz.analytics.summary.percentage.mean)}%
-                    </p>
-                  </div>
-                );
-              })()}
-
-              {/* Most Attempts */}
-              {(() => {
-                const mostAttempts = allQuizzes
-                  .filter(q => q.hasAttempts)
-                  .reduce((max, current) => 
-                    !max || current.analytics.total_attempts > max.analytics.total_attempts 
-                      ? current 
-                      : max
-                  , null);
-
-                return mostAttempts && (
-                  <div className="p-6 bg-blue-50 border-2 border-blue-300 rounded-2xl shadow-md hover:shadow-lg transition-all">
-                    <div className="flex items-center gap-3 mb-3">
-                      <Users className="w-6 h-6 text-blue-600" />
-                      <h4 className="font-black text-blue-800 text-lg">Most Popular</h4>
-                    </div>
-                    <p className="text-gray-800 font-bold mb-2">{mostAttempts.title}</p>
-                    <p className="text-3xl font-black text-blue-600">
-                      {mostAttempts.analytics.total_attempts} attempts
-                    </p>
-                  </div>
-                );
-              })()}
-
-              {/* Needs Attention */}
-              {(() => {
-                const needsAttention = allQuizzes
-                  .filter(q => q.hasAttempts && q.analytics.summary.problematic_questions_count > 0)
-                  .reduce((max, current) => 
-                    !max || current.analytics.summary.problematic_questions_count > max.analytics.summary.problematic_questions_count 
-                      ? current 
-                      : max
-                  , null);
-
-                return needsAttention ? (
-                  <div className="p-6 bg-red-50 border-2 border-red-300 rounded-2xl shadow-md hover:shadow-lg transition-all">
-                    <div className="flex items-center gap-3 mb-3">
-                      <AlertTriangle className="w-6 h-6 text-red-600" />
-                      <h4 className="font-black text-red-800 text-lg">Needs Attention</h4>
-                    </div>
-                    <p className="text-gray-800 font-bold mb-2">{needsAttention.title}</p>
-                    <p className="text-3xl font-black text-red-600">
-                      {needsAttention.analytics.summary.problematic_questions_count} issues
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-6 bg-green-50 border-2 border-green-300 rounded-2xl shadow-md hover:shadow-lg transition-all">
-                    <div className="flex items-center gap-3 mb-3">
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                      <h4 className="font-black text-green-800 text-lg">All Good!</h4>
-                    </div>
-                    <p className="text-gray-800 font-bold mb-2">No issues found</p>
-                    <p className="text-sm text-green-700 font-semibold">
-                      All quizzes are performing well
-                    </p>
-                  </div>
-                );
-              })()}
-            </div>
+            {/* Recent Activity */}
+            {analytics.recent_activity.length > 0 && (
+              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+                <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
+                  <Clock className="h-5 w-5" />
+                  Recent Activity
+                </h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Quiz</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Student</th>
+                        <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Score</th>
+                        <th className="text-center py-3 px-4 text-sm font-semibold text-gray-700">Percentage</th>
+                        <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {analytics.recent_activity.map((activity, idx) => (
+                        <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 text-sm text-gray-900">{activity.quiz_title}</td>
+                          <td className="py-3 px-4 text-sm text-gray-700">{activity.student_name}</td>
+                          <td className="py-3 px-4 text-sm text-center font-medium text-black">
+                            {activity.score}/{activity.max_score}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                              activity.percentage >= 80 ? 'bg-green-100 text-green-800' :
+                              activity.percentage >= 60 ? 'bg-blue-100 text-blue-800' :
+                              activity.percentage >= 40 ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {activity.percentage}%
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-600 text-right">
+                            {activity.submitted_at ? new Date(activity.submitted_at).toLocaleDateString() : 'N/A'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
     </div>
   );
-};
-
-export default Analytics;
+}

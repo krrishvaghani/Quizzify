@@ -51,8 +51,9 @@ export default function RoomLobby() {
       const data = await roomAPI.getRoom(id)
       setRoom(data)
       
-      // If room started, redirect to quiz
-      if (data.status === 'active' && data.quiz) {
+      // If room started, redirect to quiz (but NOT if user is the host)
+      const isHost = data.host_email === user?.email
+      if (data.status === 'active' && data.quiz && !isHost) {
         navigate(`/quiz/${data.quiz_id}/start`)
       }
     } catch (error) {
@@ -85,9 +86,29 @@ export default function RoomLobby() {
     setStarting(true)
     try {
       await roomAPI.startRoom(id)
-      navigate(`/quiz/${room.quiz_id}/start`)
+      // Host stays on lobby page to view leaderboard
+      // Don't navigate away - just refresh room data
+      await fetchRoom()
+      setActiveTab('leaderboard') // Switch to leaderboard tab
     } catch (error) {
       alert(error.response?.data?.detail || 'Failed to start room')
+    } finally {
+      setStarting(false)
+    }
+  }
+
+  const handleComplete = async () => {
+    if (!window.confirm('Are you sure you want to end this quiz? Participants will no longer be able to submit.')) {
+      return
+    }
+    
+    setStarting(true)
+    try {
+      await roomAPI.completeRoom(id)
+      await fetchRoom()
+      alert('Quiz ended successfully!')
+    } catch (error) {
+      alert(error.response?.data?.detail || 'Failed to end quiz')
     } finally {
       setStarting(false)
     }
@@ -147,8 +168,12 @@ export default function RoomLobby() {
                     <p className="text-gray-600">{room.description}</p>
                   )}
                 </div>
-                <span className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full text-sm font-semibold">
-                  Waiting
+                <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
+                  room.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
+                  room.status === 'active' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {room.status === 'waiting' ? 'Waiting' : room.status === 'active' ? 'Active' : 'Completed'}
                 </span>
               </div>
 
@@ -206,7 +231,7 @@ export default function RoomLobby() {
                   }`}
                 >
                   <Users className="h-5 w-5" />
-                  Participants ({room.participants_details?.length || 0})
+                  Participants ({room.participants_details?.filter(p => p.email !== room.host_email).length || 0})
                 </button>
                 <button
                   onClick={() => setActiveTab('leaderboard')}
@@ -224,7 +249,7 @@ export default function RoomLobby() {
               {/* Participants Tab */}
               {activeTab === 'participants' && (
                 <div className="space-y-2">
-                  {room.participants_details?.map((participant) => (
+                  {room.participants_details?.filter(p => p.email !== room.host_email).map((participant) => (
                     <div
                       key={participant.email}
                       className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -235,11 +260,6 @@ export default function RoomLobby() {
                       <div className="flex-1">
                         <p className="font-medium text-gray-900">
                           {participant.username}
-                          {participant.email === room.host_email && (
-                            <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
-                              Host
-                            </span>
-                          )}
                         </p>
                         {participant.full_name && (
                           <p className="text-sm text-gray-500">{participant.full_name}</p>
@@ -429,32 +449,68 @@ export default function RoomLobby() {
               </div>
             </div>
 
-            {/* Start Button (Host Only) */}
+            {/* Control Buttons (Host Only) */}
             {isHost && (
-              <button
-                onClick={handleStart}
-                disabled={starting || room.participants_details?.length === 0}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {starting ? (
-                  <>
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    Starting...
-                  </>
+              <>
+                {room.status === 'waiting' ? (
+                  <button
+                    onClick={handleStart}
+                    disabled={starting || room.participants_details?.filter(p => p.email !== room.host_email).length === 0}
+                    className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {starting ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Starting...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-5 w-5" />
+                        Start Quiz
+                      </>
+                    )}
+                  </button>
+                ) : room.status === 'active' ? (
+                  <button
+                    onClick={handleComplete}
+                    disabled={starting}
+                    className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {starting ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Ending...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-5 w-5" />
+                        End Quiz
+                      </>
+                    )}
+                  </button>
                 ) : (
-                  <>
-                    <Play className="h-5 w-5" />
-                    Start Quiz
-                  </>
+                  <div className="w-full bg-gray-100 text-gray-600 py-3 px-6 rounded-lg font-semibold text-center">
+                    Quiz Completed
+                  </div>
                 )}
-              </button>
+              </>
             )}
 
-            {/* Waiting Message (Participants) */}
+            {/* Status Message (Participants) */}
             {!isHost && (
-              <div className="card bg-gray-100 border-2 border-purple-200">
-                <p className="text-center text-purple-900 font-medium">
-                  Waiting for host to start the quiz...
+              <div className={`card border-2 ${
+                room.status === 'waiting' ? 'bg-yellow-50 border-yellow-200' :
+                room.status === 'active' ? 'bg-green-50 border-green-200' :
+                'bg-gray-100 border-gray-200'
+              }`}>
+                <p className={`text-center font-medium ${
+                  room.status === 'waiting' ? 'text-yellow-900' :
+                  room.status === 'active' ? 'text-green-900' :
+                  'text-gray-900'
+                }`}>
+                  {room.status === 'waiting' ? 'Waiting for host to start the quiz...' :
+                   room.status === 'active' ? 'Quiz is active! Take the quiz now.' :
+                   'Quiz has ended. Check the leaderboard for results.'}
                 </p>
               </div>
             )}

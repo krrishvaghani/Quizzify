@@ -768,7 +768,7 @@ async def create_room(
     while await db.rooms.find_one({"room_code": room_code}):
         room_code = generate_room_code()
     
-    # Create room
+    # Create room (host is not included in participants list)
     room_data = {
         "title": room_request.title,
         "description": room_request.description,
@@ -777,7 +777,7 @@ async def create_room(
         "room_code": room_code,
         "settings": room_request.settings.dict(),
         "status": "waiting",
-        "participants": [current_user["email"]],
+        "participants": [],  # Host is not a participant
         "max_participants": 50,
         "created_at": datetime.utcnow(),
         "started_at": None

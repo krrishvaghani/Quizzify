@@ -34,6 +34,10 @@ export default function Signup() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState(0)
+  const [showOtpVerification, setShowOtpVerification] = useState(false)
+  const [otp, setOtp] = useState(['', '', '', '', '', ''])
+  const [registeredEmail, setRegisteredEmail] = useState('')
+  const [resending, setResending] = useState(false)
   const navigate = useNavigate()
   const { login } = useAuth()
 
@@ -77,15 +81,100 @@ export default function Signup() {
 
     try {
       const { confirmPassword, ...registerData } = formData
-      await authAPI.register(registerData)
+      const response = await authAPI.register(registerData)
       
-      // Show success message and redirect to login
-      alert('Account created successfully! Please login with your credentials.')
-      navigate('/login')
+      // Save email and show OTP verification screen
+      setRegisteredEmail(formData.email)
+      setShowOtpVerification(true)
+      setError('')
     } catch (err) {
       setError(err.response?.data?.detail || 'Registration failed. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleOtpChange = (index, value) => {
+    if (value.length > 1) {
+      // Handle paste
+      const digits = value.slice(0, 6).split('')
+      const newOtp = [...otp]
+      digits.forEach((digit, i) => {
+        if (index + i < 6) {
+          newOtp[index + i] = digit
+        }
+      })
+      setOtp(newOtp)
+      
+      // Focus last filled input
+      const lastIndex = Math.min(index + digits.length - 1, 5)
+      document.getElementById(`otp-${lastIndex}`)?.focus()
+    } else {
+      const newOtp = [...otp]
+      newOtp[index] = value
+      setOtp(newOtp)
+      
+      // Auto-focus next input
+      if (value && index < 5) {
+        document.getElementById(`otp-${index + 1}`)?.focus()
+      }
+    }
+  }
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      document.getElementById(`otp-${index - 1}`)?.focus()
+    }
+  }
+
+  const handleVerifyOtp = async () => {
+    const otpCode = otp.join('')
+    
+    if (otpCode.length !== 6) {
+      setError('Please enter the complete 6-digit OTP')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await authAPI.verifyOtp({
+        email: registeredEmail,
+        otp: otpCode
+      })
+      
+      // Auto-login after successful verification
+      if (response.access_token) {
+        login(response.access_token)
+        navigate('/dashboard')
+      } else {
+        alert('Email verified successfully! Please login with your credentials.')
+        navigate('/login')
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Invalid OTP. Please try again.')
+      // Clear OTP fields on error
+      setOtp(['', '', '', '', '', ''])
+      document.getElementById('otp-0')?.focus()
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    setResending(true)
+    setError('')
+
+    try {
+      await authAPI.resendOtp({ email: registeredEmail })
+      alert('New OTP sent to your email!')
+      setOtp(['', '', '', '', '', ''])
+      document.getElementById('otp-0')?.focus()
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Failed to resend OTP. Please try again.')
+    } finally {
+      setResending(false)
     }
   }
 
@@ -189,18 +278,20 @@ export default function Signup() {
 
             {/* Form Container */}
             <div className="bg-white rounded-3xl shadow-2xl p-8 lg:p-10 border-2 border-gray-200">
-              {/* Header */}
-              <div className="mb-8">
-                <h2 className="text-3xl font-black text-black mb-2">
-                  Create Account
-                </h2>
-                <p className="text-gray-600">
-                  Start your 14-day free trial. No credit card needed.
-                </p>
-              </div>
+              {!showOtpVerification ? (
+                <>
+                  {/* Header */}
+                  <div className="mb-8">
+                    <h2 className="text-3xl font-black text-black mb-2">
+                      Create Account
+                    </h2>
+                    <p className="text-gray-600">
+                      Start your 14-day free trial. No credit card needed.
+                    </p>
+                  </div>
 
-              {/* Form */}
-              <form className="space-y-5" onSubmit={handleSubmit}>
+                  {/* Form */}
+                  <form className="space-y-5" onSubmit={handleSubmit}>
                 {error && (
                   <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-4 rounded-xl flex items-start gap-3 animate-shake">
                     <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
@@ -493,6 +584,103 @@ export default function Signup() {
                   </div>
                 </div>
               </div>
+                </>
+              ) : (
+                /* OTP Verification Screen */
+                <div>
+                  <button
+                    onClick={() => setShowOtpVerification(false)}
+                    className="mb-6 flex items-center gap-2 text-gray-600 hover:text-black transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span>Back to Sign Up</span>
+                  </button>
+
+                  <div className="text-center mb-8">
+                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Mail className="w-8 h-8 text-white" />
+                    </div>
+                    <h2 className="text-3xl font-black text-black mb-2">
+                      Verify Your Email
+                    </h2>
+                    <p className="text-gray-600">
+                      We've sent a 6-digit code to
+                    </p>
+                    <p className="text-black font-semibold mt-1">
+                      {registeredEmail}
+                    </p>
+                  </div>
+
+                  {error && (
+                    <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-4 rounded-xl flex items-start gap-3 mb-6">
+                      <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                      <span className="text-sm font-medium">{error}</span>
+                    </div>
+                  )}
+
+                  {/* OTP Input */}
+                  <div className="mb-8">
+                    <label className="block text-sm font-bold text-gray-700 mb-3 text-center">
+                      Enter 6-Digit Code
+                    </label>
+                    <div className="flex justify-center gap-3">
+                      {otp.map((digit, index) => (
+                        <input
+                          key={index}
+                          id={`otp-${index}`}
+                          type="text"
+                          maxLength="1"
+                          value={digit}
+                          onChange={(e) => handleOtpChange(index, e.target.value)}
+                          onKeyDown={(e) => handleOtpKeyDown(index, e)}
+                          className="w-14 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-black focus:ring-2 focus:ring-black/20 transition-all"
+                          disabled={loading}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Verify Button */}
+                  <button
+                    onClick={handleVerifyOtp}
+                    disabled={loading || otp.join('').length !== 6}
+                    className="w-full bg-gradient-to-r from-black to-gray-800 text-white py-4 rounded-xl font-bold text-lg hover:from-gray-900 hover:to-black transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        Verifying...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5" />
+                        Verify Email
+                      </>
+                    )}
+                  </button>
+
+                  {/* Resend OTP */}
+                  <div className="mt-6 text-center">
+                    <p className="text-gray-600 text-sm mb-2">
+                      Didn't receive the code?
+                    </p>
+                    <button
+                      onClick={handleResendOtp}
+                      disabled={resending}
+                      className="text-black font-bold hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {resending ? 'Sending...' : 'Resend OTP'}
+                    </button>
+                  </div>
+
+                  {/* Help Text */}
+                  <div className="mt-8 p-4 bg-blue-50 border-2 border-blue-200 rounded-xl">
+                    <p className="text-sm text-blue-800 text-center">
+                      💡 Check your spam folder if you don't see the email. The code expires in 10 minutes.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

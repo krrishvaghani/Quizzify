@@ -14,7 +14,8 @@ import {
   Copy,
   Check,
   Download,
-  BarChart3,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 
 export default function QuizView() {
@@ -131,20 +132,6 @@ export default function QuizView() {
             {!showResults && (
               <div className="flex gap-2">
                 <Link
-                  to={`/quiz/${id}/edit`}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                >
-                  <Edit3 className="h-4 w-4" />
-                  Edit
-                </Link>
-                <Link
-                  to={`/quiz/${id}/analytics`}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-                >
-                  <BarChart3 className="h-4 w-4" />
-                  Analytics
-                </Link>
-                <Link
                   to={`/quiz/${id}/export`}
                   className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
                 >
@@ -229,11 +216,23 @@ export default function QuizView() {
               <div className="text-right">
                 <p className="text-sm text-gray-500">Progress</p>
                 <p className="text-2xl font-bold text-primary-600">
-                  {Object.keys(selectedAnswers).length} / {quiz.questions.length}
+                  {currentQuestion + 1} / {quiz.questions.length}
                 </p>
               </div>
             )}
           </div>
+          
+          {/* Progress Bar */}
+          {!showResults && (
+            <div className="mt-4">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-primary-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${((currentQuestion + 1) / quiz.questions.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Results Summary */}
@@ -264,91 +263,169 @@ export default function QuizView() {
           </div>
         )}
 
-        {/* Questions */}
-        <div className="space-y-6">
-          {quiz.questions.map((question, questionIndex) => {
-            const selectedOption = selectedAnswers[questionIndex]
-            const isAnswered = selectedOption !== undefined
-
-            return (
-              <div key={questionIndex} className="card">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="flex-shrink-0 w-10 h-10 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold">
-                    {questionIndex + 1}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {question.question}
-                    </h3>
-                  </div>
-                </div>
-
-                <div className="space-y-3 ml-14">
-                  {question.options.map((option, optionIndex) => {
-                    const isSelected = selectedOption === optionIndex
-                    const isCorrect = option.is_correct
-                    const showCorrect = showResults && isCorrect
-                    const showIncorrect = showResults && isSelected && !isCorrect
-
-                    let buttonClass = 'w-full text-left p-4 rounded-lg border-2 transition-all '
-                    
-                    if (showCorrect) {
-                      buttonClass += 'border-green-500 bg-green-50 '
-                    } else if (showIncorrect) {
-                      buttonClass += 'border-red-500 bg-red-50 '
-                    } else if (isSelected) {
-                      buttonClass += 'border-primary-500 bg-primary-50 '
-                    } else {
-                      buttonClass += 'border-gray-300 hover:border-primary-400 hover:bg-gray-50 '
-                    }
-
-                    return (
-                      <button
-                        key={optionIndex}
-                        onClick={() => handleAnswerSelect(questionIndex, optionIndex)}
-                        disabled={showResults}
-                        className={buttonClass}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-gray-900">
-                            {option.text}
-                          </span>
-                          {showCorrect && (
-                            <CheckCircle className="h-6 w-6 text-green-600" />
-                          )}
-                          {showIncorrect && (
-                            <XCircle className="h-6 w-6 text-red-600" />
-                          )}
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-
-                {/* Explanation */}
-                {showResults && question.explanation && (
-                  <div className="ml-14 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm font-medium text-blue-900 mb-1">
-                      Explanation:
-                    </p>
-                    <p className="text-sm text-blue-800">{question.explanation}</p>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Submit Button */}
+        {/* Current Question */}
         {!showResults && (
-          <div className="mt-8 text-center">
-            <button
-              onClick={handleSubmit}
-              disabled={Object.keys(selectedAnswers).length === 0}
-              className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Submit Quiz
-            </button>
+          <>
+            <div className="card mb-6">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="flex-shrink-0 w-12 h-12 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                  {currentQuestion + 1}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-gray-500 mb-2">Question {currentQuestion + 1} of {quiz.questions.length}</p>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {quiz.questions[currentQuestion].question}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                {quiz.questions[currentQuestion].options.map((option, optionIndex) => {
+                  const isSelected = selectedAnswers[currentQuestion] === optionIndex
+
+                  return (
+                    <button
+                      key={optionIndex}
+                      onClick={() => handleAnswerSelect(currentQuestion, optionIndex)}
+                      className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+                        isSelected
+                          ? 'border-primary-500 bg-primary-50'
+                          : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          isSelected ? 'border-primary-500 bg-primary-500' : 'border-gray-300'
+                        }`}>
+                          {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                        </div>
+                        <span className="font-medium text-gray-900">
+                          {option.text}
+                        </span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setCurrentQuestion(Math.max(0, currentQuestion - 1))}
+                disabled={currentQuestion === 0}
+                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <ChevronLeft className="h-5 w-5" />
+                Previous
+              </button>
+
+              <div className="flex gap-2">
+                {quiz.questions.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentQuestion(idx)}
+                    className={`w-10 h-10 rounded-full font-medium transition-colors ${
+                      idx === currentQuestion
+                        ? 'bg-primary-600 text-white'
+                        : selectedAnswers[idx] !== undefined
+                        ? 'bg-green-100 text-green-700 border border-green-300'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+              </div>
+
+              {currentQuestion < quiz.questions.length - 1 ? (
+                <button
+                  onClick={() => setCurrentQuestion(Math.min(quiz.questions.length - 1, currentQuestion + 1))}
+                  className="px-6 py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors flex items-center gap-2"
+                >
+                  Next
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmit}
+                  disabled={Object.keys(selectedAnswers).length === 0}
+                  className="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  Submit Quiz
+                  <CheckCircle className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Results View - Show All Questions After Submission */}
+        {showResults && (
+          <div className="space-y-6">
+            {quiz.questions.map((question, questionIndex) => {
+              const selectedOption = selectedAnswers[questionIndex]
+              
+              return (
+                <div key={questionIndex} className="card">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="flex-shrink-0 w-10 h-10 bg-primary-600 text-white rounded-full flex items-center justify-center font-bold">
+                      {questionIndex + 1}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {question.question}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 ml-14">
+                    {question.options.map((option, optionIndex) => {
+                      const isSelected = selectedOption === optionIndex
+                      const isCorrect = option.is_correct
+                      const showCorrect = isCorrect
+                      const showIncorrect = isSelected && !isCorrect
+
+                      let buttonClass = 'w-full text-left p-4 rounded-lg border-2 transition-all '
+                      
+                      if (showCorrect) {
+                        buttonClass += 'border-green-500 bg-green-50 '
+                      } else if (showIncorrect) {
+                        buttonClass += 'border-red-500 bg-red-50 '
+                      } else {
+                        buttonClass += 'border-gray-300 '
+                      }
+
+                      return (
+                        <div key={optionIndex} className={buttonClass}>
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium text-gray-900">
+                              {option.text}
+                            </span>
+                            {showCorrect && (
+                              <CheckCircle className="h-6 w-6 text-green-600" />
+                            )}
+                            {showIncorrect && (
+                              <XCircle className="h-6 w-6 text-red-600" />
+                            )}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Explanation */}
+                  {question.explanation && (
+                    <div className="ml-14 mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm font-medium text-blue-900 mb-1">
+                        Explanation:
+                      </p>
+                      <p className="text-sm text-blue-800">{question.explanation}</p>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         )}
       </main>

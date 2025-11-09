@@ -12,6 +12,10 @@ from passlib.context import CryptContext
 import io
 import csv
 from pathlib import Path
+import random
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from dotenv import load_dotenv
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -51,6 +55,13 @@ SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440  # 24 hours
 
+# Email Configuration
+SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USERNAME = os.getenv("SMTP_USERNAME", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+EMAIL_FROM = os.getenv("EMAIL_FROM", SMTP_USERNAME)
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -73,6 +84,13 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class OTPVerification(BaseModel):
+    email: EmailStr
+    otp: str
+
+class ResendOTP(BaseModel):
+    email: EmailStr
 
 class MCQOption(BaseModel):
     text: str
@@ -183,6 +201,69 @@ class QuizAttempt(BaseModel):
 # Helper Functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
+def generate_otp():
+    """Generate a 6-digit OTP"""
+    return str(random.randint(100000, 999999))
+
+async def send_otp_email(email: str, otp: str):
+    """Send OTP via email"""
+    try:
+        # Create message
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Verify Your Email - Quizzify"
+        message["From"] = EMAIL_FROM
+        message["To"] = email
+
+        # Create HTML content
+        html = f"""
+        <html>
+          <body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #000; margin-bottom: 10px;">🎓 QUIZZIFY</h1>
+                <h2 style="color: #333;">Email Verification</h2>
+              </div>
+              
+              <p style="color: #555; font-size: 16px; line-height: 1.6;">
+                Thank you for signing up! Please use the following One-Time Password (OTP) to verify your email address:
+              </p>
+              
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; text-align: center; margin: 30px 0;">
+                <p style="color: white; font-size: 14px; margin: 0 0 10px 0;">Your OTP Code</p>
+                <h1 style="color: white; font-size: 36px; letter-spacing: 8px; margin: 0; font-weight: bold;">{otp}</h1>
+              </div>
+              
+              <p style="color: #555; font-size: 14px; line-height: 1.6;">
+                This OTP will expire in <strong>10 minutes</strong>. Please do not share this code with anyone.
+              </p>
+              
+              <p style="color: #999; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                If you didn't request this verification, please ignore this email.
+              </p>
+            </div>
+          </body>
+        </html>
+        """
+
+        # Attach HTML content
+        part = MIMEText(html, "html")
+        message.attach(part)
+
+        # Send email
+        if SMTP_USERNAME and SMTP_PASSWORD:
+            with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+                server.starttls()
+                server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                server.send_message(message)
+            print(f"✅ OTP email sent successfully to {email}")
+            return True
+        else:
+            print(f"⚠️ Email not configured. OTP for {email}: {otp}")
+            return False
+    except Exception as e:
+        print(f"❌ Failed to send OTP email: {str(e)}")
+        return False
 
 def format_time(seconds):
     """Format time in seconds to readable format"""
@@ -414,9 +495,9 @@ def generate_simple_mcqs(text: str, num_questions: int) -> List[dict]:
 async def root():
     return {"message": "Quizzify API is running"}
 
-@app.post("/register", response_model=Token)
+@app.post("/register")
 async def register(user: UserRegister):
-    # Check if email already exists
+    # Check if email already exists in users collection
     existing_email = await db.users.find_one({"email": user.email})
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -427,26 +508,131 @@ async def register(user: UserRegister):
         raise HTTPException(status_code=400, detail="Username already taken")
     
     try:
-        # Create new user
-        hashed_pwd = get_password_hash(user.password)
-        print(f"Registration: Creating user {user.email} with hashed password")
+        # Generate OTP
+        otp = generate_otp()
+        otp_expiry = datetime.utcnow() + timedelta(minutes=10)
         
-        user_dict = {
+        # Hash password
+        hashed_pwd = get_password_hash(user.password)
+        
+        # Store pending registration with OTP
+        pending_user = {
             "username": user.username,
             "email": user.email,
             "full_name": user.full_name,
             "hashed_password": hashed_pwd,
-            "created_at": datetime.utcnow()
+            "otp": otp,
+            "otp_expiry": otp_expiry,
+            "created_at": datetime.utcnow(),
+            "verified": False
         }
         
-        result = await db.users.insert_one(user_dict)
-        print(f"Registration successful: User {user.email} created with ID {result.inserted_id}")
+        # Delete any existing pending registration for this email
+        await db.pending_users.delete_many({"email": user.email})
         
-        # Don't return token anymore since we want users to login manually
-        return {"access_token": "", "token_type": "bearer", "message": "Registration successful"}
+        # Insert pending user
+        await db.pending_users.insert_one(pending_user)
+        
+        # Send OTP email
+        email_sent = await send_otp_email(user.email, otp)
+        
+        print(f"📧 OTP generated for {user.email}: {otp} (expires in 10 minutes)")
+        
+        return {
+            "message": "OTP sent to your email. Please verify to complete registration.",
+            "email": user.email,
+            "email_sent": email_sent
+        }
     except Exception as e:
         print(f"Registration error: {e}")
         raise HTTPException(status_code=500, detail="Registration failed. Please try again.")
+
+@app.post("/verify-otp")
+async def verify_otp(verification: OTPVerification):
+    """Verify OTP and complete user registration"""
+    try:
+        # Find pending user
+        pending_user = await db.pending_users.find_one({"email": verification.email})
+        
+        if not pending_user:
+            raise HTTPException(status_code=404, detail="No pending registration found for this email")
+        
+        # Check if OTP expired
+        if datetime.utcnow() > pending_user["otp_expiry"]:
+            await db.pending_users.delete_one({"email": verification.email})
+            raise HTTPException(status_code=400, detail="OTP has expired. Please register again.")
+        
+        # Verify OTP
+        if pending_user["otp"] != verification.otp:
+            raise HTTPException(status_code=400, detail="Invalid OTP. Please try again.")
+        
+        # OTP is valid - create the user
+        user_dict = {
+            "username": pending_user["username"],
+            "email": pending_user["email"],
+            "full_name": pending_user.get("full_name"),
+            "hashed_password": pending_user["hashed_password"],
+            "created_at": datetime.utcnow(),
+            "verified": True
+        }
+        
+        result = await db.users.insert_one(user_dict)
+        
+        # Delete pending user
+        await db.pending_users.delete_one({"email": verification.email})
+        
+        print(f"✅ Email verified and user created: {verification.email}")
+        
+        # Create access token for auto-login
+        access_token = create_access_token(data={"sub": verification.email})
+        
+        return {
+            "message": "Email verified successfully! You can now login.",
+            "access_token": access_token,
+            "token_type": "bearer"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"OTP verification error: {e}")
+        raise HTTPException(status_code=500, detail="Verification failed. Please try again.")
+
+@app.post("/resend-otp")
+async def resend_otp(data: ResendOTP):
+    """Resend OTP to email"""
+    try:
+        # Find pending user
+        pending_user = await db.pending_users.find_one({"email": data.email})
+        
+        if not pending_user:
+            raise HTTPException(status_code=404, detail="No pending registration found for this email")
+        
+        # Generate new OTP
+        otp = generate_otp()
+        otp_expiry = datetime.utcnow() + timedelta(minutes=10)
+        
+        # Update pending user with new OTP
+        await db.pending_users.update_one(
+            {"email": data.email},
+            {"$set": {"otp": otp, "otp_expiry": otp_expiry}}
+        )
+        
+        # Send OTP email
+        email_sent = await send_otp_email(data.email, otp)
+        
+        print(f"📧 New OTP generated for {data.email}: {otp}")
+        
+        return {
+            "message": "New OTP sent to your email",
+            "email_sent": email_sent
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Resend OTP error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to resend OTP. Please try again.")
 
 @app.post("/token", response_model=Token)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -608,6 +794,17 @@ async def upload_and_generate(
 async def get_quizzes(current_user: dict = Depends(get_current_user)):
     """Get all quizzes created by the user"""
     quizzes = await db.quizzes.find({"created_by": current_user["email"]}).to_list(100)
+    
+    for quiz in quizzes:
+        quiz["id"] = str(quiz["_id"])
+        del quiz["_id"]
+    
+    return {"quizzes": quizzes}
+
+@app.get("/quizzes/all/public")
+async def get_all_public_quizzes(current_user: dict = Depends(get_current_user)):
+    """Get all quizzes from all users (public quizzes)"""
+    quizzes = await db.quizzes.find({}).sort("created_at", -1).to_list(100)
     
     for quiz in quizzes:
         quiz["id"] = str(quiz["_id"])
@@ -1199,6 +1396,44 @@ async def get_attempt_details(attempt_id: str):
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail="Invalid attempt ID")
+
+@app.get("/my-attempts")
+async def get_my_attempts(current_user: dict = Depends(get_current_user)):
+    """Get all quiz attempts by the current user"""
+    try:
+        # Find all attempts by this user's email
+        attempts_cursor = db.quiz_attempts.find({
+            "student_email": current_user["email"]
+        }).sort("submitted_at", -1)
+        
+        attempts = await attempts_cursor.to_list(length=100)
+        
+        # Format attempts with quiz details
+        formatted_attempts = []
+        for attempt in attempts:
+            # Get quiz title
+            from bson import ObjectId
+            quiz = await db.quizzes.find_one({"_id": ObjectId(attempt["quiz_id"])})
+            quiz_title = quiz.get("title", "Unknown Quiz") if quiz else "Unknown Quiz"
+            
+            formatted_attempts.append({
+                "id": str(attempt["_id"]),
+                "quiz_id": attempt["quiz_id"],
+                "quiz_title": quiz_title,
+                "score": attempt.get("score", 0),
+                "total_questions": attempt.get("total_questions", 0),
+                "max_score": attempt.get("total_questions", 0),
+                "percentage": attempt.get("percentage", 0),
+                "time_taken": attempt.get("time_taken", 0),
+                "completed_at": attempt.get("submitted_at"),
+                "answers": attempt.get("answers", {}),
+                "question_details": attempt.get("question_details", [])
+            })
+        
+        return {"attempts": formatted_attempts}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching attempts: {str(e)}")
 
 @app.delete("/rooms/{room_id}")
 async def delete_room(room_id: str, current_user: dict = Depends(get_current_user)):

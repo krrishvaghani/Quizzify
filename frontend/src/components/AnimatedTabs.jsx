@@ -32,18 +32,6 @@ const AnimatedTabs = ({ tabs, variant = "default", activeTab, onTabChange, isDar
                   : (isDark ? "text-gray-300 hover:text-white" : "text-gray-600 hover:text-black")
               }`}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="active-tab-underline"
-                  className={`absolute bottom-0 left-0 right-0 h-1 ${isDark ? "bg-white" : "bg-black"}`}
-                  initial={false}
-                  transition={{
-                    type: "spring",
-                    stiffness: 500,
-                    damping: 30,
-                  }}
-                />
-              )}
               <span className="relative z-10">{tabLabel}</span>
             </button>
           );

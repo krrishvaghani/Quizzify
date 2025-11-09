@@ -15,8 +15,7 @@ import ManualQuizCreation from './pages/ManualQuizCreation'
 import Profile from './pages/Profile'
 import TakeQuizPublic from './pages/TakeQuizPublic'
 import AttemptReview from './pages/AttemptReview'
-import Analytics from './pages/Analytics'
-import QuizAnalytics from './pages/QuizAnalytics'
+import AllQuizzes from './pages/AllQuizzes'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 function PrivateRoute({ children }) {
@@ -113,18 +112,10 @@ function App() {
             }
           />
           <Route
-            path="/analytics"
+            path="/all-quizzes"
             element={
               <PrivateRoute>
-                <Analytics />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/analytics/:quizId"
-            element={
-              <PrivateRoute>
-                <QuizAnalytics />
+                <AllQuizzes />
               </PrivateRoute>
             }
           />

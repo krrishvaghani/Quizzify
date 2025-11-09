@@ -38,6 +38,14 @@ export const authAPI = {
     const response = await api.post('/register', userData)
     return response.data
   },
+  verifyOtp: async (data) => {
+    const response = await api.post('/verify-otp', data)
+    return response.data
+  },
+  resendOtp: async (data) => {
+    const response = await api.post('/resend-otp', data)
+    return response.data
+  },
   login: async (credentials) => {
     const response = await api.post('/login', credentials)
     return response.data
@@ -80,6 +88,10 @@ export const quizAPI = {
     const response = await api.get('/quizzes')
     return response.data
   },
+  getAllPublicQuizzes: async () => {
+    const response = await api.get('/quizzes/all/public')
+    return response.data
+  },
   getQuiz: async (id) => {
     const response = await api.get(`/quizzes/${id}`)
     return response.data
@@ -102,6 +114,10 @@ export const quizAPI = {
   },
   getAttemptDetails: async (attemptId) => {
     const response = await api.get(`/public/attempt/${attemptId}`)
+    return response.data
+  },
+  getMyAttempts: async () => {
+    const response = await api.get('/my-attempts')
     return response.data
   },
   // Export/Share endpoints

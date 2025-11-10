@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { quizAPI } from '../utils/api'
 import {
@@ -189,7 +189,7 @@ export default function QuizEditor() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0f1419] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading quiz...</p>
@@ -200,10 +200,10 @@ export default function QuizEditor() {
 
   if (error || !quiz) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0f1419] flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Not Found</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Quiz Not Found</h2>
           <p className="text-gray-600 mb-4">{error || 'The quiz you are looking for does not exist.'}</p>
           <button onClick={() => navigate('/dashboard')} className="btn-primary">
             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -217,14 +217,14 @@ export default function QuizEditor() {
   // Preview Modal
   if (showPreview) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-white shadow-sm">
+      <div className="min-h-screen bg-[#0f1419]">
+        <header className="bg-[#1a1f2e] shadow-sm">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <BookOpen className="h-6 w-6 text-purple-600" />
                 <div>
-                  <h1 className="text-xl font-bold text-gray-900">{quiz.title}</h1>
+                  <h1 className="text-xl font-bold text-white">{quiz.title}</h1>
                   <p className="text-sm text-gray-500">Preview Mode</p>
                 </div>
               </div>
@@ -243,7 +243,7 @@ export default function QuizEditor() {
           {quiz.questions.map((question, qIdx) => (
             <div key={qIdx} className="card mb-6">
               <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-semibold text-white">
                   Question {qIdx + 1}
                 </h3>
                 {question.difficulty && (
@@ -257,7 +257,7 @@ export default function QuizEditor() {
                 )}
               </div>
               
-              <p className="text-gray-900 mb-4">{question.question}</p>
+              <p className="text-white mb-4">{question.question}</p>
               
               <div className="space-y-2 mb-4">
                 {question.options.map((option, oIdx) => (
@@ -266,7 +266,7 @@ export default function QuizEditor() {
                     className={`p-3 rounded-lg border-2 ${
                       option.is_correct
                         ? 'border-green-500 bg-green-50'
-                        : 'border-gray-200 bg-white'
+                        : 'border-gray-200 bg-[#1a1f2e]'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -311,14 +311,14 @@ export default function QuizEditor() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0f1419]">
       {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-10">
+      <header className="bg-[#1a1f2e] shadow-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate(`/quiz/${quizId}`)}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />
               <span>Back to Quiz</span>
@@ -327,7 +327,7 @@ export default function QuizEditor() {
             <div className="flex items-center gap-3">
               <Edit3 className="h-6 w-6 text-purple-600" />
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">Edit Quiz</h1>
+                <h1 className="text-lg font-semibold text-white">Edit Quiz</h1>
                 <p className="text-sm text-gray-500">{quiz.questions.length} questions</p>
               </div>
             </div>
@@ -390,7 +390,7 @@ export default function QuizEditor() {
         {quiz.questions.map((question, qIdx) => (
           <div key={qIdx} className="card mb-6">
             <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-white">
                 Question {qIdx + 1}
               </h3>
               <button
@@ -554,3 +554,5 @@ export default function QuizEditor() {
     </div>
   )
 }
+
+

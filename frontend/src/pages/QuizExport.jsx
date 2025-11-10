@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { quizAPI } from '../utils/api'
 import {
@@ -175,7 +175,7 @@ export default function QuizExport() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0f1419] flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-purple-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading quiz data...</p>
@@ -185,13 +185,13 @@ export default function QuizExport() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0f1419]">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-[#1a1f2e] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
             <span>Back to Dashboard</span>
@@ -203,7 +203,7 @@ export default function QuizExport() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Quiz Info */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{quiz.title}</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{quiz.title}</h1>
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <span className="flex items-center gap-1">
               <Users className="h-4 w-4" />
@@ -219,7 +219,7 @@ export default function QuizExport() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Export Options */}
           <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <Download className="h-6 w-6 text-purple-600" />
               Export Options
             </h2>
@@ -233,7 +233,7 @@ export default function QuizExport() {
                       <FileSpreadsheet className="h-6 w-6 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Export as CSV</h3>
+                      <h3 className="font-semibold text-white">Export as CSV</h3>
                       <p className="text-sm text-gray-600">
                         Download student results as spreadsheet
                       </p>
@@ -241,13 +241,13 @@ export default function QuizExport() {
                   </div>
                 </div>
                 
-                <div className="bg-gray-50 p-3 rounded-lg mb-3">
+                <div className="bg-[#0f1419] p-3 rounded-lg mb-3">
                   <p className="text-xs text-gray-600 mb-2">Includes:</p>
                   <ul className="text-xs text-gray-700 space-y-1">
-                    <li>• Student name and email</li>
-                    <li>• Score and percentage</li>
-                    <li>• Time taken</li>
-                    <li>• Submission timestamp</li>
+                    <li>â€¢ Student name and email</li>
+                    <li>â€¢ Score and percentage</li>
+                    <li>â€¢ Time taken</li>
+                    <li>â€¢ Submission timestamp</li>
                   </ul>
                 </div>
 
@@ -278,7 +278,7 @@ export default function QuizExport() {
                       <FileText className="h-6 w-6 text-red-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Export as PDF</h3>
+                      <h3 className="font-semibold text-white">Export as PDF</h3>
                       <p className="text-sm text-gray-600">
                         Download formatted quiz with answers
                       </p>
@@ -286,12 +286,12 @@ export default function QuizExport() {
                   </div>
                 </div>
 
-                <div className="bg-gray-50 p-3 rounded-lg mb-3">
+                <div className="bg-[#0f1419] p-3 rounded-lg mb-3">
                   <p className="text-xs text-gray-600 mb-2">Perfect for:</p>
                   <ul className="text-xs text-gray-700 space-y-1">
-                    <li>• Printing quiz for offline use</li>
-                    <li>• Creating answer keys</li>
-                    <li>• Sharing with colleagues</li>
+                    <li>â€¢ Printing quiz for offline use</li>
+                    <li>â€¢ Creating answer keys</li>
+                    <li>â€¢ Sharing with colleagues</li>
                   </ul>
                 </div>
 
@@ -318,7 +318,7 @@ export default function QuizExport() {
 
           {/* Share Options */}
           <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <Share2 className="h-6 w-6 text-purple-600" />
               Share Options
             </h2>
@@ -326,7 +326,7 @@ export default function QuizExport() {
             <div className="space-y-4">
               {/* Share Link */}
               <div className="p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
-                <label className="block text-sm font-medium text-gray-900 mb-2">
+                <label className="block text-sm font-medium text-white mb-2">
                   Share Link
                 </label>
                 <div className="flex gap-2">
@@ -334,7 +334,7 @@ export default function QuizExport() {
                     type="text"
                     value={`${window.location.origin}/quiz/${id}/start`}
                     readOnly
-                    className="flex-1 input-field bg-white text-sm"
+                    className="flex-1 input-field bg-[#1a1f2e] text-sm"
                   />
                   <button
                     onClick={handleCopyLink}
@@ -357,12 +357,12 @@ export default function QuizExport() {
 
               {/* Visibility Settings */}
               <div>
-                <label className="block text-sm font-medium text-gray-900 mb-3">
+                <label className="block text-sm font-medium text-white mb-3">
                   Visibility
                 </label>
                 <div className="space-y-3">
                   {/* Public */}
-                  <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-[#0f1419] transition-colors">
                     <input
                       type="radio"
                       name="visibility"
@@ -374,7 +374,7 @@ export default function QuizExport() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Unlock className="h-4 w-4 text-green-600" />
-                        <span className="font-medium text-gray-900">Public</span>
+                        <span className="font-medium text-white">Public</span>
                       </div>
                       <p className="text-xs text-gray-600">
                         Anyone with the link can access the quiz
@@ -383,7 +383,7 @@ export default function QuizExport() {
                   </label>
 
                   {/* Unlisted */}
-                  <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-[#0f1419] transition-colors">
                     <input
                       type="radio"
                       name="visibility"
@@ -395,7 +395,7 @@ export default function QuizExport() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Eye className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium text-gray-900">Unlisted</span>
+                        <span className="font-medium text-white">Unlisted</span>
                       </div>
                       <p className="text-xs text-gray-600">
                         Only people you share the link with can access
@@ -404,7 +404,7 @@ export default function QuizExport() {
                   </label>
 
                   {/* Password Protected */}
-                  <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-[#0f1419] transition-colors">
                     <input
                       type="radio"
                       name="visibility"
@@ -416,7 +416,7 @@ export default function QuizExport() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <Lock className="h-4 w-4 text-red-600" />
-                        <span className="font-medium text-gray-900">Password Protected</span>
+                        <span className="font-medium text-white">Password Protected</span>
                       </div>
                       <p className="text-xs text-gray-600">
                         Requires password to access the quiz
@@ -429,7 +429,7 @@ export default function QuizExport() {
               {/* Password Field */}
               {shareSettings.visibility === 'password_protected' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                  <label className="block text-sm font-medium text-white mb-2">
                     Quiz Password
                   </label>
                   <div className="relative">
@@ -477,16 +477,16 @@ export default function QuizExport() {
 
           {/* Timer Settings */}
           <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
               <Clock className="h-6 w-6 text-purple-600" />
               Timer Settings
             </h2>
 
             <div className="space-y-4">
               {/* Enable Timer */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 border-2 border-gray-200 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-[#0f1419] border-2 border-gray-200 rounded-lg">
                 <div>
-                  <label className="text-sm font-medium text-gray-900">Enable Timer</label>
+                  <label className="text-sm font-medium text-white">Enable Timer</label>
                   <p className="text-xs text-gray-600 mt-1">
                     Add a countdown timer to this quiz
                   </p>
@@ -498,7 +498,7 @@ export default function QuizExport() {
                     onChange={(e) => setTimerSettings({ ...timerSettings, enabled: e.target.checked })}
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#1a1f2e] after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                 </label>
               </div>
 
@@ -506,12 +506,12 @@ export default function QuizExport() {
                 <>
                   {/* Timer Type */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-900 mb-2">
+                    <label className="block text-sm font-medium text-white mb-2">
                       Timer Type
                     </label>
                     <div className="space-y-2">
                       {/* Global Timer */}
-                      <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                      <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-[#0f1419] transition-colors">
                         <input
                           type="radio"
                           name="timer_type"
@@ -523,7 +523,7 @@ export default function QuizExport() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <Clock className="h-4 w-4 text-blue-600" />
-                            <span className="font-medium text-gray-900">Global Timer</span>
+                            <span className="font-medium text-white">Global Timer</span>
                           </div>
                           <p className="text-xs text-gray-600">
                             One timer for the entire quiz (e.g., 30 minutes total)
@@ -532,7 +532,7 @@ export default function QuizExport() {
                       </label>
 
                       {/* Per Question Timer */}
-                      <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                      <label className="flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-[#0f1419] transition-colors">
                         <input
                           type="radio"
                           name="timer_type"
@@ -544,7 +544,7 @@ export default function QuizExport() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <Clock className="h-4 w-4 text-orange-600" />
-                            <span className="font-medium text-gray-900">Per Question Timer</span>
+                            <span className="font-medium text-white">Per Question Timer</span>
                           </div>
                           <p className="text-xs text-gray-600">
                             Separate timer for each question (e.g., 30 seconds per question)
@@ -557,7 +557,7 @@ export default function QuizExport() {
                   {/* Duration Settings */}
                   {timerSettings.timer_type === 'global' ? (
                     <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                      <label className="block text-sm font-medium text-white mb-2">
                         Total Quiz Duration (minutes)
                       </label>
                       <input
@@ -578,7 +578,7 @@ export default function QuizExport() {
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-sm font-medium text-gray-900 mb-2">
+                      <label className="block text-sm font-medium text-white mb-2">
                         Time Per Question (seconds)
                       </label>
                       <input
@@ -600,9 +600,9 @@ export default function QuizExport() {
                   )}
 
                   {/* Auto Submit */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-[#0f1419] border-2 border-gray-200 rounded-lg">
                     <div>
-                      <label className="text-sm font-medium text-gray-900">Auto Submit</label>
+                      <label className="text-sm font-medium text-white">Auto Submit</label>
                       <p className="text-xs text-gray-600 mt-1">
                         Automatically submit quiz when time expires
                       </p>
@@ -614,14 +614,14 @@ export default function QuizExport() {
                         onChange={(e) => setTimerSettings({ ...timerSettings, auto_submit: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#1a1f2e] after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                     </label>
                   </div>
 
                   {/* Show Timer */}
-                  <div className="flex items-center justify-between p-4 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-[#0f1419] border-2 border-gray-200 rounded-lg">
                     <div>
-                      <label className="text-sm font-medium text-gray-900">Show Timer</label>
+                      <label className="text-sm font-medium text-white">Show Timer</label>
                       <p className="text-xs text-gray-600 mt-1">
                         Display countdown timer to students
                       </p>
@@ -633,7 +633,7 @@ export default function QuizExport() {
                         onChange={(e) => setTimerSettings({ ...timerSettings, show_timer: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                      <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#1a1f2e] after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
                     </label>
                   </div>
                 </>
@@ -664,10 +664,10 @@ export default function QuizExport() {
         {/* Attempts Summary */}
         {attempts.length > 0 && (
           <div className="card mt-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Attempts</h2>
+            <h2 className="text-xl font-bold text-white mb-4">Recent Attempts</h2>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+                <thead className="bg-[#0f1419]">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Student
@@ -686,16 +686,16 @@ export default function QuizExport() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-[#1a1f2e] divide-y divide-gray-200">
                   {attempts.slice(0, 10).map((attempt) => (
-                    <tr key={attempt.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    <tr key={attempt.id} className="hover:bg-[#0f1419]">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
                         {attempt.student_name}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                         {attempt.student_email}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
                         {attempt.score}/{attempt.total_questions}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -727,7 +727,7 @@ export default function QuizExport() {
         {attempts.length === 0 && (
           <div className="card mt-6 text-center py-12">
             <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Attempts Yet</h3>
+            <h3 className="text-lg font-semibold text-white mb-2">No Attempts Yet</h3>
             <p className="text-gray-600 mb-4">
               Share your quiz link with students to start collecting responses
             </p>
@@ -737,3 +737,5 @@ export default function QuizExport() {
     </div>
   )
 }
+
+

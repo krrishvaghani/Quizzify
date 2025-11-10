@@ -51,31 +51,7 @@ export default function AllQuizzes() {
   );
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-black border-b border-gray-800 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              <span className="font-medium">Back to Dashboard</span>
-            </button>
-            
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-black" />
-              </div>
-              <h1 className="text-xl font-bold text-white">All Quizzes</h1>
-            </div>
-
-            <div className="w-32"></div> {/* Spacer for alignment */}
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-[#0f1419]">
       <main className="max-w-7xl mx-auto px-6 py-8">
         {/* Search Bar */}
         <div className="mb-8">
@@ -86,88 +62,79 @@ export default function AllQuizzes() {
               placeholder="Search all quizzes..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl text-black placeholder-gray-400 focus:outline-none focus:border-black focus:ring-2 focus:ring-gray-200"
+              className="w-full pl-12 pr-4 py-3 bg-[#252b3b] border-2 border-[#2d3548] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/30 transition-all font-medium shadow-lg"
             />
           </div>
         </div>
 
         {/* Quiz Count */}
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-black">
+          <h2 className="text-2xl font-bold text-white">
             {searchQuery ? `Search Results (${filteredQuizzes.length})` : `All Available Quizzes (${filteredQuizzes.length})`}
           </h2>
-          <p className="text-gray-600 mt-1">Browse and take quizzes from the community</p>
+          <p className="text-gray-400 mt-2 text-sm">Browse and take quizzes from the community</p>
         </div>
 
         {/* Quizzes Grid */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="h-10 w-10 text-gray-400 animate-spin mb-3" />
-            <p className="text-gray-600">Loading quizzes...</p>
+          <div className="flex flex-col items-center justify-center py-20">
+            <Loader2 className="h-10 w-10 text-cyan-500 animate-spin mb-3" />
+            <p className="text-gray-400">Loading quizzes...</p>
           </div>
         ) : filteredQuizzes.length === 0 ? (
-          <div className="text-center py-16 px-6 bg-gray-50 rounded-xl border border-gray-300">
-            <FileText className="h-12 w-12 text-gray-400 mb-4 mx-auto" />
-            <h3 className="text-xl font-bold text-black mb-2">
+          <div className="text-center py-12 px-6 bg-[#1a1f2e] rounded-2xl border-2 border-[#2d3548] shadow-xl">
+            <div className="w-14 h-14 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-500 rounded-xl flex items-center justify-center mx-auto mb-4">
+              <FileText className="h-7 w-7 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-2">
               {searchQuery ? 'No quizzes found' : 'No quizzes yet'}
             </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            <p className="text-gray-400 text-sm">
               {searchQuery 
                 ? 'Try adjusting your search terms' 
                 : 'No quizzes available at the moment'}
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredQuizzes.map((quiz) => {
               const isMyQuiz = quiz.created_by === user?.email
               
               return (
                 <div
                   key={quiz.id}
-                  className="bg-white rounded-xl border border-gray-300 hover:border-black transition-all duration-200 overflow-hidden group hover:shadow-lg"
+                  className="bg-[#1a1f2e] rounded-xl border-2 border-[#2d3548] hover:border-cyan-500 transition-all duration-300 overflow-hidden hover:shadow-xl"
                 >
-                  {/* Quiz Icon/Header */}
-                  <div className="bg-black p-6 relative">
-                    <div className="bg-white w-14 h-14 rounded-xl flex items-center justify-center mb-4">
-                      <BookOpen className="h-7 w-7 text-black" />
+                  {/* Quiz Header with Icon and Badge */}
+                  <div className="p-3 flex items-start justify-between">
+                    <div className="bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-500 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg">
+                      <BookOpen className="h-6 w-6 text-white" />
                     </div>
                     {/* Creator Badge */}
-                    {isMyQuiz ? (
-                      <span className="absolute top-3 right-3 px-2 py-1 bg-blue-500 text-white text-xs font-medium rounded-full">
+                    {isMyQuiz && (
+                      <span className="px-2 py-0.5 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-[10px] font-bold rounded">
                         My Quiz
-                      </span>
-                    ) : (
-                      <span className="absolute top-3 right-3 px-2 py-1 bg-gray-700 text-white text-xs font-medium rounded-full">
-                        Public
                       </span>
                     )}
                   </div>
 
                   {/* Quiz Content */}
-                  <div className="p-6">
-                    <h3 className="text-lg font-semibold text-black mb-2 line-clamp-2 group-hover:text-gray-700 transition-colors">
+                  <div className="px-3 pb-3">
+                    <h3 className="text-base font-bold text-white mb-1 line-clamp-1">
                       {quiz.title}
                     </h3>
-                    <div className="flex items-center justify-between mb-4">
-                      <p className="text-sm text-gray-600">
-                        {getQuizCategory(quiz)}
-                      </p>
-                      {!isMyQuiz && quiz.created_by && (
-                        <p className="text-xs text-gray-500 italic">
-                          by {quiz.created_by.split('@')[0]}
-                        </p>
-                      )}
-                    </div>
+                    <p className="text-xs text-gray-400 mb-3">
+                      {getQuizCategory(quiz)}
+                    </p>
 
                     {/* Quiz Stats */}
-                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-6">
+                    <div className="flex items-center gap-4 text-xs text-gray-400 mb-3">
                       <div className="flex items-center gap-1">
-                        <FileText className="h-4 w-4" />
+                        <FileText className="h-3.5 w-3.5" />
                         <span>{quiz.questions?.length || 0} Questions</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
+                        <Clock className="h-3.5 w-3.5" />
                         <span>{getQuizTimeLimit(quiz)}</span>
                       </div>
                     </div>
@@ -175,7 +142,7 @@ export default function AllQuizzes() {
                     {/* Action Button */}
                     <Link
                       to={`/quiz/${quiz.id}/start`}
-                      className="w-full py-2.5 bg-black text-white rounded-xl font-medium hover:bg-gray-800 flex items-center justify-center gap-2 transition-all"
+                      className="w-full py-2.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white rounded-lg font-bold text-sm hover:from-cyan-400 hover:via-blue-400 hover:to-purple-400 flex items-center justify-center gap-2 transition-all"
                     >
                       <PlayCircle className="h-4 w-4" />
                       Start Quiz

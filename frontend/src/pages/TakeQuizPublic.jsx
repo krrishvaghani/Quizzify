@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+﻿import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { quizAPI } from '../utils/api'
 import { useAuth } from '../context/AuthContext'
@@ -300,9 +300,9 @@ export default function TakeQuizPublic() {
         time_per_question: finalTimePerQuestion
       }
 
-      console.log('📤 Submitting quiz:', submission)
+      console.log('ðŸ“¤ Submitting quiz:', submission)
       const result = await quizAPI.submitQuizPublic(submission)
-      console.log('✅ Quiz submitted successfully:', result)
+      console.log('âœ… Quiz submitted successfully:', result)
       
       setResult(result)
       setIsSubmitted(true)
@@ -310,7 +310,7 @@ export default function TakeQuizPublic() {
       // Clear saved progress
       localStorage.removeItem(storageKey)
     } catch (err) {
-      console.error('❌ Submit error:', err)
+      console.error('âŒ Submit error:', err)
       setError('Failed to submit quiz. Please try again.')
     } finally {
       setLoading(false)
@@ -329,7 +329,7 @@ export default function TakeQuizPublic() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0f1419] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading quiz...</p>
@@ -340,10 +340,10 @@ export default function TakeQuizPublic() {
 
   if (error && !quiz) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0f1419] flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Quiz Not Found</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Quiz Not Found</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => window.location.reload()}
@@ -360,22 +360,22 @@ export default function TakeQuizPublic() {
   // Student info form (before starting)
   if (!hasStarted && quiz) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#0f1419]">
         <div className="max-w-2xl mx-auto px-4 py-12">
           <div className="text-center mb-8">
-            <div className="bg-gray-900 p-4 rounded-lg shadow-lg inline-block mb-4">
+            <div className="bg-[#0f1419] p-4 rounded-lg shadow-lg inline-block mb-4">
               <BookOpen className="h-12 w-12 text-white" />
             </div>
-            <h1 className="text-3xl font-extrabold text-gray-900 mb-2">
+            <h1 className="text-3xl font-extrabold text-white mb-2">
               {quiz.title}
             </h1>
             <p className="text-gray-600">
-              {quiz.questions.length} questions • Estimated time: 30 minutes
+              {quiz.questions.length} questions â€¢ Estimated time: 30 minutes
             </p>
           </div>
 
           <div className="card">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">
+            <h2 className="text-xl font-bold text-white mb-6">
               Enter Your Information
             </h2>
             
@@ -465,7 +465,7 @@ export default function TakeQuizPublic() {
     const isOnTime = quiz.time_limit ? timeTakenSeconds <= (quiz.time_limit * 60) : true
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#0f1419]">
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Success Message */}
           <div className="flex justify-center mb-6">
@@ -477,7 +477,7 @@ export default function TakeQuizPublic() {
 
           {/* Quiz Title */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            <h1 className="text-4xl font-bold text-white mb-2">
               {quiz.title} <span className="font-normal">Results</span>
             </h1>
             <p className="text-gray-600">Congratulations on completing the quiz!</p>
@@ -518,7 +518,7 @@ export default function TakeQuizPublic() {
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-gray-900">{result.score}</div>
+                      <div className="text-3xl font-bold text-white">{result.score}</div>
                       <div className="text-sm text-gray-500">out of {result.total_questions}</div>
                     </div>
                   </div>
@@ -535,7 +535,7 @@ export default function TakeQuizPublic() {
                   <CheckCircle className="h-6 w-6 text-green-600" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-3xl font-bold text-gray-900 mb-1">{result.correct_count}</div>
+                  <div className="text-3xl font-bold text-white mb-1">{result.correct_count}</div>
                   <div className="text-sm text-gray-600 mb-1">Correct Answers</div>
                   <div className="text-xs text-gray-500">out of {result.total_questions} questions</div>
                 </div>
@@ -549,7 +549,7 @@ export default function TakeQuizPublic() {
                   <XCircle className="h-6 w-6 text-red-600" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-3xl font-bold text-gray-900 mb-1">{result.incorrect_count}</div>
+                  <div className="text-3xl font-bold text-white mb-1">{result.incorrect_count}</div>
                   <div className="text-sm text-gray-600 mb-1">Incorrect Answers</div>
                   <div className="text-xs text-gray-500">out of {result.total_questions} questions</div>
                 </div>
@@ -563,7 +563,7 @@ export default function TakeQuizPublic() {
                   <Clock className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-3xl font-bold text-gray-900 mb-1">{formatTimeReadable(timeTakenSeconds)}</div>
+                  <div className="text-3xl font-bold text-white mb-1">{formatTimeReadable(timeTakenSeconds)}</div>
                   <div className="text-sm text-gray-600 mb-1">Time Taken</div>
                   <div className="text-xs text-gray-500">
                     {quiz.time_limit ? `Limit: ${quiz.time_limit} minutes` : 'No time limit'}
@@ -579,7 +579,7 @@ export default function TakeQuizPublic() {
                   <Award className="h-6 w-6 text-yellow-600" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-3xl font-bold text-gray-900 mb-1">{percentage}%</div>
+                  <div className="text-3xl font-bold text-white mb-1">{percentage}%</div>
                   <div className="text-sm text-gray-600 mb-1">Accuracy</div>
                   <div className="text-xs text-gray-500">{result.correct_count} of {result.total_questions} correct</div>
                 </div>
@@ -591,18 +591,18 @@ export default function TakeQuizPublic() {
           <div className="card mb-8">
             <div className="flex items-center gap-2 mb-6">
               <BarChart3 className="h-5 w-5 text-gray-700" />
-              <h3 className="text-xl font-semibold text-gray-900">Performance Analysis</h3>
+              <h3 className="text-xl font-semibold text-white">Performance Analysis</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* On Time Status */}
-              <div className="text-center p-6 bg-gray-50 rounded-lg">
+              <div className="text-center p-6 bg-[#0f1419] rounded-lg">
                 <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
                   isOnTime ? 'bg-green-100' : 'bg-red-100'
                 }`}>
                   <Clock className={`h-8 w-8 ${isOnTime ? 'text-green-600' : 'text-red-600'}`} />
                 </div>
-                <div className="text-lg font-semibold text-gray-900 mb-1">
+                <div className="text-lg font-semibold text-white mb-1">
                   {isOnTime ? 'On Time' : 'Overtime'}
                 </div>
                 <div className="text-sm text-gray-600">
@@ -611,22 +611,22 @@ export default function TakeQuizPublic() {
               </div>
 
               {/* Grade */}
-              <div className="text-center p-6 bg-gray-50 rounded-lg">
+              <div className="text-center p-6 bg-[#0f1419] rounded-lg">
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
                   <Award className="h-8 w-8 text-purple-600" />
                 </div>
-                <div className="text-lg font-semibold text-gray-900 mb-1">Grade: {grade}</div>
+                <div className="text-lg font-semibold text-white mb-1">Grade: {grade}</div>
                 <div className="text-sm text-gray-600">Based on your score</div>
               </div>
 
               {/* Pass/Fail Status */}
-              <div className="text-center p-6 bg-gray-50 rounded-lg">
+              <div className="text-center p-6 bg-[#0f1419] rounded-lg">
                 <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
                   passed ? 'bg-green-100' : 'bg-red-100'
                 }`}>
                   <CheckCircle className={`h-8 w-8 ${passed ? 'text-green-600' : 'text-red-600'}`} />
                 </div>
-                <div className="text-lg font-semibold text-gray-900 mb-1">
+                <div className="text-lg font-semibold text-white mb-1">
                   {passed ? 'Passed' : 'Failed'}
                 </div>
                 <div className="text-sm text-gray-600">
@@ -648,7 +648,7 @@ export default function TakeQuizPublic() {
             
             <button
               onClick={() => {
-                const shareText = `I scored ${percentage}% on ${quiz.title}! 🎉`
+                const shareText = `I scored ${percentage}% on ${quiz.title}! ðŸŽ‰`
                 if (navigator.share) {
                   navigator.share({
                     title: quiz.title,
@@ -660,7 +660,7 @@ export default function TakeQuizPublic() {
                   alert('Results copied to clipboard!')
                 }
               }}
-              className="px-6 py-3 bg-gray-800 text-white rounded-lg font-medium hover:bg-gray-700 transition-all flex items-center gap-2"
+              className="px-6 py-3 bg-[#1a1f2e] text-white rounded-lg font-medium hover:bg-[#252b3b] transition-all flex items-center gap-2"
             >
               <Share2 className="h-5 w-5" />
               Share Results
@@ -668,7 +668,7 @@ export default function TakeQuizPublic() {
 
             <button
               onClick={() => navigate(`/attempt/${result.attempt_id}/review`)}
-              className="px-6 py-3 bg-white text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-gray-50 transition-all flex items-center gap-2"
+              className="px-6 py-3 bg-[#1a1f2e] text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-[#0f1419] transition-all flex items-center gap-2"
             >
               <BookOpen className="h-5 w-5" />
               View Detailed Review
@@ -679,17 +679,17 @@ export default function TakeQuizPublic() {
           <div className="mt-8 text-center">
             {percentage >= 80 && (
               <div className="p-4 bg-green-50 border border-green-200 rounded-lg inline-block">
-                <p className="text-green-800 font-medium">🎉 Excellent work! You've demonstrated strong understanding.</p>
+                <p className="text-green-800 font-medium">ðŸŽ‰ Excellent work! You've demonstrated strong understanding.</p>
               </div>
             )}
             {percentage >= 60 && percentage < 80 && (
               <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg inline-block">
-                <p className="text-yellow-800 font-medium">👍 Good job! There's room for improvement.</p>
+                <p className="text-yellow-800 font-medium">ðŸ‘ Good job! There's room for improvement.</p>
               </div>
             )}
             {percentage < 60 && (
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg inline-block">
-                <p className="text-red-800 font-medium">💪 Keep practicing! Review the explanations to improve.</p>
+                <p className="text-red-800 font-medium">ðŸ’ª Keep practicing! Review the explanations to improve.</p>
               </div>
             )}
           </div>
@@ -710,7 +710,7 @@ export default function TakeQuizPublic() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
         {/* Header with Logo and Timer */}
-        <div className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-700 sticky top-0 z-10">
+        <div className="bg-slate-900/50 backdrop-blur-sm border-b border-gray-800 sticky top-0 z-10">
           <div className="max-w-4xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Logo */}
@@ -765,7 +765,7 @@ export default function TakeQuizPublic() {
 
           {/* Progress Bar */}
           <div className="mb-8">
-            <div className="w-full h-3 bg-slate-700 rounded-full overflow-hidden">
+            <div className="w-full h-3 bg-gray-800 rounded-full overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 transition-all duration-500 ease-out"
                 style={{ width: `${completionPercentage}%` }}
@@ -782,7 +782,7 @@ export default function TakeQuizPublic() {
           </div>
 
           {/* Question Card */}
-          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700 p-8 mb-6">
+          <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-gray-800 p-8 mb-6">
             {/* Question Number Badge & Text */}
             <div className="mb-8">
               <div className="flex items-start gap-4 mb-6">
@@ -851,7 +851,7 @@ export default function TakeQuizPublic() {
             </div>
 
             {/* Question Dots Indicator */}
-            <div className="flex justify-center gap-2 mt-8 pt-6 border-t border-slate-700">
+            <div className="flex justify-center gap-2 mt-8 pt-6 border-t border-gray-800">
               {quiz.questions.map((_, idx) => {
                 const isAnswered = answers[idx] && answers[idx].length > 0
                 const isCurrent = idx === currentQuestion
@@ -874,11 +874,11 @@ export default function TakeQuizPublic() {
             </div>
 
             {/* Navigation Buttons */}
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-700">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-800">
               <button
                 onClick={goToPrevious}
                 disabled={currentQuestion === 0}
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-6 py-3 bg-gray-800 hover:bg-slate-600 text-white font-medium rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 <ChevronLeft className="h-5 w-5" />
                 Previous
@@ -928,3 +928,5 @@ export default function TakeQuizPublic() {
 
   return null
 }
+
+

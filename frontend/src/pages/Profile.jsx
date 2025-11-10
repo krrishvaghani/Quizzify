@@ -150,31 +150,31 @@ export default function Profile() {
   const latestQuiz = getLatestQuiz()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black">
+    <div className="min-h-screen bg-[#0f1419]">
       {/* Header */}
-      <header className="bg-gradient-to-r from-black via-gray-900 to-black border-b border-gray-800 shadow-2xl">
-        <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
+      <header className="bg-[#1a1f2e] border-b border-gray-800 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <button 
             onClick={() => navigate('/dashboard')} 
-            className="flex items-center gap-2 px-4 py-2 text-white hover:bg-white/10 rounded-xl transition-all font-semibold"
+            className="flex items-center gap-2 px-4 py-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-all"
           >
             <ArrowLeft className="h-5 w-5" />
-            <span>Dashboard</span>
+            <span className="font-medium">Back to Dashboard</span>
           </button>
           
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-white to-gray-200 rounded-xl flex items-center justify-center shadow-lg">
-              <Sparkles className="h-6 w-6 text-black" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-500 flex items-center justify-center">
+              <BookOpen className="h-6 w-6 text-white" />
             </div>
-            <span className="text-white font-black text-xl">QUIZZIFY</span>
+            <span className="text-white font-bold text-xl">QUIZZIFY</span>
           </div>
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl transition-all font-bold shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
           >
             <LogOut className="h-4 w-4" />
-            Logout
+            <span className="font-medium">Logout</span>
           </button>
         </div>
       </header>
@@ -183,36 +183,36 @@ export default function Profile() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Sidebar - Profile Card */}
           <div className="lg:col-span-1">
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-3xl border-2 border-gray-700 p-8 shadow-2xl">
+            <div className="bg-[#1a1f2e] rounded-2xl border border-gray-800 p-6">
               {/* Profile Avatar */}
-              <div className="flex flex-col items-center mb-8">
-                <div className="w-28 h-28 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-5 shadow-2xl transform hover:scale-105 transition-transform">
-                  <span className="text-white font-black text-5xl">
+              <div className="flex flex-col items-center mb-6">
+                <div className="w-24 h-24 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-4 transform hover:scale-105 transition-transform">
+                  <span className="text-white font-bold text-4xl">
                     {user?.username?.charAt(0).toUpperCase() || 'U'}
                   </span>
                 </div>
-                <h2 className="text-3xl font-black text-white mb-2">
+                <h2 className="text-2xl font-bold text-white mb-1">
                   {user?.username || 'User'}
                 </h2>
-                <p className="text-gray-300 text-base mb-2 font-medium">{user?.email}</p>
-                <p className="text-gray-400 text-sm font-medium">
-                  Student • Joined {new Date(user?.created_at || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                <p className="text-gray-400 text-sm mb-1">{user?.email}</p>
+                <p className="text-gray-500 text-xs">
+                  Joined {new Date(user?.created_at || Date.now()).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 </p>
                 
                 <button
                   onClick={() => setShowEditProfile(!showEditProfile)}
-                  className="mt-4 flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  className="mt-4 flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white rounded-lg hover:opacity-90 transition-opacity"
                 >
                   <Edit className="h-4 w-4" />
-                  Edit Profile
+                  <span className="font-medium">Edit Profile</span>
                 </button>
               </div>
 
               {/* Stats Cards */}
               <div className="space-y-4">
-                <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
+                <div className="bg-[#1a1f2e] rounded-lg p-4 border border-gray-800">
                   <div className="flex items-center gap-3 mb-2">
-                    <BookOpen className="h-5 w-5 text-blue-400" />
+                    <BookOpen className="h-5 w-5 text-cyan-400" />
                     <span className="text-gray-400 text-sm">Total Attempts</span>
                   </div>
                   <p className="text-3xl font-bold text-white">
@@ -220,7 +220,7 @@ export default function Profile() {
                   </p>
                 </div>
 
-                <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
+                <div className="bg-[#1a1f2e] rounded-lg p-4 border border-gray-800">
                   <div className="flex items-center gap-3 mb-2">
                     <CheckCircle className="h-5 w-5 text-green-400" />
                     <span className="text-gray-400 text-sm">Completion Rate</span>
@@ -230,9 +230,9 @@ export default function Profile() {
                   </p>
                 </div>
 
-                <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
+                <div className="bg-[#1a1f2e] rounded-lg p-4 border border-gray-800">
                   <div className="flex items-center gap-3 mb-2">
-                    <Star className="h-5 w-5 text-yellow-400" />
+                    <Star className="h-5 w-5 text-purple-400" />
                     <span className="text-gray-400 text-sm">Average Score</span>
                   </div>
                   <p className="text-3xl font-bold text-white">
@@ -243,11 +243,11 @@ export default function Profile() {
 
               {/* Latest Quiz */}
               {latestQuiz && (
-                <div className="mt-6 bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg p-4 border border-purple-700">
+                <div className="mt-6 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg p-4">
                   <h3 className="text-white font-semibold mb-2">Latest Quiz</h3>
                   <p className="text-gray-300 text-sm mb-2">{latestQuiz.title}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-3xl font-bold text-blue-400">{latestQuiz.score}%</span>
+                    <span className="text-3xl font-bold text-cyan-400">{latestQuiz.score}%</span>
                     <span className="text-gray-400 text-xs">{latestQuiz.date}</span>
                   </div>
                 </div>
@@ -258,13 +258,13 @@ export default function Profile() {
           {/* Right Content - Performance History & Edit Forms */}
           <div className="lg:col-span-2 space-y-6">
             {/* Performance History Chart */}
-            <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
+            <div className="bg-[#1a1f2e] rounded-xl border border-gray-800 p-6">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="text-xl font-bold text-white mb-1">Performance History</h3>
                   <p className="text-gray-400 text-sm">Your quiz scores over time</p>
                 </div>
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+                <button className="px-4 py-2 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 hover:opacity-90 text-white text-sm rounded-lg transition-opacity">
                   All Time
                 </button>
               </div>
@@ -398,43 +398,43 @@ export default function Profile() {
 
             {/* Edit Profile Form */}
             {showEditProfile && (
-              <div className="bg-slate-800 rounded-xl border border-slate-700 p-6">
+              <div className="bg-[#1a1f2e] rounded-xl border border-gray-800 p-6">
                 <h3 className="text-xl font-bold text-white mb-4">Edit Profile Information</h3>
                 <form onSubmit={handleSubmitProfile} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Username</label>
                     <input 
                       type="text" 
                       value={formData.username} 
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })} 
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      className="w-full px-4 py-2.5 bg-[#252b3b] border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all" 
                       required 
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Email</label>
                     <input 
                       type="email" 
                       value={formData.email} 
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      className="w-full px-4 py-2.5 bg-[#252b3b] border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all" 
                       required 
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
                     <input 
                       type="text" 
                       value={formData.full_name} 
                       onChange={(e) => setFormData({ ...formData, full_name: e.target.value })} 
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                      className="w-full px-4 py-2.5 bg-[#252b3b] border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all" 
                     />
                   </div>
                   <div className="flex gap-3">
                     <button 
                       type="submit" 
                       disabled={loading} 
-                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                      className="flex-1 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 hover:opacity-90 text-white py-2.5 px-4 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-opacity"
                     >
                       <Save className="h-4 w-4" />
                       Save Changes
@@ -442,50 +442,50 @@ export default function Profile() {
                     <button 
                       type="button"
                       onClick={() => setShowEditProfile(false)}
-                      className="px-6 bg-slate-700 hover:bg-slate-600 text-white py-2 rounded-lg transition-colors"
+                      className="px-6 bg-gray-700 hover:bg-gray-600 text-white py-2.5 rounded-lg transition-colors"
                     >
                       Cancel
                     </button>
                   </div>
                 </form>
 
-                <div className="mt-6 pt-6 border-t border-slate-700">
+                <div className="mt-6 pt-6 border-t border-gray-700">
                   <h3 className="text-xl font-bold text-white mb-4">Change Password</h3>
                   <form onSubmit={handleSubmitPassword} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Current Password</label>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Current Password</label>
                       <input 
                         type="password" 
                         value={passwordData.current_password} 
                         onChange={(e) => setPasswordData({ ...passwordData, current_password: e.target.value })} 
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        className="w-full px-4 py-2.5 bg-[#252b3b] border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all" 
                         required 
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">New Password</label>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">New Password</label>
                       <input 
                         type="password" 
                         value={passwordData.new_password} 
                         onChange={(e) => setPasswordData({ ...passwordData, new_password: e.target.value })} 
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        className="w-full px-4 py-2.5 bg-[#252b3b] border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all" 
                         required 
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">Confirm New Password</label>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Confirm New Password</label>
                       <input 
                         type="password" 
                         value={passwordData.confirm_password} 
                         onChange={(e) => setPasswordData({ ...passwordData, confirm_password: e.target.value })} 
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                        className="w-full px-4 py-2.5 bg-[#252b3b] border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all" 
                         required 
                       />
                     </div>
                     <button 
                       type="submit" 
                       disabled={loading} 
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-colors"
+                      className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 hover:opacity-90 text-white py-2.5 px-4 rounded-lg disabled:opacity-50 flex items-center justify-center gap-2 transition-opacity"
                     >
                       <Lock className="h-4 w-4" />
                       Change Password

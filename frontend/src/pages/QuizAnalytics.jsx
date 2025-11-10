@@ -77,8 +77,8 @@ export default function QuizAnalytics() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-black" />
+      <div className="min-h-screen bg-[#1a1f2e] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
       </div>
     );
   }
@@ -88,17 +88,17 @@ export default function QuizAnalytics() {
     const attempts = analytics?.total_attempts || 0;
     
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[#1a1f2e]">
         <div className="border-b border-black">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <Link to="/analytics" className="inline-flex items-center gap-2 p-2 hover:bg-gray-100 rounded-lg border border-black">
+            <Link to="/analytics" className="inline-flex items-center gap-2 p-2 hover:bg-[#1a1f2e] rounded-lg border border-black">
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
           <AlertTriangle className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-xl font-semibold text-black mb-2">Insufficient Data to Analyze</h3>
+          <h3 className="text-xl font-semibold text-white mb-2">Insufficient Data to Analyze</h3>
           <p className="text-gray-600 mb-2">{message}</p>
           {attempts > 0 && attempts < 10 && (
             <p className="text-sm text-gray-500">
@@ -113,23 +113,23 @@ export default function QuizAnalytics() {
   const problematicQuestions = analytics.questions.filter(q => q.is_problematic);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#1a1f2e]">
       <div className="border-b border-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/analytics" className="p-2 hover:bg-gray-100 rounded-lg border border-black">
+              <Link to="/analytics" className="p-2 hover:bg-[#1a1f2e] rounded-lg border border-black">
                 <ArrowLeft className="h-5 w-5" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-black">{analytics.quiz_title}</h1>
+                <h1 className="text-2xl font-bold text-white">{analytics.quiz_title}</h1>
                 <p className="text-gray-600 mt-1">MCQ Analytics</p>
               </div>
             </div>
             <button 
               onClick={handleExport} 
               disabled={exporting}
-              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 border border-black disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-[#1a1f2e] border border-black disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {exporting ? (
                 <>
@@ -157,37 +157,37 @@ export default function QuizAnalytics() {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
           <div className="border border-black rounded-lg p-6">
             <div className="text-sm text-gray-600 mb-1">Total Attempts</div>
-            <div className="text-3xl font-bold text-black">{analytics.total_attempts}</div>
+            <div className="text-3xl font-bold text-white">{analytics.total_attempts}</div>
             <div className="text-xs text-gray-500 mt-1">{analytics.total_students} students</div>
           </div>
           <div className="border border-black rounded-lg p-6">
             <div className="text-sm text-gray-600 mb-1">Average Score</div>
-            <div className="text-3xl font-bold text-black">{analytics.average_score}/{analytics.total_questions}</div>
+            <div className="text-3xl font-bold text-white">{analytics.average_score}/{analytics.total_questions}</div>
             <div className="text-xs text-gray-500 mt-1">{analytics.average_percentage}%</div>
           </div>
           <div className="border border-black rounded-lg p-6">
             <div className="text-sm text-gray-600 mb-1">Avg Time/Question</div>
-            <div className="text-3xl font-bold text-black">{analytics.average_time_per_question || 0}s</div>
+            <div className="text-3xl font-bold text-white">{analytics.average_time_per_question || 0}s</div>
             <div className="text-xs text-gray-500 mt-1">per question</div>
           </div>
           <div className="border border-black rounded-lg p-6">
             <div className="text-sm text-gray-600 mb-1">Total Questions</div>
-            <div className="text-3xl font-bold text-black">{analytics.total_questions}</div>
+            <div className="text-3xl font-bold text-white">{analytics.total_questions}</div>
           </div>
           <div className="border border-black rounded-lg p-6">
             <div className="text-sm text-gray-600 mb-1">Problematic</div>
-            <div className="text-3xl font-bold text-black">{problematicQuestions.length}</div>
+            <div className="text-3xl font-bold text-white">{problematicQuestions.length}</div>
             <div className="text-xs text-gray-500 mt-1">need review</div>
           </div>
         </div>
 
         {analytics.score_distribution && Object.keys(analytics.score_distribution).length > 0 && (
           <div className="border border-black rounded-lg p-6 mb-8">
-            <h3 className="font-semibold text-black mb-4">Score Distribution</h3>
+            <h3 className="font-semibold text-white mb-4">Score Distribution</h3>
             <div className="grid grid-cols-4 gap-4">
               {Object.entries(analytics.score_distribution).map(([range, count]) => (
                 <div key={range} className="text-center border border-gray-300 rounded p-3">
-                  <div className="text-2xl font-bold text-black">{count}</div>
+                  <div className="text-2xl font-bold text-white">{count}</div>
                   <div className="text-sm text-gray-600">{range} correct</div>
                 </div>
               ))}
@@ -196,11 +196,11 @@ export default function QuizAnalytics() {
         )}
 
         {problematicQuestions.length > 0 && (
-          <div className="border-2 border-black rounded-lg p-6 mb-8 bg-gray-50">
+          <div className="border-2 border-black rounded-lg p-6 mb-8 bg-[#0f1419]">
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-6 w-6 flex-shrink-0 mt-1" />
               <div className="flex-1">
-                <h3 className="font-semibold text-black mb-2">{problematicQuestions.length} Question{problematicQuestions.length !== 1 ? 's' : ''} Need Attention</h3>
+                <h3 className="font-semibold text-white mb-2">{problematicQuestions.length} Question{problematicQuestions.length !== 1 ? 's' : ''} Need Attention</h3>
                 <div className="space-y-2">
                   {problematicQuestions.map(q => (
                     <div key={q.question_index} className="text-sm">
@@ -214,13 +214,13 @@ export default function QuizAnalytics() {
         )}
 
         <div className="space-y-8">
-          <h2 className="text-xl font-bold text-black">Question Analysis</h2>
+          <h2 className="text-xl font-bold text-white">Question Analysis</h2>
           {analytics.questions.map((question, idx) => (
-            <div key={question.question_index} className="border border-black rounded-lg p-7 bg-white shadow-sm">
+            <div key={question.question_index} className="border border-black rounded-lg p-7 bg-[#1a1f2e] shadow-sm">
               <div className="flex items-start justify-between mb-5">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
-                    <span className="font-bold text-black text-lg">Question {question.question_number}</span>
+                    <span className="font-bold text-white text-lg">Question {question.question_number}</span>
                     {question.is_problematic && (
                       <span className="px-3 py-1 bg-black text-white text-xs font-medium rounded">NEEDS REVIEW</span>
                     )}
@@ -229,36 +229,36 @@ export default function QuizAnalytics() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-5 text-sm border-t border-b border-gray-300 py-4 bg-gray-50">
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-5 text-sm border-t border-b border-gray-300 py-4 bg-[#0f1419]">
                 <div className="text-center">
                   <div className="text-gray-600 text-xs mb-1">Attempts</div>
-                  <div className="font-bold text-black text-lg">{question.attempts || 0}</div>
+                  <div className="font-bold text-white text-lg">{question.attempts || 0}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-gray-600 text-xs mb-1">% Correct</div>
-                  <div className={`font-bold text-lg ${question.correct_percentage < 40 ? 'text-red-600' : 'text-black'}`}>
+                  <div className={`font-bold text-lg ${question.correct_percentage < 40 ? 'text-red-600' : 'text-white'}`}>
                     {question.correct_percentage?.toFixed(1) || '0.0'}%
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-gray-600 text-xs mb-1">Skip Rate</div>
-                  <div className={`font-bold text-lg ${question.skip_rate > 20 ? 'text-red-600' : 'text-black'}`}>
+                  <div className={`font-bold text-lg ${question.skip_rate > 20 ? 'text-red-600' : 'text-white'}`}>
                     {question.skip_rate?.toFixed(1) || '0.0'}%
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-gray-600 text-xs mb-1">Avg Time</div>
-                  <div className="font-bold text-black text-lg">{question.average_time_spent || 0}s</div>
+                  <div className="font-bold text-white text-lg">{question.average_time_spent || 0}s</div>
                 </div>
                 <div className="text-center">
                   <div className="text-gray-600 text-xs mb-1">Discrimination</div>
-                  <div className="font-bold text-black text-lg">
+                  <div className="font-bold text-white text-lg">
                     {typeof question.discrimination_index === 'number' ? question.discrimination_index.toFixed(1) : 'N/A'}
                   </div>
                 </div>
                 <div className="text-center">
                   <div className="text-gray-600 text-xs mb-1">Most Chosen</div>
-                  <div className="font-bold text-black text-lg">{question.most_chosen_option || '—'}</div>
+                  <div className="font-bold text-white text-lg">{question.most_chosen_option || '—'}</div>
                 </div>
               </div>
 
@@ -266,7 +266,7 @@ export default function QuizAnalytics() {
                 <div className="mb-5 p-4 bg-yellow-50 border-2 border-yellow-400 rounded-lg" title={question.flag_tooltip || ''}>
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{question.flag_icon || '⚠️'}</span>
-                    <span className="font-medium text-gray-900">{question.flags.join(', ')}</span>
+                    <span className="font-medium text-white">{question.flags.join(', ')}</span>
                   </div>
                   {question.flag_tooltip && (
                     <p className="text-xs text-gray-600 mt-1 ml-8">{question.flag_tooltip}</p>
@@ -291,15 +291,15 @@ export default function QuizAnalytics() {
                           ) : (
                             <XCircle className="h-5 w-5 text-gray-400 flex-shrink-0" />
                           )}
-                          <span className={`${isCorrect ? 'font-semibold text-black' : 'text-gray-700'} flex-1`}>
+                          <span className={`${isCorrect ? 'font-semibold text-white' : 'text-gray-700'} flex-1`}>
                             {option.option_text || '—'}
                           </span>
                         </div>
-                        <span className="font-bold text-black text-right ml-4 min-w-[80px]">
+                        <span className="font-bold text-white text-right ml-4 min-w-[80px]">
                           {option.selected_count || 0} ({displayPercentage}%)
                         </span>
                       </div>
-                      <div className="h-3 bg-gray-100 rounded-lg border border-gray-300 overflow-hidden relative ml-11">
+                      <div className="h-3 bg-[#1a1f2e] rounded-lg border border-gray-300 overflow-hidden relative ml-11">
                         <div 
                           className="h-full bg-black rounded-lg transition-all duration-300 ease-out" 
                           style={{ width: barWidth + '%' }}
@@ -325,3 +325,5 @@ export default function QuizAnalytics() {
     </div>
   );
 }
+
+

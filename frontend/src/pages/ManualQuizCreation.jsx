@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { quizAPI, roomAPI } from '../utils/api'
 import {
@@ -180,7 +180,7 @@ export default function ManualQuizCreation() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-8 py-4 bg-white text-black rounded-2xl font-black hover:scale-105 transition-all duration-200 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-xl text-lg"
+              className="px-8 py-4 bg-[#1a1f2e] text-white rounded-2xl font-black hover:scale-105 transition-all duration-200 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-xl text-lg"
             >
               {saving ? (
                 <>
@@ -207,7 +207,7 @@ export default function ManualQuizCreation() {
               <PenTool className="h-16 w-16 text-white" />
             </div>
           </div>
-          <h1 className="text-5xl font-black text-gray-900 mb-4 bg-gradient-to-r from-black via-gray-800 to-black bg-clip-text text-transparent">
+          <h1 className="text-5xl font-black text-white mb-4 bg-gradient-to-r from-black via-gray-800 to-black bg-clip-text text-transparent">
             Manual Quiz Creation
           </h1>
           <p className="text-xl text-gray-600 font-semibold">
@@ -225,7 +225,7 @@ export default function ManualQuizCreation() {
 
         {/* Quiz Title */}
         <div className="bg-gradient-to-br from-white via-gray-50 to-white p-8 rounded-3xl shadow-2xl border-2 border-gray-200 mb-8">
-          <label className="block text-lg font-bold text-gray-900 mb-3">
+          <label className="block text-lg font-bold text-white mb-3">
             Quiz Title <span className="text-red-500">*</span>
           </label>
           <input
@@ -233,7 +233,7 @@ export default function ManualQuizCreation() {
             value={quizTitle}
             onChange={(e) => setQuizTitle(e.target.value)}
             placeholder="Enter quiz title"
-            className="w-full px-6 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 text-2xl font-black text-gray-900 placeholder-gray-400 shadow-lg"
+            className="w-full px-6 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 text-2xl font-black text-white placeholder-gray-400 shadow-lg"
             maxLength={100}
           />
         </div>
@@ -243,7 +243,7 @@ export default function ManualQuizCreation() {
           {questions.map((question, qIndex) => (
             <div key={qIndex} className="bg-gradient-to-br from-white via-gray-50 to-white p-10 rounded-3xl shadow-2xl border-2 border-gray-200">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-3xl font-black text-gray-900 flex items-center gap-3">
+                <h3 className="text-3xl font-black text-white flex items-center gap-3">
                   <span className="bg-gradient-to-br from-blue-500 to-purple-500 text-white px-4 py-2 rounded-xl shadow-lg">
                     {qIndex + 1}
                   </span>
@@ -271,7 +271,7 @@ export default function ManualQuizCreation() {
 
               {/* Question Text */}
               <div className="mb-6">
-                <label className="block text-lg font-bold text-gray-900 mb-3">
+                <label className="block text-lg font-bold text-white mb-3">
                   Question Text <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -281,13 +281,13 @@ export default function ManualQuizCreation() {
                   }
                   placeholder="Enter your question"
                   rows={3}
-                  className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-gray-900 placeholder-gray-400 shadow-md resize-none"
+                  className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md resize-none"
                 />
               </div>
 
               {/* Options */}
               <div className="mb-6">
-                <label className="block text-lg font-bold text-gray-900 mb-4">
+                <label className="block text-lg font-bold text-white mb-4">
                   Answer Options <span className="text-red-500">*</span>
                   <span className="text-gray-600 ml-3 text-sm font-semibold">
                     (Select the correct answer)
@@ -303,7 +303,7 @@ export default function ManualQuizCreation() {
                         className={`flex-shrink-0 w-10 h-10 rounded-xl border-3 flex items-center justify-center transition-all duration-200 shadow-lg hover:scale-110 ${
                           option.is_correct
                             ? 'border-green-600 bg-gradient-to-br from-green-500 to-emerald-500'
-                            : 'border-gray-300 hover:border-green-400 bg-white'
+                            : 'border-gray-300 hover:border-green-400 bg-[#1a1f2e]'
                         }`}
                       >
                         {option.is_correct && (
@@ -319,10 +319,10 @@ export default function ManualQuizCreation() {
                             updateOption(qIndex, oIndex, 'text', e.target.value)
                           }
                           placeholder={`Option ${oIndex + 1}`}
-                          className={`w-full px-5 py-4 border-2 rounded-2xl focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-gray-900 placeholder-gray-400 shadow-md ${
+                          className={`w-full px-5 py-4 border-2 rounded-2xl focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md ${
                             option.is_correct
                               ? 'border-green-500 bg-gradient-to-r from-green-50 to-emerald-50'
-                              : 'border-gray-300 focus:border-gray-900 bg-white'
+                              : 'border-gray-300 focus:border-gray-900 bg-[#1a1f2e]'
                           }`}
                         />
                       </div>
@@ -333,7 +333,7 @@ export default function ManualQuizCreation() {
 
               {/* Explanation */}
               <div className="mb-6">
-                <label className="block text-lg font-bold text-gray-900 mb-3">
+                <label className="block text-lg font-bold text-white mb-3">
                   Explanation <span className="text-gray-500 font-semibold">(Optional)</span>
                 </label>
                 <textarea
@@ -343,13 +343,13 @@ export default function ManualQuizCreation() {
                   }
                   placeholder="Add an explanation for the correct answer"
                   rows={2}
-                  className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-gray-900 placeholder-gray-400 shadow-md resize-none"
+                  className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md resize-none"
                 />
               </div>
 
               {/* Tags/Topics */}
               <div>
-                <label className="block text-lg font-bold text-gray-900 mb-3">
+                <label className="block text-lg font-bold text-white mb-3">
                   Tags/Topics <span className="text-gray-500 font-semibold">(Optional - for analytics)</span>
                 </label>
                 <input
@@ -360,10 +360,10 @@ export default function ManualQuizCreation() {
                     updateQuestion(qIndex, 'tags', tagsArray);
                   }}
                   placeholder="e.g., Algebra, Geometry, History (comma-separated)"
-                  className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-gray-900 placeholder-gray-400 shadow-md"
+                  className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md"
                 />
                 <p className="text-sm text-gray-600 mt-2 font-semibold bg-blue-50 p-3 rounded-xl">
-                  💡 Add topics to track performance by category in analytics
+                  ðŸ’¡ Add topics to track performance by category in analytics
                 </p>
               </div>
             </div>
@@ -382,11 +382,11 @@ export default function ManualQuizCreation() {
         </div>
 
         {/* Summary */}
-        <div className="card mt-6 bg-gray-100 border-2 border-green-200">
+        <div className="card mt-6 bg-[#1a1f2e] border-2 border-green-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Questions</p>
-              <p className="text-3xl font-bold text-gray-900">{questions.length}</p>
+              <p className="text-3xl font-bold text-white">{questions.length}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Completed</p>
@@ -404,3 +404,5 @@ export default function ManualQuizCreation() {
     </div>
   )
 }
+
+

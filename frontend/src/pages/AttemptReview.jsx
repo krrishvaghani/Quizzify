@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { quizAPI } from '../utils/api'
 import {
@@ -51,7 +51,7 @@ export default function AttemptReview() {
 
   const getAnswerStatus = (questionDetail) => {
     if (!questionDetail.is_answered) {
-      return { status: 'unanswered', icon: AlertCircle, color: 'text-gray-500', bg: 'bg-gray-50' }
+      return { status: 'unanswered', icon: AlertCircle, color: 'text-gray-500', bg: 'bg-[#0f1419]' }
     } else if (questionDetail.is_correct) {
       return { status: 'correct', icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50' }
     } else {
@@ -61,7 +61,7 @@ export default function AttemptReview() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0f1419] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
           <p className="text-gray-600">Loading results...</p>
@@ -72,10 +72,10 @@ export default function AttemptReview() {
 
   if (error || !attempt) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0f1419] flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Results Not Found</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">Results Not Found</h2>
           <p className="text-gray-600 mb-4">{error}</p>
           <button
             onClick={() => window.history.back()}
@@ -90,23 +90,23 @@ export default function AttemptReview() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0f1419]">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-[#1a1f2e] shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => window.history.back()}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />
               <span>Back to Results</span>
             </button>
             
             <div className="flex items-center gap-3">
-              <BookOpen className="h-6 w-6 text-black" />
+              <BookOpen className="h-6 w-6 text-white" />
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">{attempt.quiz_title}</h1>
+                <h1 className="text-lg font-semibold text-white">{attempt.quiz_title}</h1>
                 <p className="text-sm text-gray-500">Answer Review</p>
               </div>
             </div>
@@ -121,26 +121,26 @@ export default function AttemptReview() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <User className="h-5 w-5 text-gray-500" />
-                <span className="text-lg font-semibold text-gray-900">{attempt.student_name}</span>
+                <span className="text-lg font-semibold text-white">{attempt.student_name}</span>
               </div>
               <p className="text-gray-600">{attempt.student_email}</p>
             </div>
             
             <div className="mt-4 lg:mt-0 flex items-center gap-6">
               <div className="text-center">
-                <div className="text-2xl font-bold text-black">{attempt.percentage}%</div>
+                <div className="text-2xl font-bold text-white">{attempt.percentage}%</div>
                 <div className="text-sm text-gray-500">Score</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-black">{formatTime(attempt.time_taken)}</div>
+                <div className="text-2xl font-bold text-white">{formatTime(attempt.time_taken)}</div>
                 <div className="text-sm text-gray-500">Time Taken</div>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="text-xl font-bold text-black">{attempt.score}/{attempt.total_questions}</div>
+            <div className="text-center p-4 bg-[#0f1419] rounded-lg border border-gray-200">
+              <div className="text-xl font-bold text-white">{attempt.score}/{attempt.total_questions}</div>
               <div className="text-sm text-gray-600">Total Score</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -151,7 +151,7 @@ export default function AttemptReview() {
               <div className="text-xl font-bold text-red-600">{attempt.incorrect_answers.length}</div>
               <div className="text-sm text-red-700">Incorrect</div>
             </div>
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
+            <div className="text-center p-4 bg-[#0f1419] rounded-lg">
               <div className="text-xl font-bold text-gray-600">{attempt.unanswered.length}</div>
               <div className="text-sm text-gray-700">Unanswered</div>
             </div>
@@ -160,7 +160,7 @@ export default function AttemptReview() {
 
         {/* Questions Review */}
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Detailed Answer Review</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">Detailed Answer Review</h2>
           
           {attempt.question_details.map((questionDetail, index) => {
             const answerStatus = getAnswerStatus(questionDetail)
@@ -178,13 +178,13 @@ export default function AttemptReview() {
                       <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                         answerStatus.status === 'correct' ? 'bg-green-100 text-green-800' :
                         answerStatus.status === 'incorrect' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
+                        'bg-[#1a1f2e] text-gray-800'
                       }`}>
                         {answerStatus.status === 'correct' ? 'Correct' :
                          answerStatus.status === 'incorrect' ? 'Incorrect' : 'Unanswered'}
                       </span>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    <h3 className="text-lg font-semibold text-white mb-4">
                       {questionDetail.question}
                     </h3>
                   </div>
@@ -204,7 +204,7 @@ export default function AttemptReview() {
                     } else if (isUserAnswer) {
                       optionClasses += "bg-red-50 border-red-500 text-red-900"
                     } else {
-                      optionClasses += "bg-gray-50 border-gray-200 text-gray-700"
+                      optionClasses += "bg-[#0f1419] border-gray-200 text-gray-700"
                     }
 
                     return (
@@ -269,3 +269,5 @@ export default function AttemptReview() {
     </div>
   )
 }
+
+

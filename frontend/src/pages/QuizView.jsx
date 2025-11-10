@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { quizAPI } from '../utils/api'
 import {
@@ -105,7 +105,7 @@ export default function QuizView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#0f1419]">
         <Loader2 className="h-12 w-12 text-primary-600 animate-spin" />
       </div>
     )
@@ -116,14 +116,14 @@ export default function QuizView() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0f1419]">
       {/* Header */}
-      <header className="bg-white shadow-sm">
+      <header className="bg-[#1a1f2e] shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />
               <span>Back to Dashboard</span>
@@ -164,14 +164,14 @@ export default function QuizView() {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Share Link Section */}
         {!showResults && (
-          <div className="card mb-6 bg-gray-100 border-purple-200">
+          <div className="card mb-6 bg-[#1a1f2e] border-purple-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-purple-600 p-2 rounded-lg">
                   <Share2 className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">Share Quiz with Students</h3>
+                  <h3 className="font-semibold text-white">Share Quiz with Students</h3>
                   <p className="text-sm text-gray-600">Students can take this quiz without logging in</p>
                 </div>
               </div>
@@ -192,7 +192,7 @@ export default function QuizView() {
                 )}
               </button>
             </div>
-            <div className="mt-3 p-3 bg-white rounded-lg border border-purple-200">
+            <div className="mt-3 p-3 bg-[#1a1f2e] rounded-lg border border-purple-200">
               <p className="text-sm text-gray-600 font-mono break-all">
                 {window.location.origin}/quiz/{id}/start
               </p>
@@ -204,7 +204,7 @@ export default function QuizView() {
         <div className="card mb-8">
           <div className="flex items-start justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-white mb-2">
                 {quiz.title}
               </h1>
               <p className="text-gray-600 flex items-center gap-2">
@@ -240,7 +240,7 @@ export default function QuizView() {
           <div className={`card mb-8 ${getScoreBgColor()} border-2`}>
             <div className="text-center">
               <Award className={`h-16 w-16 mx-auto mb-4 ${getScoreColor()}`} />
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-3xl font-bold text-white mb-2">
                 Quiz Completed!
               </h2>
               <p className="text-xl text-gray-700 mb-4">
@@ -273,7 +273,7 @@ export default function QuizView() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-gray-500 mb-2">Question {currentQuestion + 1} of {quiz.questions.length}</p>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-xl font-semibold text-white">
                     {quiz.questions[currentQuestion].question}
                   </h3>
                 </div>
@@ -290,16 +290,16 @@ export default function QuizView() {
                       className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
                         isSelected
                           ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+                          : 'border-gray-300 hover:border-primary-400 hover:bg-[#0f1419]'
                       }`}
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
                           isSelected ? 'border-primary-500 bg-primary-500' : 'border-gray-300'
                         }`}>
-                          {isSelected && <div className="w-2 h-2 bg-white rounded-full"></div>}
+                          {isSelected && <div className="w-2 h-2 bg-[#1a1f2e] rounded-full"></div>}
                         </div>
-                        <span className="font-medium text-gray-900">
+                        <span className="font-medium text-white">
                           {option.text}
                         </span>
                       </div>
@@ -330,7 +330,7 @@ export default function QuizView() {
                         ? 'bg-primary-600 text-white'
                         : selectedAnswers[idx] !== undefined
                         ? 'bg-green-100 text-green-700 border border-green-300'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'bg-[#1a1f2e] text-gray-600 hover:bg-gray-200'
                     }`}
                   >
                     {idx + 1}
@@ -373,7 +373,7 @@ export default function QuizView() {
                       {questionIndex + 1}
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                      <h3 className="text-lg font-semibold text-white">
                         {question.question}
                       </h3>
                     </div>
@@ -399,7 +399,7 @@ export default function QuizView() {
                       return (
                         <div key={optionIndex} className={buttonClass}>
                           <div className="flex items-center justify-between">
-                            <span className="font-medium text-gray-900">
+                            <span className="font-medium text-white">
                               {option.text}
                             </span>
                             {showCorrect && (
@@ -432,3 +432,5 @@ export default function QuizView() {
     </div>
   )
 }
+
+

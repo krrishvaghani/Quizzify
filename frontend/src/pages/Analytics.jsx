@@ -45,19 +45,19 @@ export default function Analytics() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#1a1f2e]">
       <div className="border-b border-black">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
                 to="/dashboard"
-                className="p-2 hover:bg-gray-100 rounded-lg border border-black"
+                className="p-2 hover:bg-[#1a1f2e] rounded-lg border border-black"
               >
                 <ArrowLeft className="h-5 w-5" />
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-black">Analytics</h1>
+                <h1 className="text-3xl font-bold text-white">Analytics</h1>
                 <p className="text-gray-600 mt-1">View MCQ performance statistics</p>
               </div>
             </div>
@@ -68,16 +68,16 @@ export default function Analytics() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-black" />
+            <Loader2 className="h-8 w-8 animate-spin text-white" />
           </div>
         ) : !analytics || analytics.total_quizzes === 0 ? (
           <div className="text-center py-20">
             <BarChart3 className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-xl font-semibold text-black mb-2">No Quizzes Yet</h3>
+            <h3 className="text-xl font-semibold text-white mb-2">No Quizzes Yet</h3>
             <p className="text-gray-600 mb-6">Create a quiz to see analytics</p>
             <Link
               to="/dashboard"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 border border-black"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-black text-white rounded-lg hover:bg-[#1a1f2e] border border-black"
             >
               Go to Dashboard
             </Link>
@@ -86,44 +86,44 @@ export default function Analytics() {
           <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+              <div className="border border-gray-300 rounded-lg p-6 bg-[#1a1f2e]">
                 <div className="flex items-center gap-3 mb-2">
-                  <FileText className="h-6 w-6 text-black" />
+                  <FileText className="h-6 w-6 text-white" />
                   <span className="text-gray-600 text-sm font-medium">Total Quizzes</span>
                 </div>
-                <p className="text-3xl font-bold text-black">{analytics.total_quizzes}</p>
+                <p className="text-3xl font-bold text-white">{analytics.total_quizzes}</p>
               </div>
 
-              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+              <div className="border border-gray-300 rounded-lg p-6 bg-[#1a1f2e]">
                 <div className="flex items-center gap-3 mb-2">
-                  <Activity className="h-6 w-6 text-black" />
+                  <Activity className="h-6 w-6 text-white" />
                   <span className="text-gray-600 text-sm font-medium">Total Attempts</span>
                 </div>
-                <p className="text-3xl font-bold text-black">{analytics.total_attempts}</p>
+                <p className="text-3xl font-bold text-white">{analytics.total_attempts}</p>
               </div>
 
-              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+              <div className="border border-gray-300 rounded-lg p-6 bg-[#1a1f2e]">
                 <div className="flex items-center gap-3 mb-2">
-                  <Users className="h-6 w-6 text-black" />
+                  <Users className="h-6 w-6 text-white" />
                   <span className="text-gray-600 text-sm font-medium">Total Students</span>
                 </div>
-                <p className="text-3xl font-bold text-black">{analytics.total_students}</p>
+                <p className="text-3xl font-bold text-white">{analytics.total_students}</p>
               </div>
 
-              <div className="border border-gray-300 rounded-lg p-6 bg-white">
+              <div className="border border-gray-300 rounded-lg p-6 bg-[#1a1f2e]">
                 <div className="flex items-center gap-3 mb-2">
-                  <Trophy className="h-6 w-6 text-black" />
+                  <Trophy className="h-6 w-6 text-white" />
                   <span className="text-gray-600 text-sm font-medium">Average Score</span>
                 </div>
-                <p className="text-3xl font-bold text-black">{analytics.average_score}%</p>
+                <p className="text-3xl font-bold text-white">{analytics.average_score}%</p>
               </div>
             </div>
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Score Distribution Chart */}
-              <div className="border border-gray-300 rounded-lg p-6 bg-white">
-                <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
+              <div className="border border-gray-300 rounded-lg p-6 bg-[#1a1f2e]">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
                   Score Distribution
                 </h3>
@@ -136,7 +136,7 @@ export default function Analytics() {
                       <div key={range}>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-sm font-medium text-gray-700">{range}%</span>
-                          <span className="text-sm font-bold text-black">{count} attempts</span>
+                          <span className="text-sm font-bold text-white">{count} attempts</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-6">
                           <div
@@ -157,8 +157,8 @@ export default function Analytics() {
               </div>
 
               {/* Quiz Performance Chart */}
-              <div className="border border-gray-300 rounded-lg p-6 bg-white">
-                <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
+              <div className="border border-gray-300 rounded-lg p-6 bg-[#1a1f2e]">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <TrendingUp className="h-5 w-5" />
                   Quiz Performance
                 </h3>
@@ -174,7 +174,7 @@ export default function Analytics() {
                           <span className="text-sm font-medium text-gray-700 truncate flex-1 max-w-[200px]" title={quiz.quiz_title}>
                             {quiz.quiz_title}
                           </span>
-                          <span className="text-sm font-bold text-black ml-2">{displayScore.toFixed(1)}%</span>
+                          <span className="text-sm font-bold text-white ml-2">{displayScore.toFixed(1)}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-6 overflow-hidden">
                           <div
@@ -205,8 +205,8 @@ export default function Analytics() {
 
             {/* Recent Activity */}
             {analytics.recent_activity.length > 0 && (
-              <div className="border border-gray-300 rounded-lg p-6 bg-white">
-                <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
+              <div className="border border-gray-300 rounded-lg p-6 bg-[#1a1f2e]">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <Clock className="h-5 w-5" />
                   Recent Activity
                 </h3>
@@ -223,10 +223,10 @@ export default function Analytics() {
                     </thead>
                     <tbody>
                       {analytics.recent_activity.map((activity, idx) => (
-                        <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                          <td className="py-3 px-4 text-sm text-gray-900">{activity.quiz_title}</td>
+                        <tr key={idx} className="border-b border-gray-100 hover:bg-[#0f1419]">
+                          <td className="py-3 px-4 text-sm text-white">{activity.quiz_title}</td>
                           <td className="py-3 px-4 text-sm text-gray-700">{activity.student_name}</td>
-                          <td className="py-3 px-4 text-sm text-center font-medium text-black">
+                          <td className="py-3 px-4 text-sm text-center font-medium text-white">
                             {activity.score}/{activity.max_score}
                           </td>
                           <td className="py-3 px-4 text-center">
@@ -255,3 +255,5 @@ export default function Analytics() {
     </div>
   );
 }
+
+

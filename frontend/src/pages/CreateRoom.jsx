@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { quizAPI, roomAPI } from '../utils/api'
 import {
@@ -154,7 +154,7 @@ export default function CreateRoom() {
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="mb-10 text-center">
-          <h1 className="text-5xl font-black text-gray-900 mb-3 bg-gradient-to-r from-black via-gray-800 to-black bg-clip-text text-transparent">
+          <h1 className="text-5xl font-black text-white mb-3 bg-gradient-to-r from-black via-gray-800 to-black bg-clip-text text-transparent">
             Create a Room
           </h1>
           <p className="text-lg text-gray-600 font-semibold">
@@ -205,9 +205,9 @@ export default function CreateRoom() {
         {step === 1 && (
           <div className="bg-gradient-to-br from-white via-gray-50 to-white p-10 rounded-3xl shadow-2xl border-2 border-gray-200 max-w-2xl mx-auto space-y-8">
             <div>
-              <h2 className="text-3xl font-black text-gray-900 mb-2 flex items-center gap-3">
+              <h2 className="text-3xl font-black text-white mb-2 flex items-center gap-3">
                 <div className="p-2 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl">
-                  <SettingsIcon className="h-8 w-8 text-gray-900" />
+                  <SettingsIcon className="h-8 w-8 text-white" />
                 </div>
                 Room Details & Settings
               </h2>
@@ -216,7 +216,7 @@ export default function CreateRoom() {
 
             {/* Room Title */}
             <div>
-              <label className="block text-base font-bold text-gray-900 mb-3">
+              <label className="block text-base font-bold text-white mb-3">
                 Room Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -225,14 +225,14 @@ export default function CreateRoom() {
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="Enter room title"
-                className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-gray-900 placeholder-gray-400 shadow-md"
+                className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md"
                 maxLength={100}
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-base font-bold text-gray-900 mb-3">
+              <label className="block text-base font-bold text-white mb-3">
                 Description <span className="text-gray-500 font-semibold">(Optional)</span>
               </label>
               <textarea
@@ -241,14 +241,14 @@ export default function CreateRoom() {
                 onChange={handleChange}
                 placeholder="Describe your quiz room"
                 rows={3}
-                className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-gray-900 placeholder-gray-400 shadow-md resize-none"
+                className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md resize-none"
                 maxLength={500}
               />
             </div>
 
             {/* Quiz Features */}
             <div className="border-t-2 border-gray-200 pt-8">
-              <h3 className="text-2xl font-black text-gray-900 mb-6">
+              <h3 className="text-2xl font-black text-white mb-6">
                 Quiz Features
               </h3>
 
@@ -257,10 +257,10 @@ export default function CreateRoom() {
                 <div className="flex items-center justify-between p-6 bg-gradient-to-br from-blue-50 via-white to-purple-50 rounded-2xl border-2 border-gray-200 shadow-lg">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl">
-                      <Clock className="h-6 w-6 text-gray-900" />
+                      <Clock className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                      <p className="font-bold text-gray-900 text-lg">Enable Timer</p>
+                      <p className="font-bold text-white text-lg">Enable Timer</p>
                       <p className="text-sm text-gray-600 font-semibold">
                         Set time limit per question
                       </p>
@@ -275,7 +275,7 @@ export default function CreateRoom() {
                     }`}
                   >
                     <span
-                      className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-md ${
+                      className={`inline-block h-6 w-6 transform rounded-full bg-[#1a1f2e] transition-transform shadow-md ${
                         formData.settings.enable_timer
                           ? 'translate-x-7'
                           : 'translate-x-1'
@@ -286,7 +286,7 @@ export default function CreateRoom() {
 
                 {formData.settings.enable_timer && (
                   <div className="mt-4 ml-8 p-6 bg-gradient-to-br from-gray-50 to-white rounded-2xl border-2 border-gray-200 shadow-md">
-                    <label className="block text-base font-bold text-gray-900 mb-3">
+                    <label className="block text-base font-bold text-white mb-3">
                       Timer Duration: <span className="text-blue-600">{formData.settings.timer_duration}s</span>
                     </label>
                     <input
@@ -312,10 +312,10 @@ export default function CreateRoom() {
               <div className="flex items-center justify-between p-6 bg-gradient-to-br from-green-50 via-white to-blue-50 rounded-2xl mb-6 border-2 border-gray-200 shadow-lg">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-gradient-to-br from-green-100 to-blue-100 rounded-xl">
-                    <Shuffle className="h-6 w-6 text-gray-900" />
+                    <Shuffle className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900 text-lg">Shuffle Questions</p>
+                    <p className="font-bold text-white text-lg">Shuffle Questions</p>
                     <p className="text-sm text-gray-600 font-semibold">
                       Randomize question order
                     </p>
@@ -330,7 +330,7 @@ export default function CreateRoom() {
                   }`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-md ${
+                    className={`inline-block h-6 w-6 transform rounded-full bg-[#1a1f2e] transition-transform shadow-md ${
                       formData.settings.shuffle_questions
                         ? 'translate-x-7'
                         : 'translate-x-1'
@@ -343,10 +343,10 @@ export default function CreateRoom() {
               <div className="flex items-center justify-between p-6 bg-gradient-to-br from-purple-50 via-white to-pink-50 rounded-2xl mb-6 border-2 border-gray-200 shadow-lg">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl">
-                    <RotateCw className="h-6 w-6 text-gray-900" />
+                    <RotateCw className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900 text-lg">Shuffle Options</p>
+                    <p className="font-bold text-white text-lg">Shuffle Options</p>
                     <p className="text-sm text-gray-600 font-semibold">
                       Randomize answer options
                     </p>
@@ -361,7 +361,7 @@ export default function CreateRoom() {
                   }`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-md ${
+                    className={`inline-block h-6 w-6 transform rounded-full bg-[#1a1f2e] transition-transform shadow-md ${
                       formData.settings.shuffle_options
                         ? 'translate-x-7'
                         : 'translate-x-1'
@@ -375,13 +375,13 @@ export default function CreateRoom() {
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-gradient-to-br from-yellow-100 to-orange-100 rounded-xl">
                     {formData.settings.show_results_immediately ? (
-                      <Eye className="h-6 w-6 text-gray-900" />
+                      <Eye className="h-6 w-6 text-white" />
                     ) : (
-                      <EyeOff className="h-6 w-6 text-gray-900" />
+                      <EyeOff className="h-6 w-6 text-white" />
                     )}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-900 text-lg">Show Results Immediately</p>
+                    <p className="font-bold text-white text-lg">Show Results Immediately</p>
                     <p className="text-sm text-gray-600 font-semibold">
                       Display correct answers after submission
                     </p>
@@ -396,7 +396,7 @@ export default function CreateRoom() {
                   }`}
                 >
                   <span
-                    className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform shadow-md ${
+                    className={`inline-block h-6 w-6 transform rounded-full bg-[#1a1f2e] transition-transform shadow-md ${
                       formData.settings.show_results_immediately
                         ? 'translate-x-7'
                         : 'translate-x-1'
@@ -407,9 +407,9 @@ export default function CreateRoom() {
 
               {/* Attempts Allowed */}
               <div className="p-6 bg-gradient-to-br from-red-50 via-white to-pink-50 rounded-2xl border-2 border-gray-200 shadow-lg">
-                <label className="block text-base font-bold text-gray-900 mb-4 flex items-center gap-3">
+                <label className="block text-base font-bold text-white mb-4 flex items-center gap-3">
                   <div className="p-2 bg-gradient-to-br from-red-100 to-pink-100 rounded-xl">
-                    <Trophy className="h-6 w-6 text-gray-900" />
+                    <Trophy className="h-6 w-6 text-white" />
                   </div>
                   Attempts Allowed
                 </label>
@@ -421,7 +421,7 @@ export default function CreateRoom() {
                       className={`flex-1 py-4 rounded-2xl font-black text-lg transition-all duration-200 border-2 shadow-lg hover:scale-105 ${
                         formData.settings.attempts_allowed === num
                           ? 'bg-gradient-to-r from-black via-gray-900 to-black text-white border-gray-800 scale-105'
-                          : 'bg-gradient-to-br from-white to-gray-50 text-gray-700 hover:bg-gray-100 border-gray-300'
+                          : 'bg-gradient-to-br from-white to-gray-50 text-gray-700 hover:bg-[#1a1f2e] border-gray-300'
                       }`}
                     >
                       {num}
@@ -443,7 +443,7 @@ export default function CreateRoom() {
         {step === 2 && (
           <div className="bg-gradient-to-br from-white via-gray-50 to-white p-10 rounded-3xl shadow-2xl border-2 border-gray-200 max-w-4xl mx-auto">
             <div className="mb-10 text-center">
-              <h2 className="text-4xl font-black text-gray-900 mb-3">
+              <h2 className="text-4xl font-black text-white mb-3">
                 Choose Quiz Option
               </h2>
               <p className="text-lg text-gray-600 font-semibold">
@@ -470,7 +470,7 @@ export default function CreateRoom() {
                   )}
                 </div>
 
-                <h3 className="text-xl font-black text-gray-900 mb-3">
+                <h3 className="text-xl font-black text-white mb-3">
                   Select Existing Quiz
                 </h3>
                 <p className="text-sm text-gray-600 mb-6 font-semibold">
@@ -511,7 +511,7 @@ export default function CreateRoom() {
                   )}
                 </div>
 
-                <h3 className="text-xl font-black text-gray-900 mb-3">
+                <h3 className="text-xl font-black text-white mb-3">
                   AI Generated Quiz
                 </h3>
                 <p className="text-sm text-gray-600 mb-6 font-semibold">
@@ -552,7 +552,7 @@ export default function CreateRoom() {
                   )}
                 </div>
 
-                <h3 className="text-xl font-black text-gray-900 mb-3">
+                <h3 className="text-xl font-black text-white mb-3">
                   Create New Quiz
                 </h3>
                 <p className="text-sm text-gray-600 mb-6 font-semibold">
@@ -579,7 +579,7 @@ export default function CreateRoom() {
             <div className="flex justify-between gap-4">
               <button
                 onClick={() => setStep(1)}
-                className="px-8 py-4 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-900 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-200 flex items-center gap-3 shadow-lg border-2 border-gray-300"
+                className="px-8 py-4 bg-gradient-to-br from-gray-100 to-gray-200 text-white rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-200 flex items-center gap-3 shadow-lg border-2 border-gray-300"
               >
                 <ArrowLeft className="h-5 w-5" />
                 Back
@@ -600,7 +600,7 @@ export default function CreateRoom() {
         {step === 3 && (
           <div className="bg-gradient-to-br from-white via-gray-50 to-white p-10 rounded-3xl shadow-2xl border-2 border-gray-200 max-w-2xl mx-auto">
             <div className="mb-8 text-center">
-              <h2 className="text-4xl font-black text-gray-900 mb-3">
+              <h2 className="text-4xl font-black text-white mb-3">
                 Choose Quiz
               </h2>
               <p className="text-lg text-gray-600 font-semibold">
@@ -615,7 +615,7 @@ export default function CreateRoom() {
             ) : quizzes.length === 0 ? (
               <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-white rounded-3xl border-2 border-gray-200">
                 <AlertCircle className="h-20 w-20 text-gray-400 mx-auto mb-6" />
-                <h3 className="text-2xl font-black text-gray-900 mb-3">
+                <h3 className="text-2xl font-black text-white mb-3">
                   No quizzes available
                 </h3>
                 <p className="text-gray-600 mb-6 font-semibold text-lg">
@@ -646,7 +646,7 @@ export default function CreateRoom() {
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-black text-gray-900 mb-2 text-xl">
+                          <h3 className="font-black text-white mb-2 text-xl">
                             {quiz.title}
                           </h3>
                           <p className="text-sm text-gray-600 font-bold bg-gradient-to-r from-blue-100 to-purple-100 px-3 py-1 rounded-full inline-block">
@@ -664,7 +664,7 @@ export default function CreateRoom() {
                 <div className="flex gap-4">
                   <button
                     onClick={() => setStep(2)}
-                    className="flex-1 px-6 py-4 bg-gradient-to-br from-gray-100 to-gray-200 text-gray-900 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-200 shadow-lg border-2 border-gray-300 flex items-center justify-center gap-2"
+                    className="flex-1 px-6 py-4 bg-gradient-to-br from-gray-100 to-gray-200 text-white rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-200 shadow-lg border-2 border-gray-300 flex items-center justify-center gap-2"
                   >
                     <ArrowLeft className="h-5 w-5" />
                     Back
@@ -692,3 +692,5 @@ export default function CreateRoom() {
     </div>
   )
 }
+
+

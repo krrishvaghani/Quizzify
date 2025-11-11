@@ -164,14 +164,14 @@ export default function ManualQuizCreation() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-[#0f1419]">
       {/* Header */}
-      <header className="bg-gradient-to-r from-black via-gray-900 to-black text-white border-b-4 border-gray-800 sticky top-0 z-10 shadow-2xl">
+      <header className="bg-gradient-to-r from-[#1a1f2e] to-[#252b3b] text-white border-b border-gray-800 sticky top-0 z-10 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-white hover:text-gray-300 text-base font-bold hover:scale-105 transition-all duration-200"
+              className="flex items-center gap-2 text-gray-400 hover:text-cyan-400 text-base font-bold hover:scale-105 transition-all duration-200"
             >
               <ArrowLeft className="h-6 w-6" />
               <span>Back to Dashboard</span>
@@ -180,7 +180,7 @@ export default function ManualQuizCreation() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-8 py-4 bg-[#1a1f2e] text-white rounded-2xl font-black hover:scale-105 transition-all duration-200 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-xl text-lg"
+              className="px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-2xl font-black hover:scale-105 transition-all duration-200 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg hover:shadow-cyan-500/30 text-lg border-2 border-cyan-500"
             >
               {saving ? (
                 <>
@@ -203,37 +203,37 @@ export default function ManualQuizCreation() {
         {/* Header */}
         <div className="text-center mb-12">
           <div className="flex justify-center mb-6">
-            <div className="bg-gradient-to-br from-black via-gray-900 to-black p-6 rounded-3xl shadow-2xl">
+            <div className="bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 p-6 rounded-2xl shadow-2xl">
               <PenTool className="h-16 w-16 text-white" />
             </div>
           </div>
-          <h1 className="text-5xl font-black text-white mb-4 bg-gradient-to-r from-black via-gray-800 to-black bg-clip-text text-transparent">
+          <h1 className="text-5xl font-black text-white mb-4">
             Manual Quiz Creation
           </h1>
-          <p className="text-xl text-gray-600 font-semibold">
+          <p className="text-xl text-gray-400 font-semibold">
             Create your custom quiz questions
           </p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-8 bg-gradient-to-r from-red-50 to-pink-50 border-2 border-red-300 text-red-900 px-6 py-4 rounded-2xl flex items-center gap-3 shadow-lg font-semibold">
+          <div className="mb-8 bg-red-500/20 border-2 border-red-500 text-red-400 px-6 py-4 rounded-2xl flex items-center gap-3 shadow-lg font-semibold">
             <AlertCircle className="h-6 w-6" />
             <span>{error}</span>
           </div>
         )}
 
         {/* Quiz Title */}
-        <div className="bg-gradient-to-br from-white via-gray-50 to-white p-8 rounded-3xl shadow-2xl border-2 border-gray-200 mb-8">
+        <div className="bg-[#1a1f2e] p-8 rounded-2xl shadow-2xl border border-gray-800 mb-8">
           <label className="block text-lg font-bold text-white mb-3">
-            Quiz Title <span className="text-red-500">*</span>
+            Quiz Title <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
             value={quizTitle}
             onChange={(e) => setQuizTitle(e.target.value)}
             placeholder="Enter quiz title"
-            className="w-full px-6 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 text-2xl font-black text-white placeholder-gray-400 shadow-lg"
+            className="w-full px-6 py-4 bg-[#252b3b] border-2 border-gray-700 rounded-2xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all duration-200 text-2xl font-black text-white placeholder-gray-500 shadow-lg"
             maxLength={100}
           />
         </div>
@@ -241,10 +241,10 @@ export default function ManualQuizCreation() {
         {/* Questions */}
         <div className="space-y-8">
           {questions.map((question, qIndex) => (
-            <div key={qIndex} className="bg-gradient-to-br from-white via-gray-50 to-white p-10 rounded-3xl shadow-2xl border-2 border-gray-200">
+            <div key={qIndex} className="bg-[#1a1f2e] p-10 rounded-2xl shadow-2xl border border-gray-800">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-3xl font-black text-white flex items-center gap-3">
-                  <span className="bg-gradient-to-br from-blue-500 to-purple-500 text-white px-4 py-2 rounded-xl shadow-lg">
+                  <span className="bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl shadow-lg">
                     {qIndex + 1}
                   </span>
                   Question {qIndex + 1}
@@ -252,7 +252,7 @@ export default function ManualQuizCreation() {
                 <div className="flex gap-3">
                   <button
                     onClick={() => duplicateQuestion(qIndex)}
-                    className="p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 hover:scale-110 shadow-lg border-2 border-blue-200"
+                    className="p-3 text-cyan-400 hover:bg-cyan-500/10 rounded-xl transition-all duration-200 hover:scale-110 shadow-lg border-2 border-cyan-500/30"
                     title="Duplicate question"
                   >
                     <Copy className="h-6 w-6" />
@@ -260,7 +260,7 @@ export default function ManualQuizCreation() {
                   {questions.length > 1 && (
                     <button
                       onClick={() => removeQuestion(qIndex)}
-                      className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200 hover:scale-110 shadow-lg border-2 border-red-200"
+                      className="p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all duration-200 hover:scale-110 shadow-lg border-2 border-red-500/30"
                       title="Delete question"
                     >
                       <Trash2 className="h-6 w-6" />
@@ -272,7 +272,7 @@ export default function ManualQuizCreation() {
               {/* Question Text */}
               <div className="mb-6">
                 <label className="block text-lg font-bold text-white mb-3">
-                  Question Text <span className="text-red-500">*</span>
+                  Question Text <span className="text-red-400">*</span>
                 </label>
                 <textarea
                   value={question.question}
@@ -281,15 +281,15 @@ export default function ManualQuizCreation() {
                   }
                   placeholder="Enter your question"
                   rows={3}
-                  className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md resize-none"
+                  className="w-full px-5 py-4 bg-[#252b3b] border-2 border-gray-700 rounded-2xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-500 shadow-md resize-none"
                 />
               </div>
 
               {/* Options */}
               <div className="mb-6">
                 <label className="block text-lg font-bold text-white mb-4">
-                  Answer Options <span className="text-red-500">*</span>
-                  <span className="text-gray-600 ml-3 text-sm font-semibold">
+                  Answer Options <span className="text-red-400">*</span>
+                  <span className="text-gray-400 ml-3 text-sm font-semibold">
                     (Select the correct answer)
                   </span>
                 </label>
@@ -300,10 +300,10 @@ export default function ManualQuizCreation() {
                         onClick={() =>
                           updateOption(qIndex, oIndex, 'is_correct', !option.is_correct)
                         }
-                        className={`flex-shrink-0 w-10 h-10 rounded-xl border-3 flex items-center justify-center transition-all duration-200 shadow-lg hover:scale-110 ${
+                        className={`flex-shrink-0 w-10 h-10 rounded-xl border-2 flex items-center justify-center transition-all duration-200 shadow-lg hover:scale-110 ${
                           option.is_correct
-                            ? 'border-green-600 bg-gradient-to-br from-green-500 to-emerald-500'
-                            : 'border-gray-300 hover:border-green-400 bg-[#1a1f2e]'
+                            ? 'border-green-500 bg-gradient-to-br from-green-500 to-emerald-500'
+                            : 'border-gray-700 hover:border-green-400 bg-[#252b3b]'
                         }`}
                       >
                         {option.is_correct && (
@@ -319,10 +319,10 @@ export default function ManualQuizCreation() {
                             updateOption(qIndex, oIndex, 'text', e.target.value)
                           }
                           placeholder={`Option ${oIndex + 1}`}
-                          className={`w-full px-5 py-4 border-2 rounded-2xl focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md ${
+                          className={`w-full px-5 py-4 border-2 rounded-2xl focus:ring-2 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-500 shadow-md ${
                             option.is_correct
-                              ? 'border-green-500 bg-gradient-to-r from-green-50 to-emerald-50'
-                              : 'border-gray-300 focus:border-gray-900 bg-[#1a1f2e]'
+                              ? 'border-green-500 bg-green-500/10 focus:ring-green-500/20'
+                              : 'border-gray-700 bg-[#252b3b] focus:border-cyan-500 focus:ring-cyan-500/20'
                           }`}
                         />
                       </div>
@@ -343,7 +343,7 @@ export default function ManualQuizCreation() {
                   }
                   placeholder="Add an explanation for the correct answer"
                   rows={2}
-                  className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md resize-none"
+                  className="w-full px-5 py-4 bg-[#252b3b] border-2 border-gray-700 rounded-2xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-500 shadow-md resize-none"
                 />
               </div>
 
@@ -360,9 +360,9 @@ export default function ManualQuizCreation() {
                     updateQuestion(qIndex, 'tags', tagsArray);
                   }}
                   placeholder="e.g., Algebra, Geometry, History (comma-separated)"
-                  className="w-full px-5 py-4 border-2 border-gray-300 rounded-2xl focus:border-gray-900 focus:ring-4 focus:ring-gray-100 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-400 shadow-md"
+                  className="w-full px-5 py-4 bg-[#252b3b] border-2 border-gray-700 rounded-2xl focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 outline-none transition-all duration-200 font-semibold text-white placeholder-gray-500 shadow-md"
                 />
-                <p className="text-sm text-gray-600 mt-2 font-semibold bg-blue-50 p-3 rounded-xl">
+                <p className="text-sm text-gray-400 mt-2 font-semibold bg-cyan-500/10 p-3 rounded-xl border border-cyan-500/30">
                   ðŸ’¡ Add topics to track performance by category in analytics
                 </p>
               </div>
@@ -374,7 +374,7 @@ export default function ManualQuizCreation() {
         <div className="mt-10">
           <button
             onClick={addQuestion}
-            className="w-full py-6 border-3 border-dashed border-gray-300 rounded-3xl text-gray-700 hover:border-green-500 hover:text-green-600 hover:bg-gradient-to-r hover:from-green-50 hover:to-emerald-50 transition-all duration-200 flex items-center justify-center gap-3 font-black text-xl shadow-xl hover:scale-[1.02]"
+            className="w-full py-6 border-2 border-dashed border-gray-700 rounded-2xl text-gray-400 hover:border-cyan-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all duration-200 flex items-center justify-center gap-3 font-black text-xl shadow-xl hover:scale-[1.02]"
           >
             <Plus className="h-7 w-7" />
             Add Another Question
@@ -382,15 +382,15 @@ export default function ManualQuizCreation() {
         </div>
 
         {/* Summary */}
-        <div className="card mt-6 bg-[#1a1f2e] border-2 border-green-200">
+        <div className="bg-[#1a1f2e] rounded-2xl p-6 mt-6 border-2 border-cyan-500/30 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Total Questions</p>
+              <p className="text-sm text-gray-400">Total Questions</p>
               <p className="text-3xl font-bold text-white">{questions.length}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-3xl font-bold text-green-600">
+              <p className="text-sm text-gray-400">Completed</p>
+              <p className="text-3xl font-bold text-green-500">
                 {questions.filter(q => 
                   q.question.trim() && 
                   q.options.some(o => o.is_correct) &&

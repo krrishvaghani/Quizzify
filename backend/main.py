@@ -69,6 +69,9 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
+    print(f"✅ Gemini API configured successfully")
+else:
+    print("⚠️ Warning: GEMINI_API_KEY not found. AI quiz generation will use fallback method.")
 
 # Models
 class UserRegister(BaseModel):
@@ -336,66 +339,120 @@ async def generate_mcqs_with_ai(text: str, num_questions: int, difficulty: str) 
     """Generate MCQs using AI (Gemini or fallback to simple generation)"""
     
     prompt = f"""
-    Based on the following content, generate EXACTLY {num_questions} multiple-choice questions (MCQs) with {difficulty} difficulty level.
-    
-    IMPORTANT INSTRUCTIONS:
-    - Generate ONLY Multiple Choice Questions (MCQs), NOT Fill in the Blank questions
-    - You must generate exactly {num_questions} questions, no more, no less
-    - Each question should be a complete question with a clear answer
-    - Create 4 distinct, plausible options for each question
-    
-    Content:
-    {text[:4000]}
-    
-    Format the response as a JSON array with the following structure:
+    You are an expert quiz creator. Analyze the following educational content and generate EXACTLY {num_questions} high-quality multiple-choice questions (MCQs) with {difficulty} difficulty level.
+
+    CRITICAL REQUIREMENTS:
+    1. TOPIC-BASED QUESTIONS: Identify the main topics, concepts, and key information in the text
+    2. Each question MUST test understanding of a specific topic or concept from the content
+    3. Questions should cover DIFFERENT topics from the text (don't repeat the same concept)
+    4. Generate ONLY Multiple Choice Questions (MCQs), NOT Fill in the Blank questions
+    5. You MUST generate exactly {num_questions} questions, no more, no less
+    6. Each question should be clear, unambiguous, and directly related to the content
+
+    DIFFICULTY LEVEL: {difficulty}
+    - Easy: Focus on definitions, basic facts, and direct recall
+    - Medium: Test comprehension, relationships between concepts, and application
+    - Hard: Require analysis, synthesis, evaluation, and deep understanding
+
+    CONTENT TO ANALYZE:
+    {text[:5000]}
+
+    QUESTION QUALITY GUIDELINES:
+    ✓ Extract main topics, key terms, important concepts, definitions, and principles
+    ✓ Create questions that test understanding of these specific topics
+    ✓ Design 4 options where all seem plausible but only one is definitively correct
+    ✓ Make wrong options believable (common misconceptions or related concepts)
+    ✓ Avoid obvious wrong answers like "None of the above" or "All of the above"
+    ✓ Use clear, professional language appropriate for the subject matter
+    ✓ Include brief explanations that reference the content
+
+    OUTPUT FORMAT (Return ONLY valid JSON, no markdown or extra text):
     [
         {{
-            "question": "What is the main concept discussed in the text?",
+            "question": "Based on the content, what is the primary purpose of [specific topic]?",
             "options": [
-                {{"text": "First plausible answer", "is_correct": false}},
-                {{"text": "Correct answer here", "is_correct": true}},
-                {{"text": "Another plausible option", "is_correct": false}},
-                {{"text": "Fourth plausible option", "is_correct": false}}
+                {{"text": "Clear, specific answer option A", "is_correct": false}},
+                {{"text": "Clear, specific answer option B (CORRECT)", "is_correct": true}},
+                {{"text": "Plausible but incorrect option C", "is_correct": false}},
+                {{"text": "Related but incorrect option D", "is_correct": false}}
             ],
-            "explanation": "Why the correct answer is correct"
+            "explanation": "The correct answer is B because according to the content, [specific reference to text]. This demonstrates [key concept]."
         }}
     ]
-    
-    Requirements:
-    - Generate EXACTLY {num_questions} complete MCQ questions
-    - Each question must have exactly 4 options
-    - Only one correct answer per question
-    - Make all options plausible and related to the content
-    - Avoid Fill in the Blank format
-    - Return ONLY the JSON array, no additional text
+
+    IMPORTANT: Return ONLY the JSON array. Do not include any markdown formatting, code blocks, or additional text before or after the JSON.
     """
     
     try:
         if GEMINI_API_KEY:
-            model = genai.GenerativeModel('gemini-pro')
-            response = model.generate_content(prompt)
+            print(f"🤖 Using Gemini AI to generate {num_questions} {difficulty} questions...")
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            # Configure generation parameters for better results
+            generation_config = {
+                "temperature": 0.7,
+                "top_p": 0.95,
+                "top_k": 40,
+                "max_output_tokens": 8192,
+            }
+            
+            response = model.generate_content(
+                prompt,
+                generation_config=generation_config
+            )
             
             # Parse the response and extract JSON
             import json
             import re
-            response_text = response.text
+            response_text = response.text.strip()
+            
+            # Remove markdown code blocks if present
+            response_text = re.sub(r'^```json\s*', '', response_text)
+            response_text = re.sub(r'^```\s*', '', response_text)
+            response_text = re.sub(r'\s*```$', '', response_text)
+            response_text = response_text.strip()
             
             # Try to find JSON in the response
             json_match = re.search(r'\[[\s\S]*\]', response_text)
             if json_match:
-                questions = json.loads(json_match.group())
+                json_str = json_match.group()
+                questions = json.loads(json_str)
                 
-                # If AI generated fewer questions, try to generate more
-                if len(questions) < num_questions:
-                    print(f"AI generated only {len(questions)} questions, expected {num_questions}")
-                    # Add simple questions to fill the gap
-                    remaining = num_questions - len(questions)
+                print(f"✅ AI generated {len(questions)} questions successfully")
+                
+                # Validate question structure
+                valid_questions = []
+                for q in questions:
+                    if (isinstance(q, dict) and 
+                        "question" in q and 
+                        "options" in q and 
+                        isinstance(q["options"], list) and
+                        len(q["options"]) == 4):
+                        
+                        # Ensure exactly one correct answer
+                        correct_count = sum(1 for opt in q["options"] if opt.get("is_correct", False))
+                        if correct_count == 1:
+                            valid_questions.append(q)
+                        else:
+                            print(f"⚠️ Question has {correct_count} correct answers, skipping")
+                
+                print(f"✅ {len(valid_questions)} valid questions after validation")
+                
+                # If AI generated fewer valid questions, try to generate more
+                if len(valid_questions) < num_questions:
+                    print(f"⚠️ Need {num_questions - len(valid_questions)} more questions")
+                    remaining = num_questions - len(valid_questions)
                     additional = generate_simple_mcqs(text, remaining)
-                    questions.extend(additional)
+                    valid_questions.extend(additional)
                 
-                return questions[:num_questions]
+                return valid_questions[:num_questions]
+            else:
+                print(f"❌ No JSON found in AI response")
+                print(f"Response preview: {response_text[:200]}")
     except Exception as e:
-        print(f"AI generation error: {e}")
+        print(f"❌ AI generation error: {e}")
+        import traceback
+        traceback.print_exc()
     
     # Fallback: Generate simple questions from the text
     return generate_simple_mcqs(text, num_questions)
@@ -740,6 +797,7 @@ async def upload_and_generate(
     file: UploadFile = File(...),
     num_questions: int = 5,
     difficulty: str = "medium",
+    quiz_name: str = "",
     current_user: dict = Depends(get_current_user)
 ):
     """Upload a file and generate MCQs"""
@@ -768,9 +826,12 @@ async def upload_and_generate(
         # Generate MCQs
         questions = await generate_mcqs_with_ai(text, num_questions, difficulty)
         
+        # Use custom quiz name if provided, otherwise use filename
+        title = quiz_name.strip() if quiz_name.strip() else f"Quiz from {file.filename}"
+        
         # Save quiz to database
         quiz_data = {
-            "title": f"Quiz from {file.filename}",
+            "title": title,
             "questions": questions,
             "created_by": current_user["email"],
             "created_at": datetime.utcnow(),

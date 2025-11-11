@@ -171,10 +171,10 @@ export default function Profile() {
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all"
+            className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-red-500/30 transition-all duration-300"
           >
-            <LogOut className="h-4 w-4" />
-            <span className="font-medium">Logout</span>
+            <LogOut className="h-5 w-5" />
+            <span className="font-semibold">Logout</span>
           </button>
         </div>
       </header>

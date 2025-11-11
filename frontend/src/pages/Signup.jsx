@@ -175,14 +175,37 @@ export default function Signup() {
           <button
             onClick={handleVerifyOtp}
             disabled={loading}
-            className="w-full py-3.5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 mb-4"
+            className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-cyan-500/30 transition-all disabled:opacity-50 mb-4"
           >
             {loading ? 'Verifying...' : 'Verify Email'}
           </button>
 
+          <div className="text-center mb-4">
+            <button
+              onClick={async () => {
+                setLoading(true)
+                setError('')
+                try {
+                  await authAPI.resendOtp({ email: registeredEmail })
+                  alert('OTP resent successfully! Check your email.')
+                  setOtp(['', '', '', '', '', ''])
+                  document.getElementById('otp-0')?.focus()
+                } catch (err) {
+                  setError(err.response?.data?.detail || 'Failed to resend OTP. Please try again.')
+                } finally {
+                  setLoading(false)
+                }
+              }}
+              disabled={loading}
+              className="text-cyan-400 hover:text-cyan-300 font-semibold disabled:opacity-50"
+            >
+              Resend OTP
+            </button>
+          </div>
+
           <button
             onClick={() => setShowOtpVerification(false)}
-            className="w-full text-center text-gray-400 hover:text-white transition-colors"
+            className="w-full text-center text-gray-400 hover:text-white transition-colors font-semibold"
           >
             Back to Sign Up
           </button>

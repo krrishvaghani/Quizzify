@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { quizAPI } from '../utils/api'
 import { useAuth } from '../context/AuthContext'
 import {
@@ -23,7 +23,12 @@ import {
 export default function TakeQuizPublic() {
   const { quizId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user } = useAuth()
+  
+  // Get room settings if coming from a room
+  const roomSettings = location.state?.roomSettings
+  const roomId = location.state?.roomId
   
   // Quiz data
   const [quiz, setQuiz] = useState(null)
@@ -52,6 +57,16 @@ export default function TakeQuizPublic() {
   // Resume functionality
   const storageKey = `quiz_${quizId}_progress`
 
+  // Shuffle function for arrays
+  const shuffleArray = (array) => {
+    const newArray = [...array]
+    for (let i = newArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [newArray[i], newArray[j]] = [newArray[j], newArray[i]]
+    }
+    return newArray
+  }
+
   // Update student info when user logs in
   useEffect(() => {
     if (user && !hasStarted) {
@@ -67,7 +82,31 @@ export default function TakeQuizPublic() {
     const loadQuiz = async () => {
       try {
         const data = await quizAPI.getPublicQuiz(quizId)
-        setQuiz(data.quiz)
+        let loadedQuiz = data.quiz
+        
+        // ALWAYS apply shuffling and timer for every attempt
+        if (loadedQuiz && loadedQuiz.questions) {
+          // ALWAYS shuffle options to prevent Option A from always being correct
+          loadedQuiz.questions = loadedQuiz.questions.map(question => ({
+            ...question,
+            options: shuffleArray(question.options)
+          }))
+          
+          // ALWAYS shuffle questions for variety
+          loadedQuiz.questions = shuffleArray(loadedQuiz.questions)
+          
+          // ALWAYS apply 30-second timer per question (or use room settings if available)
+          const timerDuration = roomSettings?.timer_duration || 30
+          loadedQuiz.timer_settings = {
+            enabled: true,
+            timer_type: 'per_question',
+            per_question_duration: timerDuration,
+            auto_submit: true,
+            show_timer: true  // Always show the timer
+          }
+        }
+        
+        setQuiz(loadedQuiz)
         
         // Check for saved progress
         const savedProgress = localStorage.getItem(storageKey)
@@ -297,7 +336,8 @@ export default function TakeQuizPublic() {
         student_email: studentInfo.email,
         answers: answers,
         time_taken: timeLeft !== null ? (1800 - timeLeft) : 0,
-        time_per_question: finalTimePerQuestion
+        time_per_question: finalTimePerQuestion,
+        ...(roomId && { room_id: roomId }) // Include room_id if taking quiz from a room
       }
 
       console.log('ðŸ“¤ Submitting quiz:', submission)
@@ -361,45 +401,67 @@ export default function TakeQuizPublic() {
   if (!hasStarted && quiz) {
     return (
       <div className="min-h-screen bg-[#0f1419]">
-        <div className="max-w-2xl mx-auto px-4 py-12">
-          <div className="text-center mb-8">
-            <div className="bg-[#0f1419] p-4 rounded-lg shadow-lg inline-block mb-4">
-              <BookOpen className="h-12 w-12 text-white" />
+        <div className="max-w-3xl mx-auto px-4 py-12">
+          {/* Header Section */}
+          <div className="text-center mb-10">
+            <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-2xl mx-auto mb-6 animate-pulse">
+              <BookOpen className="h-10 w-10 text-white" />
             </div>
-            <h1 className="text-3xl font-extrabold text-white mb-2">
+            <h1 className="text-5xl font-bold text-white mb-4">
               {quiz.title}
             </h1>
-            <p className="text-gray-600">
-              {quiz.questions.length} questions â€¢ Estimated time: 30 minutes
-            </p>
+            <div className="flex items-center justify-center gap-6 text-gray-400">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center">
+                  <BookOpen className="h-4 w-4 text-cyan-400" />
+                </div>
+                <span className="font-semibold">{quiz.questions.length} Questions</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <Clock className="h-4 w-4 text-blue-400" />
+                </div>
+                <span className="font-semibold">30 sec per question</span>
+              </div>
+            </div>
           </div>
 
-          <div className="card">
-            <h2 className="text-xl font-bold text-white mb-6">
-              Enter Your Information
-            </h2>
+          {/* Info Card */}
+          <div className="bg-[#1a1f2e] rounded-2xl border-2 border-gray-800 p-8 shadow-2xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white">
+                Enter Your Information
+              </h2>
+            </div>
             
             {error && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+              <div className="mb-6 bg-red-500/10 border-2 border-red-500/30 text-red-400 px-4 py-3 rounded-xl flex items-center gap-2">
                 <AlertCircle className="h-5 w-5" />
-                <span>{error}</span>
+                <span className="font-semibold">{error}</span>
               </div>
             )}
 
-            <div className="space-y-4 mb-6">
+            <div className="space-y-6 mb-8">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-white mb-3">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     Full Name
-                    {user && <span className="text-xs text-green-600">(Auto-filled from account)</span>}
+                    {user && <span className="text-xs text-green-400 ml-2">(✓ Auto-filled)</span>}
                   </div>
                 </label>
                 <input
                   type="text"
                   value={studentInfo.name}
                   onChange={(e) => setStudentInfo({ ...studentInfo, name: e.target.value })}
-                  className={`input-field ${user ? 'bg-green-50 cursor-not-allowed' : ''}`}
+                  className={`w-full px-4 py-4 bg-[#252b3b] border-2 rounded-xl text-white placeholder-gray-500 focus:outline-none transition-all ${
+                    user 
+                      ? 'border-green-500/50 bg-green-500/5 cursor-not-allowed' 
+                      : 'border-gray-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20'
+                  }`}
                   placeholder="Enter your full name"
                   required
                   readOnly={!!user}
@@ -407,18 +469,22 @@ export default function TakeQuizPublic() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-white mb-3">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
                     Email Address
-                    {user && <span className="text-xs text-green-600">(Auto-filled from account)</span>}
+                    {user && <span className="text-xs text-green-400 ml-2">(✓ Auto-filled)</span>}
                   </div>
                 </label>
                 <input
                   type="email"
                   value={studentInfo.email}
                   onChange={(e) => setStudentInfo({ ...studentInfo, email: e.target.value })}
-                  className={`input-field ${user ? 'bg-green-50 cursor-not-allowed' : ''}`}
+                  className={`w-full px-4 py-4 bg-[#252b3b] border-2 rounded-xl text-white placeholder-gray-500 focus:outline-none transition-all ${
+                    user 
+                      ? 'border-green-500/50 bg-green-500/5 cursor-not-allowed' 
+                      : 'border-gray-700 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20'
+                  }`}
                   placeholder="Enter your email address"
                   required
                   readOnly={!!user}
@@ -428,11 +494,24 @@ export default function TakeQuizPublic() {
 
             <button
               onClick={handleStartQuiz}
-              className="w-full btn-primary flex items-center justify-center gap-2"
+              className="w-full px-8 py-5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white rounded-xl font-bold text-lg hover:shadow-2xl hover:shadow-cyan-500/30 transition-all duration-300 flex items-center justify-center gap-3 group"
             >
-              <Play className="h-5 w-5" />
-              Start Quiz
+              <Play className="h-6 w-6 group-hover:scale-110 transition-transform" />
+              Start Quiz Now
             </button>
+
+            {!user && (
+              <p className="text-center text-gray-400 text-sm mt-4">
+                Have an account?{' '}
+                <button
+                  onClick={() => navigate('/login')}
+                  className="text-cyan-400 hover:text-cyan-300 font-semibold"
+                >
+                  Log in
+                </button>
+                {' '}for auto-fill
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -466,170 +545,193 @@ export default function TakeQuizPublic() {
 
     return (
       <div className="min-h-screen bg-[#0f1419]">
-        <div className="max-w-6xl mx-auto px-4 py-8">
-          {/* Success Message */}
-          <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-full border border-green-300">
-              <CheckCircle className="h-5 w-5" />
-              <span className="font-medium">Quiz Completed Successfully!</span>
+        <div className="max-w-6xl mx-auto px-4 py-12">
+          {/* Success Banner with Animation */}
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-2 border-green-500/50 rounded-2xl backdrop-blur-sm">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center animate-bounce">
+                <CheckCircle className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <div className="font-bold text-white text-lg">Quiz Completed! 🎉</div>
+                <div className="text-green-400 text-sm">Great job on finishing</div>
+              </div>
             </div>
           </div>
 
           {/* Quiz Title */}
-          <div className="text-center mb-8">
+          <div className="text-center mb-10">
             <h1 className="text-4xl font-bold text-white mb-2">
-              {quiz.title} <span className="font-normal">Results</span>
+              {quiz.title}
             </h1>
-            <p className="text-gray-600">Congratulations on completing the quiz!</p>
+            <p className="text-gray-400 text-lg">Your Results Summary</p>
           </div>
 
           {/* Score Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {/* Overall Score Card */}
-            <div className="card">
-              <div className="flex flex-col items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+            {/* Overall Score Card - Spans 2 columns */}
+            <div className="md:col-span-2 bg-[#1a1f2e] rounded-2xl border border-gray-800 p-6 relative overflow-hidden">
+              {/* Background Gradient Effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-blue-500/5 to-purple-500/5"></div>
+              
+              <div className="relative z-10 flex flex-col items-center">
                 {/* Circular Progress */}
-                <div className="relative w-32 h-32 mb-4">
-                  <svg className="w-32 h-32 transform -rotate-90">
+                <div className="relative w-36 h-36 mb-4">
+                  <svg className="w-36 h-36 transform -rotate-90">
                     <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
-                      stroke="#E5E7EB"
-                      strokeWidth="12"
+                      cx="72"
+                      cy="72"
+                      r="62"
+                      stroke="currentColor"
+                      strokeWidth="14"
                       fill="none"
+                      className="text-gray-800"
                     />
                     <circle
-                      cx="64"
-                      cy="64"
-                      r="56"
+                      cx="72"
+                      cy="72"
+                      r="62"
                       stroke="url(#gradient)"
-                      strokeWidth="12"
+                      strokeWidth="14"
                       fill="none"
-                      strokeDasharray={`${(percentage / 100) * 352} 352`}
+                      strokeDasharray={`${(percentage / 100) * 389} 389`}
                       strokeLinecap="round"
+                      className="transition-all duration-1000 ease-out"
                     />
                     <defs>
                       <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stopColor="#8B5CF6" />
-                        <stop offset="100%" stopColor="#3B82F6" />
+                        <stop offset="0%" stopColor="#06b6d4" />
+                        <stop offset="50%" stopColor="#3b82f6" />
+                        <stop offset="100%" stopColor="#8b5cf6" />
                       </linearGradient>
                     </defs>
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                      <div className="text-3xl font-bold text-white">{result.score}</div>
-                      <div className="text-sm text-gray-500">out of {result.total_questions}</div>
+                      <div className="text-4xl font-bold text-white">{result.score}</div>
+                      <div className="text-xs text-gray-400">of {result.total_questions}</div>
                     </div>
                   </div>
                 </div>
-                <div className="text-2xl font-bold text-purple-600 mb-1">{percentage}%</div>
-                <div className="text-sm text-gray-500">Overall Score</div>
+                <div className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent mb-1">
+                  {percentage}%
+                </div>
+                <div className="text-sm text-gray-400">Overall Score</div>
               </div>
             </div>
 
             {/* Correct Answers Card */}
-            <div className="card">
+            <div className="bg-[#1a1f2e] rounded-2xl border border-gray-800 p-6">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
+                <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg shadow-green-500/20">
+                  <CheckCircle className="h-7 w-7 text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-3xl font-bold text-white mb-1">{result.correct_count}</div>
-                  <div className="text-sm text-gray-600 mb-1">Correct Answers</div>
-                  <div className="text-xs text-gray-500">out of {result.total_questions} questions</div>
+                  <div className="text-4xl font-bold text-white mb-1">{result.correct_count}</div>
+                  <div className="text-sm text-gray-400 mb-1">Correct</div>
+                  <div className="text-xs text-green-400">✓ Answers</div>
                 </div>
               </div>
             </div>
 
             {/* Incorrect Answers Card */}
-            <div className="card">
+            <div className="bg-[#1a1f2e] rounded-2xl border border-gray-800 p-6">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-red-100 rounded-lg">
-                  <XCircle className="h-6 w-6 text-red-600" />
+                <div className="p-3 bg-gradient-to-br from-red-500 to-rose-600 rounded-xl shadow-lg shadow-red-500/20">
+                  <XCircle className="h-7 w-7 text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-3xl font-bold text-white mb-1">{result.incorrect_count}</div>
-                  <div className="text-sm text-gray-600 mb-1">Incorrect Answers</div>
-                  <div className="text-xs text-gray-500">out of {result.total_questions} questions</div>
+                  <div className="text-4xl font-bold text-white mb-1">{result.incorrect_count}</div>
+                  <div className="text-sm text-gray-400 mb-1">Incorrect</div>
+                  <div className="text-xs text-red-400">✗ Answers</div>
                 </div>
               </div>
             </div>
 
             {/* Time Taken Card */}
-            <div className="card">
+            <div className="bg-[#1a1f2e] rounded-2xl border border-gray-800 p-6">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-blue-600" />
+                <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl shadow-lg shadow-blue-500/20">
+                  <Clock className="h-7 w-7 text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-3xl font-bold text-white mb-1">{formatTimeReadable(timeTakenSeconds)}</div>
-                  <div className="text-sm text-gray-600 mb-1">Time Taken</div>
-                  <div className="text-xs text-gray-500">
-                    {quiz.time_limit ? `Limit: ${quiz.time_limit} minutes` : 'No time limit'}
+                  <div className="text-4xl font-bold text-white mb-1">{formatTimeReadable(timeTakenSeconds)}</div>
+                  <div className="text-sm text-gray-400 mb-1">Time Taken</div>
+                  <div className="text-xs text-blue-400">
+                    {quiz.time_limit ? `⏱ ${quiz.time_limit} min limit` : '∞ No limit'}
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Accuracy Card */}
-            <div className="card">
+            <div className="bg-[#1a1f2e] rounded-2xl border border-gray-800 p-6">
               <div className="flex items-start gap-4">
-                <div className="p-3 bg-yellow-100 rounded-lg">
-                  <Award className="h-6 w-6 text-yellow-600" />
+                <div className="p-3 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl shadow-lg shadow-yellow-500/20">
+                  <Award className="h-7 w-7 text-white" />
                 </div>
                 <div className="flex-1">
-                  <div className="text-3xl font-bold text-white mb-1">{percentage}%</div>
-                  <div className="text-sm text-gray-600 mb-1">Accuracy</div>
-                  <div className="text-xs text-gray-500">{result.correct_count} of {result.total_questions} correct</div>
+                  <div className="text-4xl font-bold text-white mb-1">{percentage}%</div>
+                  <div className="text-sm text-gray-400 mb-1">Accuracy</div>
+                  <div className="text-xs text-yellow-400">★ {result.correct_count}/{result.total_questions} correct</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Performance Analysis */}
-          <div className="card mb-8">
-            <div className="flex items-center gap-2 mb-6">
-              <BarChart3 className="h-5 w-5 text-gray-700" />
-              <h3 className="text-xl font-semibold text-white">Performance Analysis</h3>
+          <div className="bg-[#1a1f2e] rounded-2xl border border-gray-800 p-8 mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
+                <BarChart3 className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white">Performance Analysis</h3>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* On Time Status */}
-              <div className="text-center p-6 bg-[#0f1419] rounded-lg">
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                  isOnTime ? 'bg-green-100' : 'bg-red-100'
+              <div className="text-center p-8 bg-[#252b3b] rounded-xl border border-gray-700">
+                <div className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                  isOnTime 
+                    ? 'bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30' 
+                    : 'bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-500/30'
                 }`}>
-                  <Clock className={`h-8 w-8 ${isOnTime ? 'text-green-600' : 'text-red-600'}`} />
+                  <Clock className="h-10 w-10 text-white" />
                 </div>
-                <div className="text-lg font-semibold text-white mb-1">
-                  {isOnTime ? 'On Time' : 'Overtime'}
+                <div className={`text-xl font-bold mb-2 ${isOnTime ? 'text-green-400' : 'text-red-400'}`}>
+                  {isOnTime ? '✓ On Time' : '✗ Overtime'}
                 </div>
-                <div className="text-sm text-gray-600">
-                  {isOnTime ? 'Completed within time limit' : 'Exceeded time limit'}
+                <div className="text-sm text-gray-400">
+                  {isOnTime ? 'Completed within limit' : 'Exceeded time limit'}
                 </div>
               </div>
 
               {/* Grade */}
-              <div className="text-center p-6 bg-[#0f1419] rounded-lg">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Award className="h-8 w-8 text-purple-600" />
+              <div className="text-center p-8 bg-[#252b3b] rounded-xl border border-gray-700">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                  <Award className="h-10 w-10 text-white" />
                 </div>
-                <div className="text-lg font-semibold text-white mb-1">Grade: {grade}</div>
-                <div className="text-sm text-gray-600">Based on your score</div>
+                <div className="text-xl font-bold text-purple-400 mb-2">Grade: {grade}</div>
+                <div className="text-sm text-gray-400">Based on your score</div>
               </div>
 
               {/* Pass/Fail Status */}
-              <div className="text-center p-6 bg-[#0f1419] rounded-lg">
-                <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                  passed ? 'bg-green-100' : 'bg-red-100'
+              <div className="text-center p-8 bg-[#252b3b] rounded-xl border border-gray-700">
+                <div className={`w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center ${
+                  passed 
+                    ? 'bg-gradient-to-br from-green-500 to-emerald-600 shadow-lg shadow-green-500/30' 
+                    : 'bg-gradient-to-br from-red-500 to-rose-600 shadow-lg shadow-red-500/30'
                 }`}>
-                  <CheckCircle className={`h-8 w-8 ${passed ? 'text-green-600' : 'text-red-600'}`} />
+                  {passed ? (
+                    <CheckCircle className="h-10 w-10 text-white" />
+                  ) : (
+                    <XCircle className="h-10 w-10 text-white" />
+                  )}
                 </div>
-                <div className="text-lg font-semibold text-white mb-1">
-                  {passed ? 'Passed' : 'Failed'}
+                <div className={`text-xl font-bold mb-2 ${passed ? 'text-green-400' : 'text-red-400'}`}>
+                  {passed ? '✓ Passed' : '✗ Failed'}
                 </div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-400">
                   {passed ? 'Great job!' : 'Keep practicing!'}
                 </div>
               </div>
@@ -637,40 +739,50 @@ export default function TakeQuizPublic() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-purple-700 transition-all flex items-center gap-2"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              Back to Dashboard
-            </button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+            {roomId ? (
+              <button
+                onClick={() => navigate(`/room/${roomId}`)}
+                className="px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-2xl hover:shadow-cyan-500/30 transition-all duration-300 flex items-center gap-3 group"
+              >
+                <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                Back to Room Lobby
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white rounded-xl font-semibold hover:shadow-2xl hover:shadow-cyan-500/30 transition-all duration-300 flex items-center gap-3 group"
+              >
+                <ArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+                Back to Dashboard
+              </button>
+            )}
             
             <button
               onClick={() => {
-                const shareText = `I scored ${percentage}% on ${quiz.title}! ðŸŽ‰`
+                const resultsUrl = `${window.location.origin}/attempt/${result.attempt_id}/review`
                 if (navigator.share) {
                   navigator.share({
-                    title: quiz.title,
-                    text: shareText,
-                    url: window.location.href
+                    title: `${quiz.title} - Quiz Results`,
+                    text: `${quiz.title} - Score: ${percentage}%`,
+                    url: resultsUrl
                   })
                 } else {
-                  navigator.clipboard.writeText(shareText)
-                  alert('Results copied to clipboard!')
+                  navigator.clipboard.writeText(resultsUrl)
+                  alert('Results link copied to clipboard!')
                 }
               }}
-              className="px-6 py-3 bg-[#1a1f2e] text-white rounded-lg font-medium hover:bg-[#252b3b] transition-all flex items-center gap-2"
+              className="px-8 py-4 bg-[#1a1f2e] text-white rounded-xl font-semibold hover:bg-[#252b3b] border border-gray-700 hover:border-cyan-500/50 transition-all duration-300 flex items-center gap-3 group"
             >
-              <Share2 className="h-5 w-5" />
+              <Share2 className="h-5 w-5 group-hover:rotate-12 transition-transform" />
               Share Results
             </button>
 
             <button
               onClick={() => navigate(`/attempt/${result.attempt_id}/review`)}
-              className="px-6 py-3 bg-[#1a1f2e] text-gray-700 border border-gray-300 rounded-lg font-medium hover:bg-[#0f1419] transition-all flex items-center gap-2"
+              className="px-8 py-4 bg-[#1a1f2e] text-white border border-gray-700 rounded-xl font-semibold hover:bg-[#252b3b] hover:border-purple-500/50 transition-all duration-300 flex items-center gap-3 group"
             >
-              <BookOpen className="h-5 w-5" />
+              <BookOpen className="h-5 w-5 group-hover:scale-110 transition-transform" />
               View Detailed Review
             </button>
           </div>
@@ -678,18 +790,18 @@ export default function TakeQuizPublic() {
           {/* Motivational Message */}
           <div className="mt-8 text-center">
             {percentage >= 80 && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg inline-block">
-                <p className="text-green-800 font-medium">ðŸŽ‰ Excellent work! You've demonstrated strong understanding.</p>
+              <div className="p-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-2 border-green-500/30 rounded-2xl inline-block backdrop-blur-sm">
+                <p className="text-green-400 font-semibold text-lg">🎉 Excellent work! You've demonstrated strong understanding.</p>
               </div>
             )}
             {percentage >= 60 && percentage < 80 && (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg inline-block">
-                <p className="text-yellow-800 font-medium">ðŸ‘ Good job! There's room for improvement.</p>
+              <div className="p-6 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-2 border-yellow-500/30 rounded-2xl inline-block backdrop-blur-sm">
+                <p className="text-yellow-400 font-semibold text-lg">👍 Good job! There's room for improvement.</p>
               </div>
             )}
             {percentage < 60 && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg inline-block">
-                <p className="text-red-800 font-medium">ðŸ’ª Keep practicing! Review the explanations to improve.</p>
+              <div className="p-6 bg-gradient-to-r from-red-500/10 to-rose-500/10 border-2 border-red-500/30 rounded-2xl inline-block backdrop-blur-sm">
+                <p className="text-red-400 font-semibold text-lg">💪 Keep practicing! Review the explanations to improve.</p>
               </div>
             )}
           </div>

@@ -69,20 +69,20 @@ export default function RoomsList() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-[#0f1419]">
       {/* Header */}
-      <header className="bg-gradient-to-r from-black via-gray-900 to-black text-white border-b-4 border-gray-800 shadow-2xl">
+      <header className="bg-gradient-to-r from-[#1a1f2e] to-[#252b3b] text-white border-b border-gray-800 shadow-2xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <button
               onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-white hover:text-gray-300 text-base font-bold hover:scale-105 transition-all duration-200"
+              className="flex items-center gap-2 text-white hover:text-cyan-400 text-base font-bold hover:scale-105 transition-all duration-200"
             >
               <ArrowLeft className="h-6 w-6" />
               <span>Back to Dashboard</span>
             </button>
 
-            <Link to="/create-room" className="px-6 py-3 bg-[#1a1f2e] text-white rounded-2xl font-black hover:scale-105 transition-all duration-200 flex items-center gap-2 text-base shadow-xl">
+            <Link to="/create-room" className="px-6 py-3 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-2xl font-black hover:scale-105 transition-all duration-200 flex items-center gap-2 text-base shadow-lg hover:shadow-cyan-500/30">
               <Plus className="h-6 w-6" />
               Create Room
             </Link>
@@ -93,9 +93,9 @@ export default function RoomsList() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Join with Code */}
-        <div className="bg-gradient-to-br from-white via-gray-50 to-white rounded-3xl border-2 border-gray-200 p-10 max-w-3xl mx-auto mb-12 shadow-2xl">
+        <div className="bg-[#1a1f2e] rounded-2xl border border-gray-800 p-10 max-w-3xl mx-auto mb-12 shadow-2xl">
           <h2 className="text-3xl font-black text-white mb-6 flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl">
+            <div className="p-3 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg">
               <KeyRound className="h-8 w-8 text-white" />
             </div>
             Got a room code?
@@ -107,12 +107,12 @@ export default function RoomsList() {
               onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
               placeholder="ABCD12"
               maxLength={6}
-              className="flex-1 px-6 py-5 border-3 border-gray-300 rounded-2xl uppercase tracking-widest text-2xl font-black focus:outline-none focus:ring-4 focus:ring-gray-200 focus:border-gray-900 transition-all duration-200 shadow-lg"
+              className="flex-1 px-6 py-5 bg-[#252b3b] border-2 border-gray-700 rounded-2xl uppercase tracking-widest text-2xl font-black text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all duration-200 shadow-lg placeholder-gray-500"
             />
             <button
               type="submit"
               disabled={joining || joinCode.length !== 6}
-              className="px-8 py-5 bg-gradient-to-r from-black via-gray-900 to-black text-white rounded-2xl font-black text-lg hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3 shadow-2xl border-2 border-gray-800"
+              className="px-8 py-5 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-2xl font-black text-lg hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-3 shadow-lg hover:shadow-cyan-500/30 border-2 border-cyan-500"
             >
               {joining ? (
                 <Loader2 className="h-6 w-6 animate-spin" />
@@ -128,7 +128,7 @@ export default function RoomsList() {
 
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-10 w-10 text-white animate-spin" />
+            <Loader2 className="h-10 w-10 text-cyan-400 animate-spin" />
           </div>
         ) : (
           <>
@@ -140,7 +140,7 @@ export default function RoomsList() {
                   {myRooms.map((room) => (
                     <div
                       key={room.id}
-                      className="bg-gradient-to-br from-white via-gray-50 to-white border-2 border-gray-200 rounded-3xl p-8 hover:border-gray-900 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:scale-[1.02]"
+                      className="bg-[#1a1f2e] border-2 border-gray-800 rounded-2xl p-8 hover:border-cyan-500 transition-all duration-300 cursor-pointer hover:shadow-2xl hover:shadow-cyan-500/20 hover:scale-[1.02]"
                       onClick={() => navigate(`/room/${room.id}`)}
                     >
                       <div className="flex items-start justify-between mb-5">
@@ -150,10 +150,10 @@ export default function RoomsList() {
                         <span
                           className={`px-4 py-2 rounded-xl text-sm font-black shadow-lg ${
                             room.status === 'waiting'
-                              ? 'bg-gradient-to-r from-yellow-100 to-orange-100 text-white'
+                              ? 'bg-gradient-to-r from-yellow-500 to-orange-600 text-white'
                               : room.status === 'active'
                               ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
-                              : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600'
+                              : 'bg-gray-700 text-gray-400'
                           }`}
                         >
                           {room.status}
@@ -161,26 +161,26 @@ export default function RoomsList() {
                       </div>
 
                       {room.description && (
-                        <p className="text-base text-gray-600 mb-5 line-clamp-2 font-semibold">
+                        <p className="text-base text-gray-400 mb-5 line-clamp-2 font-semibold">
                           {room.description}
                         </p>
                       )}
 
-                      <div className="space-y-3 text-base text-gray-700 font-semibold">
-                        <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-xl">
-                          <Users className="h-5 w-5 text-white" />
+                      <div className="space-y-3 text-base text-gray-300 font-semibold">
+                        <div className="flex items-center gap-3 bg-[#252b3b] p-3 rounded-xl border border-gray-700">
+                          <Users className="h-5 w-5 text-cyan-400" />
                           <span>{room.participants?.length || 0} people</span>
                         </div>
-                        <div className="flex items-center gap-3 bg-gradient-to-r from-green-50 to-blue-50 p-3 rounded-xl">
-                          <Clock className="h-5 w-5 text-white" />
+                        <div className="flex items-center gap-3 bg-[#252b3b] p-3 rounded-xl border border-gray-700">
+                          <Clock className="h-5 w-5 text-blue-400" />
                           <span>
                             {new Date(room.created_at).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
 
-                      <div className="mt-6 pt-6 border-t-2 border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-2xl">
-                        <p className="text-sm text-gray-600 mb-2 font-bold">Room Code</p>
+                      <div className="mt-6 pt-6 border-t-2 border-gray-800 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 p-4 rounded-2xl border border-cyan-500/30">
+                        <p className="text-sm text-gray-400 mb-2 font-bold">Room Code</p>
                         <p className="text-3xl font-black text-white tracking-widest">
                           {room.room_code}
                         </p>
@@ -198,15 +198,15 @@ export default function RoomsList() {
               </h2>
 
               {rooms.length === 0 ? (
-                <div className="bg-gradient-to-br from-white via-gray-50 to-white border-2 border-gray-200 rounded-3xl text-center py-20 shadow-xl">
-                  <Users className="h-20 w-20 text-gray-400 mx-auto mb-6" />
+                <div className="bg-[#1a1f2e] border-2 border-gray-800 rounded-2xl text-center py-20 shadow-xl">
+                  <Users className="h-20 w-20 text-gray-600 mx-auto mb-6" />
                   <h3 className="text-3xl font-black text-white mb-3">
                     No rooms yet
                   </h3>
-                  <p className="text-gray-600 mb-8 font-semibold text-lg">
+                  <p className="text-gray-400 mb-8 font-semibold text-lg">
                     Be the first to create one
                   </p>
-                  <Link to="/create-room" className="px-8 py-4 bg-gradient-to-r from-black via-gray-900 to-black text-white rounded-2xl font-black hover:scale-105 transition-all duration-200 inline-flex items-center gap-3 shadow-2xl border-2 border-gray-800">
+                  <Link to="/create-room" className="px-8 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-2xl font-black hover:scale-105 transition-all duration-200 inline-flex items-center gap-3 shadow-lg hover:shadow-cyan-500/30 border-2 border-cyan-500">
                     <Plus className="h-6 w-6" />
                     Create Room
                   </Link>
@@ -214,7 +214,7 @@ export default function RoomsList() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {rooms.map((room) => (
-                    <div key={room.id} className="bg-gradient-to-br from-white via-gray-50 to-white border-2 border-gray-200 rounded-3xl p-8 hover:border-gray-900 transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]">
+                    <div key={room.id} className="bg-[#1a1f2e] border-2 border-gray-800 rounded-2xl p-8 hover:border-blue-500 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02]">
                       <div className="flex items-start justify-between mb-5">
                         <h3 className="text-2xl font-black text-white">
                           {room.title}
@@ -225,18 +225,18 @@ export default function RoomsList() {
                       </div>
 
                       {room.description && (
-                        <p className="text-base text-gray-600 mb-5 line-clamp-2 font-semibold">
+                        <p className="text-base text-gray-400 mb-5 line-clamp-2 font-semibold">
                           {room.description}
                         </p>
                       )}
 
-                      <div className="space-y-3 text-base text-gray-700 mb-6 font-semibold">
-                        <div className="flex items-center gap-3 bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl">
-                          <User className="h-5 w-5 text-white" />
+                      <div className="space-y-3 text-base text-gray-300 mb-6 font-semibold">
+                        <div className="flex items-center gap-3 bg-[#252b3b] p-3 rounded-xl border border-gray-700">
+                          <User className="h-5 w-5 text-purple-400" />
                           <span>{room.host_username || 'Someone'}</span>
                         </div>
-                        <div className="flex items-center gap-3 bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-xl">
-                          <Users className="h-5 w-5 text-white" />
+                        <div className="flex items-center gap-3 bg-[#252b3b] p-3 rounded-xl border border-gray-700">
+                          <Users className="h-5 w-5 text-cyan-400" />
                           <span>
                             {room.participants?.length || 0}/{room.max_participants} people
                           </span>
@@ -245,7 +245,7 @@ export default function RoomsList() {
 
                       <button
                         onClick={() => handleJoinRoom(room.room_code)}
-                        className="w-full px-6 py-4 bg-gradient-to-r from-black via-gray-900 to-black text-white rounded-2xl font-black hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3 shadow-xl border-2 border-gray-800 text-lg"
+                        className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-2xl font-black hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-cyan-500/30 border-2 border-cyan-500 text-lg"
                       >
                         <LogIn className="h-6 w-6" />
                         Join Room

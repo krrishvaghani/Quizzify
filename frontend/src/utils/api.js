@@ -65,12 +65,21 @@ export const authAPI = {
 }
 
 export const quizAPI = {
-  uploadAndGenerate: async (file, numQuestions, difficulty) => {
+  uploadAndGenerate: async (file, numQuestions, difficulty, quizName = '') => {
     const formData = new FormData()
     formData.append('file', file)
     
+    const params = new URLSearchParams({
+      num_questions: numQuestions,
+      difficulty: difficulty,
+    })
+    
+    if (quizName.trim()) {
+      params.append('quiz_name', quizName.trim())
+    }
+    
     const response = await api.post(
-      `/upload-and-generate?num_questions=${numQuestions}&difficulty=${difficulty}`,
+      `/upload-and-generate?${params.toString()}`,
       formData,
       {
         headers: {

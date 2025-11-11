@@ -16,15 +16,22 @@ import {
   PlusCircle,
   Users,
   Sparkles,
+  Eye,
+  Target,
+  PlayCircle,
+  BookOpen,
 } from 'lucide-react'
 import AnimatedTabs from '../components/AnimatedTabs'
 
 export default function QuizGenerator() {
   const [selectedFile, setSelectedFile] = useState(null)
+  const [quizName, setQuizName] = useState('')
   const [numQuestions, setNumQuestions] = useState(5)
   const [difficulty, setDifficulty] = useState('medium')
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
+  const [generatedQuiz, setGeneratedQuiz] = useState(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   
@@ -58,6 +65,11 @@ export default function QuizGenerator() {
       return
     }
 
+    if (!quizName.trim()) {
+      alert('Please enter a quiz name')
+      return
+    }
+
     setLoading(true)
     setProgress(0)
 
@@ -76,45 +88,53 @@ export default function QuizGenerator() {
       const result = await quizAPI.uploadAndGenerate(
         selectedFile,
         numQuestions,
-        difficulty
+        difficulty,
+        quizName
       )
       
       clearInterval(progressInterval)
       setProgress(100)
       
-      // If coming from Create Room flow, create room and navigate to it
-      if (returnTo === 'create-room' && roomData) {
-        try {
-          // Create room with the generated quiz
-          const roomResult = await roomAPI.createRoom({
-            ...roomData,
-            quiz_id: result.quiz.id
-          })
-          
-          setTimeout(() => {
-            navigate(`/room/${roomResult.room.id}`)
-          }, 500)
-        } catch (roomError) {
-          console.error('Error creating room:', roomError)
-          alert('Quiz created but failed to create room. You can create a room manually from the dashboard.')
-          setTimeout(() => {
-            navigate(`/quiz/${result.quiz.id}`)
-          }, 500)
-        }
-      } else {
-        // Normal flow - navigate to quiz view
-        setTimeout(() => {
-          navigate(`/quiz/${result.quiz.id}`)
-        }, 500)
-      }
+      // Store the generated quiz
+      setGeneratedQuiz(result.quiz)
+      
+      // Show success modal
+      setTimeout(() => {
+        setShowSuccessModal(true)
+        setLoading(false)
+      }, 500)
+      
     } catch (error) {
       clearInterval(progressInterval)
       console.error('Error generating quiz:', error)
       alert(error.response?.data?.detail || 'Failed to generate quiz. Please try again.')
       setProgress(0)
-    } finally {
       setLoading(false)
     }
+  }
+  
+  const handleViewQuiz = () => {
+    if (generatedQuiz) {
+      navigate(`/quiz/${generatedQuiz.id}`)
+    }
+  }
+  
+  const handleStartQuiz = () => {
+    if (generatedQuiz) {
+      navigate(`/quiz/${generatedQuiz.id}/start`)
+    }
+  }
+  
+  const handleBackToDashboard = () => {
+    navigate('/dashboard')
+  }
+  
+  const handleCreateAnother = () => {
+    setGeneratedQuiz(null)
+    setShowSuccessModal(false)
+    setSelectedFile(null)
+    setQuizName('')
+    setProgress(0)
   }
 
   const getFileIcon = () => {
@@ -249,6 +269,24 @@ export default function QuizGenerator() {
               <h3 className="text-xl font-bold text-white">Quiz Settings</h3>
             </div>
 
+            {/* Quiz Name Input */}
+            <div>
+              <label className="block text-sm font-bold text-white mb-3">
+                Quiz Name <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={quizName}
+                onChange={(e) => setQuizName(e.target.value)}
+                placeholder="Enter a name for your quiz..."
+                disabled={loading}
+                className="w-full px-4 py-3 bg-[#252b3b] border-2 border-[#2d3548] rounded-xl text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p className="text-xs text-gray-400 mt-2">
+                Give your quiz a descriptive name (e.g., "Chapter 5: Photosynthesis Quiz")
+              </p>
+            </div>
+
             <div>
               <label className="block text-sm font-bold text-white mb-4">
                 Number of Questions: <span className="text-xl text-cyan-400">{numQuestions}</span>
@@ -341,6 +379,104 @@ export default function QuizGenerator() {
           </div>
         </div>
       </main>
+
+      {/* Success Modal */}
+      {showSuccessModal && generatedQuiz && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a1f2e] rounded-2xl border-2 border-cyan-500/30 max-w-2xl w-full mx-auto shadow-2xl animate-in">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-gray-800">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center shadow-xl">
+                  <CheckCircle className="h-8 w-8 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-2xl font-bold text-white mb-1">
+                    Quiz Generated Successfully! 🎉
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    Your AI-powered quiz is ready
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Quiz Info */}
+              <div className="bg-[#252b3b] rounded-xl p-4 border border-gray-700">
+                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-cyan-400" />
+                  {generatedQuiz.title}
+                </h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <FileText className="h-4 w-4 text-cyan-400" />
+                    <span>{generatedQuiz.questions?.length || 0} Questions</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <Target className="h-4 w-4 text-purple-400" />
+                    <span className="capitalize">{difficulty} Difficulty</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sample Questions Preview */}
+              <div className="bg-[#252b3b] rounded-xl p-4 border border-gray-700">
+                <h4 className="text-sm font-bold text-white mb-3">Sample Questions:</h4>
+                <div className="space-y-2 text-sm">
+                  {generatedQuiz.questions?.slice(0, 3).map((q, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <span className="text-cyan-400 font-bold">{idx + 1}.</span>
+                      <span className="text-gray-300 line-clamp-1">{q.question}</span>
+                    </div>
+                  ))}
+                  {generatedQuiz.questions?.length > 3 && (
+                    <p className="text-gray-500 text-xs italic pl-5">
+                      +{generatedQuiz.questions.length - 3} more questions...
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  onClick={handleViewQuiz}
+                  className="py-3 px-4 bg-[#252b3b] hover:bg-[#2d3548] text-white rounded-lg font-semibold transition-all border-2 border-gray-700 hover:border-cyan-500 flex items-center justify-center gap-2"
+                >
+                  <Eye className="h-5 w-5" />
+                  View Quiz
+                </button>
+                <button
+                  onClick={handleStartQuiz}
+                  className="py-3 px-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 hover:opacity-90 text-white rounded-lg font-bold transition-opacity flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <PlayCircle className="h-5 w-5" />
+                  Start Quiz
+                </button>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCreateAnother}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Another
+                </button>
+                <button
+                  onClick={handleBackToDashboard}
+                  className="flex-1 py-2.5 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                >
+                  <Home className="h-4 w-4" />
+                  Back to Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

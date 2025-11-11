@@ -51,10 +51,17 @@ export default function RoomLobby() {
       const data = await roomAPI.getRoom(id)
       setRoom(data)
       
-      // If room started, redirect to quiz (but NOT if user is the host)
+      // If room started, redirect to quiz (but NOT if user is the host or already submitted)
       const isHost = data.host_email === user?.email
-      if (data.status === 'active' && data.quiz && !isHost) {
-        navigate(`/quiz/${data.quiz_id}/start`)
+      const hasSubmitted = data.participants_details?.find(p => p.email === user?.email)?.has_submitted
+      if (data.status === 'active' && data.quiz && !isHost && !hasSubmitted) {
+        // Pass room ID and settings via URL state
+        navigate(`/quiz/${data.quiz_id}/start`, { 
+          state: { 
+            roomId: id,
+            roomSettings: data.settings 
+          }
+        })
       }
     } catch (error) {
       console.error('Error fetching room:', error)
@@ -140,11 +147,11 @@ export default function RoomLobby() {
   return (
     <div className="min-h-screen bg-[#0f1419]">
       {/* Header */}
-      <header className="bg-[#1a1f2e] shadow-sm">
+      <header className="bg-gradient-to-r from-[#1a1f2e] to-[#252b3b] shadow-sm border-b border-gray-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors"
+            className="flex items-center gap-2 text-gray-400 hover:text-cyan-400 transition-colors font-semibold"
           >
             <ArrowLeft className="h-5 w-5" />
             <span>Back to Dashboard</span>
@@ -158,28 +165,28 @@ export default function RoomLobby() {
           {/* Left Column - Room Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Room Details Card */}
-            <div className="card">
+            <div className="bg-[#1a1f2e] rounded-2xl p-8 border border-gray-800 shadow-xl">
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <h1 className="text-3xl font-bold text-white mb-2">
                     {room.title}
                   </h1>
                   {room.description && (
-                    <p className="text-gray-600">{room.description}</p>
+                    <p className="text-gray-400">{room.description}</p>
                   )}
                 </div>
-                <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                  room.status === 'waiting' ? 'bg-yellow-100 text-yellow-800' :
-                  room.status === 'active' ? 'bg-green-100 text-green-800' :
-                  'bg-[#1a1f2e] text-gray-800'
+                <span className={`px-4 py-2 rounded-xl text-sm font-bold shadow-lg ${
+                  room.status === 'waiting' ? 'bg-gradient-to-r from-yellow-500 to-orange-600 text-white' :
+                  room.status === 'active' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white' :
+                  'bg-gray-700 text-gray-300'
                 }`}>
                   {room.status === 'waiting' ? 'Waiting' : room.status === 'active' ? 'Active' : 'Completed'}
                 </span>
               </div>
 
               {/* Room Code */}
-              <div className="bg-gradient-to-r from-purple-100 to-blue-100 rounded-xl p-6 mb-6">
-                <p className="text-sm font-medium text-gray-700 mb-2">
+              <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-xl p-6 mb-6 border border-cyan-500/30">
+                <p className="text-sm font-medium text-gray-400 mb-2">
                   Room Code
                 </p>
                 <div className="flex items-center gap-3">
@@ -188,29 +195,29 @@ export default function RoomLobby() {
                   </span>
                   <button
                     onClick={handleCopyCode}
-                    className="p-3 bg-[#1a1f2e] rounded-lg hover:bg-[#0f1419] transition-colors shadow-sm"
+                    className="p-3 bg-[#252b3b] rounded-lg hover:bg-[#2f3645] transition-colors shadow-sm border border-gray-700"
                   >
                     {copied ? (
-                      <CheckCircle className="h-6 w-6 text-green-600" />
+                      <CheckCircle className="h-6 w-6 text-green-500" />
                     ) : (
-                      <Copy className="h-6 w-6 text-gray-600" />
+                      <Copy className="h-6 w-6 text-gray-400" />
                     )}
                   </button>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
+                <p className="text-sm text-gray-400 mt-2">
                   Share this code with participants
                 </p>
               </div>
 
               {/* Quiz Info */}
               {room.quiz && (
-                <div className="border-t pt-6">
+                <div className="border-t border-gray-800 pt-6">
                   <h3 className="text-lg font-semibold text-white mb-3">
                     Quiz Information
                   </h3>
-                  <div className="bg-[#0f1419] rounded-lg p-4">
+                  <div className="bg-[#252b3b] rounded-lg p-4 border border-gray-700">
                     <p className="font-medium text-white">{room.quiz.title}</p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-gray-400 mt-1">
                       {room.quiz.num_questions} questions
                     </p>
                   </div>
@@ -219,15 +226,15 @@ export default function RoomLobby() {
             </div>
 
             {/* Participants & Leaderboard Card */}
-            <div className="card">
+            <div className="bg-[#1a1f2e] rounded-2xl p-8 border border-gray-800 shadow-xl">
               {/* Tabs */}
-              <div className="flex border-b border-gray-200 mb-6">
+              <div className="flex border-b border-gray-800 mb-6">
                 <button
                   onClick={() => setActiveTab('participants')}
-                  className={`flex-1 py-3 px-4 text-center font-medium transition-colors flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-3 px-4 text-center font-bold transition-colors flex items-center justify-center gap-2 ${
                     activeTab === 'participants'
-                      ? 'text-purple-600 border-b-2 border-purple-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'text-cyan-400 border-b-2 border-cyan-500'
+                      : 'text-gray-500 hover:text-gray-300'
                   }`}
                 >
                   <Users className="h-5 w-5" />
@@ -235,10 +242,10 @@ export default function RoomLobby() {
                 </button>
                 <button
                   onClick={() => setActiveTab('leaderboard')}
-                  className={`flex-1 py-3 px-4 text-center font-medium transition-colors flex items-center justify-center gap-2 ${
+                  className={`flex-1 py-3 px-4 text-center font-bold transition-colors flex items-center justify-center gap-2 ${
                     activeTab === 'leaderboard'
-                      ? 'text-purple-600 border-b-2 border-purple-600'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'text-cyan-400 border-b-2 border-cyan-500'
+                      : 'text-gray-500 hover:text-gray-300'
                   }`}
                 >
                   <Trophy className="h-5 w-5" />
@@ -252,9 +259,9 @@ export default function RoomLobby() {
                   {room.participants_details?.filter(p => p.email !== room.host_email).map((participant) => (
                     <div
                       key={participant.email}
-                      className="flex items-center gap-3 p-3 bg-[#0f1419] rounded-lg hover:bg-[#1a1f2e] transition-colors"
+                      className="flex items-center gap-3 p-4 bg-[#252b3b] rounded-lg hover:bg-[#2f3645] transition-colors border border-gray-700"
                     >
-                      <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                      <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold shadow-lg">
                         {participant.username.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1">
@@ -262,15 +269,15 @@ export default function RoomLobby() {
                           {participant.username}
                         </p>
                         {participant.full_name && (
-                          <p className="text-sm text-gray-500">{participant.full_name}</p>
+                          <p className="text-sm text-gray-400">{participant.full_name}</p>
                         )}
                       </div>
-                      <UserCheck className="h-5 w-5 text-green-600" />
+                      <UserCheck className="h-5 w-5 text-green-500" />
                     </div>
                   ))}
 
                   {room.participants_details?.length === 0 && (
-                    <p className="text-center text-gray-500 py-8">
+                    <p className="text-center text-gray-400 py-8">
                       Waiting for participants to join...
                     </p>
                   )}
@@ -282,7 +289,7 @@ export default function RoomLobby() {
                 <div>
                   {loadingLeaderboard && !leaderboard ? (
                     <div className="flex justify-center py-8">
-                      <Loader2 className="h-8 w-8 text-purple-600 animate-spin" />
+                      <Loader2 className="h-8 w-8 text-cyan-400 animate-spin" />
                     </div>
                   ) : leaderboard && leaderboard.leaderboard.length > 0 ? (
                     <div className="space-y-3">
@@ -291,7 +298,7 @@ export default function RoomLobby() {
                           if (rank === 1) return <Medal className="h-6 w-6 text-yellow-500" />
                           if (rank === 2) return <Medal className="h-6 w-6 text-gray-400" />
                           if (rank === 3) return <Medal className="h-6 w-6 text-amber-600" />
-                          return <span className="text-gray-500 font-bold text-lg">{rank}</span>
+                          return <span className="text-gray-400 font-bold text-lg">{rank}</span>
                         }
 
                         return (
@@ -300,9 +307,9 @@ export default function RoomLobby() {
                             className={`p-4 rounded-lg border-2 transition-all ${
                               entry.has_submitted
                                 ? idx === 0
-                                  ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300'
-                                  : 'bg-[#1a1f2e] border-gray-200 hover:border-purple-300'
-                                : 'bg-[#0f1419] border-gray-200 opacity-75'
+                                  ? 'bg-gradient-to-r from-yellow-500/20 to-orange-600/20 border-yellow-500 shadow-lg'
+                                  : 'bg-[#252b3b] border-gray-700 hover:border-cyan-500'
+                                : 'bg-[#1a1f2e] border-gray-800 opacity-75'
                             }`}
                           >
                             <div className="flex items-center gap-4">
@@ -318,18 +325,18 @@ export default function RoomLobby() {
                                     {entry.username}
                                   </p>
                                   {entry.email === user?.email && (
-                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                                    <span className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/30">
                                       You
                                     </span>
                                   )}
                                 </div>
                                 {entry.has_submitted ? (
                                   <div className="flex items-center gap-3 mt-1 text-sm">
-                                    <span className="flex items-center gap-1 text-gray-600">
+                                    <span className="flex items-center gap-1 text-gray-400">
                                       <Target className="h-3.5 w-3.5" />
                                       {entry.correct_answers}/{entry.total_questions}
                                     </span>
-                                    <span className="flex items-center gap-1 text-gray-600">
+                                    <span className="flex items-center gap-1 text-gray-400">
                                       <Timer className="h-3.5 w-3.5" />
                                       {entry.time_taken}s
                                     </span>
@@ -345,7 +352,7 @@ export default function RoomLobby() {
                                   <p className="text-2xl font-bold text-white">
                                     {entry.score}
                                   </p>
-                                  <p className="text-sm text-gray-500">
+                                  <p className="text-sm text-gray-400">
                                     {entry.percentage}%
                                   </p>
                                 </div>
@@ -356,17 +363,17 @@ export default function RoomLobby() {
                       })}
 
                       {/* Stats Summary */}
-                      <div className="mt-6 pt-6 border-t border-gray-200">
+                      <div className="mt-6 pt-6 border-t border-gray-800">
                         <div className="grid grid-cols-2 gap-4">
-                          <div className="text-center p-3 bg-purple-50 rounded-lg">
-                            <p className="text-sm text-gray-600 mb-1">Completed</p>
-                            <p className="text-2xl font-bold text-purple-600">
+                          <div className="text-center p-3 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg border border-cyan-500/30">
+                            <p className="text-sm text-gray-400 mb-1">Completed</p>
+                            <p className="text-2xl font-bold text-cyan-400">
                               {leaderboard.leaderboard.filter(e => e.has_submitted).length}
                             </p>
                           </div>
-                          <div className="text-center p-3 bg-[#1a1f2e] rounded-lg">
-                            <p className="text-sm text-gray-600 mb-1">In Progress</p>
-                            <p className="text-2xl font-bold text-gray-700">
+                          <div className="text-center p-3 bg-[#252b3b] rounded-lg border border-gray-700">
+                            <p className="text-sm text-gray-400 mb-1">In Progress</p>
+                            <p className="text-2xl font-bold text-gray-300">
                               {leaderboard.leaderboard.filter(e => !e.has_submitted).length}
                             </p>
                           </div>
@@ -375,9 +382,9 @@ export default function RoomLobby() {
                     </div>
                   ) : (
                     <div className="text-center py-8">
-                      <TrendingUp className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-gray-500">No quiz attempts yet</p>
-                      <p className="text-sm text-gray-400 mt-1">
+                      <TrendingUp className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+                      <p className="text-gray-400">No quiz attempts yet</p>
+                      <p className="text-sm text-gray-500 mt-1">
                         Scores will appear here once participants start the quiz
                       </p>
                     </div>
@@ -390,59 +397,59 @@ export default function RoomLobby() {
           {/* Right Column - Settings & Actions */}
           <div className="space-y-6">
             {/* Room Settings Card */}
-            <div className="card">
+            <div className="bg-[#1a1f2e] rounded-2xl p-6 border border-gray-800 shadow-xl">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <Settings className="h-5 w-5 text-purple-600" />
+                <Settings className="h-5 w-5 text-cyan-400" />
                 Room Settings
               </h3>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center justify-between text-sm p-3 bg-[#252b3b] rounded-lg border border-gray-700">
+                  <span className="flex items-center gap-2 text-gray-300">
                     <Clock className="h-4 w-4" />
                     Timer
                   </span>
-                  <span className={room.settings.enable_timer ? 'text-green-600 font-medium' : 'text-gray-400'}>
+                  <span className={room.settings.enable_timer ? 'text-green-500 font-bold' : 'text-gray-500'}>
                     {room.settings.enable_timer ? `${room.settings.timer_duration}s` : 'Off'}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center justify-between text-sm p-3 bg-[#252b3b] rounded-lg border border-gray-700">
+                  <span className="flex items-center gap-2 text-gray-300">
                     <Shuffle className="h-4 w-4" />
                     Shuffle Questions
                   </span>
-                  <span className={room.settings.shuffle_questions ? 'text-green-600 font-medium' : 'text-gray-400'}>
+                  <span className={room.settings.shuffle_questions ? 'text-green-500 font-bold' : 'text-gray-500'}>
                     {room.settings.shuffle_questions ? 'On' : 'Off'}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center justify-between text-sm p-3 bg-[#252b3b] rounded-lg border border-gray-700">
+                  <span className="flex items-center gap-2 text-gray-300">
                     <RotateCw className="h-4 w-4" />
                     Shuffle Options
                   </span>
-                  <span className={room.settings.shuffle_options ? 'text-green-600 font-medium' : 'text-gray-400'}>
+                  <span className={room.settings.shuffle_options ? 'text-green-500 font-bold' : 'text-gray-500'}>
                     {room.settings.shuffle_options ? 'On' : 'Off'}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center justify-between text-sm p-3 bg-[#252b3b] rounded-lg border border-gray-700">
+                  <span className="flex items-center gap-2 text-gray-300">
                     <Trophy className="h-4 w-4" />
                     Attempts
                   </span>
-                  <span className="text-purple-600 font-medium">
+                  <span className="text-cyan-400 font-bold">
                     {room.settings.attempts_allowed}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-2 text-gray-700">
+                <div className="flex items-center justify-between text-sm p-3 bg-[#252b3b] rounded-lg border border-gray-700">
+                  <span className="flex items-center gap-2 text-gray-300">
                     <Eye className="h-4 w-4" />
                     Show Results
                   </span>
-                  <span className={room.settings.show_results_immediately ? 'text-green-600 font-medium' : 'text-gray-400'}>
+                  <span className={room.settings.show_results_immediately ? 'text-green-500 font-bold' : 'text-gray-500'}>
                     {room.settings.show_results_immediately ? 'Immediate' : 'Later'}
                   </span>
                 </div>
@@ -456,7 +463,7 @@ export default function RoomLobby() {
                   <button
                     onClick={handleStart}
                     disabled={starting || room.participants_details?.filter(p => p.email !== room.host_email).length === 0}
-                    className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl font-bold hover:scale-105 transition-all shadow-lg hover:shadow-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 border-2 border-cyan-500"
                   >
                     {starting ? (
                       <>
@@ -474,7 +481,7 @@ export default function RoomLobby() {
                   <button
                     onClick={handleComplete}
                     disabled={starting}
-                    className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-red-500 to-rose-600 text-white py-4 px-6 rounded-xl font-bold hover:scale-105 transition-all shadow-lg hover:shadow-red-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 border-2 border-red-500"
                   >
                     {starting ? (
                       <>
@@ -489,7 +496,7 @@ export default function RoomLobby() {
                     )}
                   </button>
                 ) : (
-                  <div className="w-full bg-[#1a1f2e] text-gray-600 py-3 px-6 rounded-lg font-semibold text-center">
+                  <div className="w-full bg-gray-700 text-gray-300 py-4 px-6 rounded-xl font-bold text-center border-2 border-gray-600">
                     Quiz Completed
                   </div>
                 )}
@@ -498,15 +505,15 @@ export default function RoomLobby() {
 
             {/* Status Message (Participants) */}
             {!isHost && (
-              <div className={`card border-2 ${
-                room.status === 'waiting' ? 'bg-yellow-50 border-yellow-200' :
-                room.status === 'active' ? 'bg-green-50 border-green-200' :
-                'bg-[#1a1f2e] border-gray-200'
+              <div className={`rounded-xl p-4 border-2 ${
+                room.status === 'waiting' ? 'bg-yellow-500/20 border-yellow-500' :
+                room.status === 'active' ? 'bg-green-500/20 border-green-500' :
+                'bg-gray-700 border-gray-600'
               }`}>
-                <p className={`text-center font-medium ${
-                  room.status === 'waiting' ? 'text-yellow-900' :
-                  room.status === 'active' ? 'text-green-900' :
-                  'text-white'
+                <p className={`text-center font-bold ${
+                  room.status === 'waiting' ? 'text-yellow-400' :
+                  room.status === 'active' ? 'text-green-400' :
+                  'text-gray-300'
                 }`}>
                   {room.status === 'waiting' ? 'Waiting for host to start the quiz...' :
                    room.status === 'active' ? 'Quiz is active! Take the quiz now.' :

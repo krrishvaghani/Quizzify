@@ -14,6 +14,7 @@ import {
   Home,
   BarChart3,
   PlusCircle,
+  Play,
 } from 'lucide-react'
 import AnimatedTabs from '../components/AnimatedTabs'
 
@@ -24,6 +25,7 @@ export default function RoomsList() {
   const [joinCode, setJoinCode] = useState('')
   const [joining, setJoining] = useState(false)
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchRooms()
@@ -213,45 +215,66 @@ export default function RoomsList() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {rooms.map((room) => (
-                    <div key={room.id} className="bg-[#1a1f2e] border-2 border-gray-800 rounded-2xl p-8 hover:border-blue-500 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02]">
-                      <div className="flex items-start justify-between mb-5">
-                        <h3 className="text-2xl font-black text-white">
-                          {room.title}
-                        </h3>
-                        <span className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl text-sm font-black shadow-lg">
-                          Open
-                        </span>
-                      </div>
-
-                      {room.description && (
-                        <p className="text-base text-gray-400 mb-5 line-clamp-2 font-semibold">
-                          {room.description}
-                        </p>
-                      )}
-
-                      <div className="space-y-3 text-base text-gray-300 mb-6 font-semibold">
-                        <div className="flex items-center gap-3 bg-[#252b3b] p-3 rounded-xl border border-gray-700">
-                          <User className="h-5 w-5 text-purple-400" />
-                          <span>{room.host_username || 'Someone'}</span>
+                  {rooms.map((room) => {
+                    const isHost = room.host_id === user?.id || room.host_username === user?.username
+                    
+                    return (
+                      <div key={room.id} className="bg-[#1a1f2e] border-2 border-gray-800 rounded-2xl p-8 hover:border-blue-500 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02]">
+                        <div className="flex items-start justify-between mb-5">
+                          <h3 className="text-2xl font-black text-white">
+                            {room.title}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            {isHost && (
+                              <span className="px-3 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg text-xs font-black shadow-lg">
+                                HOST
+                              </span>
+                            )}
+                            <span className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl text-sm font-black shadow-lg">
+                              Open
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-3 bg-[#252b3b] p-3 rounded-xl border border-gray-700">
-                          <Users className="h-5 w-5 text-cyan-400" />
-                          <span>
-                            {room.participants?.length || 0}/{room.max_participants} people
-                          </span>
-                        </div>
-                      </div>
 
-                      <button
-                        onClick={() => handleJoinRoom(room.room_code)}
-                        className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-2xl font-black hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-cyan-500/30 border-2 border-cyan-500 text-lg"
-                      >
-                        <LogIn className="h-6 w-6" />
-                        Join Room
-                      </button>
-                    </div>
-                  ))}
+                        {room.description && (
+                          <p className="text-base text-gray-400 mb-5 line-clamp-2 font-semibold">
+                            {room.description}
+                          </p>
+                        )}
+
+                        <div className="space-y-3 text-base text-gray-300 mb-6 font-semibold">
+                          <div className="flex items-center gap-3 bg-[#252b3b] p-3 rounded-xl border border-gray-700">
+                            <User className="h-5 w-5 text-purple-400" />
+                            <span>{room.host_username || 'Someone'}</span>
+                          </div>
+                          <div className="flex items-center gap-3 bg-[#252b3b] p-3 rounded-xl border border-gray-700">
+                            <Users className="h-5 w-5 text-cyan-400" />
+                            <span>
+                              {room.participants?.length || 0}/{room.max_participants} people
+                            </span>
+                          </div>
+                        </div>
+
+                        {isHost ? (
+                          <button
+                            onClick={() => navigate(`/room/${room.id}`)}
+                            className="w-full px-6 py-4 bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 text-white rounded-2xl font-black hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-green-500/30 border-2 border-green-500 text-lg"
+                          >
+                            <Play className="h-6 w-6" />
+                            Start Quiz
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleJoinRoom(room.room_code)}
+                            className="w-full px-6 py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white rounded-2xl font-black hover:scale-[1.02] transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-cyan-500/30 border-2 border-cyan-500 text-lg"
+                          >
+                            <LogIn className="h-6 w-6" />
+                            Join Room
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )}
             </div>

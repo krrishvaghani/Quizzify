@@ -51,10 +51,21 @@ export default function RoomLobby() {
       const data = await roomAPI.getRoom(id)
       setRoom(data)
       
-      // If room started, redirect to quiz (but NOT if user is the host or already submitted)
+      // Check if user is the host
       const isHost = data.host_email === user?.email
+      
+      console.log('fetchRoom - Host check:', {
+        dataHostEmail: data.host_email,
+        userEmail: user?.email,
+        isHost: isHost,
+        roomStatus: data.status
+      })
+      
+      // If room started and user is NOT the host, redirect participants to quiz
       const hasSubmitted = data.participants_details?.find(p => p.email === user?.email)?.has_submitted
+      
       if (data.status === 'active' && data.quiz && !isHost && !hasSubmitted) {
+        console.log('Redirecting participant to quiz...')
         // Pass room ID and settings via URL state
         navigate(`/quiz/${data.quiz_id}/start`, { 
           state: { 
@@ -92,13 +103,16 @@ export default function RoomLobby() {
   const handleStart = async () => {
     setStarting(true)
     try {
+      console.log('Starting room:', { roomId: id, userEmail: user?.email, roomHostEmail: room?.host_email })
       await roomAPI.startRoom(id)
       // Host stays on lobby page to view leaderboard
       // Don't navigate away - just refresh room data
       await fetchRoom()
       setActiveTab('leaderboard') // Switch to leaderboard tab
     } catch (error) {
-      alert(error.response?.data?.detail || 'Failed to start room')
+      console.error('Error starting room:', error.response?.data)
+      const errorMsg = error.response?.data?.detail || 'Failed to start room'
+      alert(errorMsg + '\n\nDebug info:\nYour email: ' + user?.email + '\nRoom host: ' + room?.host_email)
     } finally {
       setStarting(false)
     }
@@ -143,6 +157,26 @@ export default function RoomLobby() {
   }
 
   const isHost = room.host_email === user?.email
+  
+  // Debug logging - DETAILED
+  console.log('🔍 RoomLobby Debug - Host Check:', {
+    userName: user?.username,
+    userEmail: user?.email,
+    userEmailType: typeof user?.email,
+    roomHostEmail: room.host_email,
+    roomHostEmailType: typeof room.host_email,
+    emailsMatch: room.host_email === user?.email,
+    isHost: isHost,
+    roomStatus: room.status,
+    strictComparison: String(room.host_email).trim().toLowerCase() === String(user?.email).trim().toLowerCase()
+  })
+  
+  // Show alert if both are considered host (for debugging)
+  if (isHost) {
+    console.log('✅ USER IS HOST:', user?.username, user?.email)
+  } else {
+    console.log('👤 USER IS PARTICIPANT:', user?.username, user?.email)
+  }
 
   return (
     <div className="min-h-screen bg-[#0f1419]">
@@ -457,12 +491,12 @@ export default function RoomLobby() {
             </div>
 
             {/* Control Buttons (Host Only) */}
-            {isHost && (
+            {isHost ? (
               <>
                 {room.status === 'waiting' ? (
                   <button
                     onClick={handleStart}
-                    disabled={starting || room.participants_details?.filter(p => p.email !== room.host_email).length === 0}
+                    disabled={starting}
                     className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 text-white py-4 px-6 rounded-xl font-bold hover:scale-105 transition-all shadow-lg hover:shadow-cyan-500/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center justify-center gap-2 border-2 border-cyan-500"
                   >
                     {starting ? (
@@ -473,7 +507,7 @@ export default function RoomLobby() {
                     ) : (
                       <>
                         <Play className="h-5 w-5" />
-                        Start Quiz
+                        Start Quiz (Host)
                       </>
                     )}
                   </button>
@@ -491,7 +525,7 @@ export default function RoomLobby() {
                     ) : (
                       <>
                         <CheckCircle className="h-5 w-5" />
-                        End Quiz
+                        End Quiz (Host)
                       </>
                     )}
                   </button>
@@ -500,11 +534,17 @@ export default function RoomLobby() {
                     Quiz Completed
                   </div>
                 )}
+                
+                {/* Host Badge */}
+                <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-2 border-purple-500 rounded-xl p-4">
+                  <p className="text-center font-bold text-purple-300 flex items-center justify-center gap-2">
+                    <Trophy className="h-5 w-5" />
+                    You are the Host
+                  </p>
+                </div>
               </>
-            )}
-
-            {/* Status Message (Participants) */}
-            {!isHost && (
+            ) : (
+              /* Status Message (Participants Only) */
               <div className={`rounded-xl p-4 border-2 ${
                 room.status === 'waiting' ? 'bg-yellow-500/20 border-yellow-500' :
                 room.status === 'active' ? 'bg-green-500/20 border-green-500' :
@@ -515,9 +555,9 @@ export default function RoomLobby() {
                   room.status === 'active' ? 'text-green-400' :
                   'text-gray-300'
                 }`}>
-                  {room.status === 'waiting' ? 'Waiting for host to start the quiz...' :
-                   room.status === 'active' ? 'Quiz is active! Take the quiz now.' :
-                   'Quiz has ended. Check the leaderboard for results.'}
+                  {room.status === 'waiting' ? '⏳ Waiting for host to start the quiz...' :
+                   room.status === 'active' ? '✅ Quiz is active! Take the quiz now.' :
+                   '🏁 Quiz has ended. Check the leaderboard for results.'}
                 </p>
               </div>
             )}

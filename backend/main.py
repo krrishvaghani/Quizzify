@@ -1134,57 +1134,118 @@ async def join_room(
     join_request: JoinRoomRequest,
     current_user: dict = Depends(get_current_user)
 ):
-    """Join a room using room code"""
-    room = await db.rooms.find_one({"room_code": join_request.room_code})
+    """
+    Join a room using room code (PARTICIPANTS ONLY)
+    Host cannot join their own room as participant
+    Uses atomic $addToSet to prevent duplicates
+    """
+    from bson import ObjectId
+    
+    room = await db.rooms.find_one({"room_code": join_request.room_code.upper()})
     
     if not room:
-        raise HTTPException(status_code=404, detail="Room not found")
+        raise HTTPException(status_code=404, detail="Room not found. Please check the room code.")
     
-    if room["status"] == "completed":
-        raise HTTPException(status_code=400, detail="Room has already completed")
-    
-    if len(room["participants"]) >= room["max_participants"]:
-        raise HTTPException(status_code=400, detail="Room is full")
-    
-    # Add user to participants if not already in
-    if current_user["email"] not in room["participants"]:
-        from bson import ObjectId
-        await db.rooms.update_one(
-            {"_id": ObjectId(room["_id"])},
-            {"$push": {"participants": current_user["email"]}}
+    # Prevent host from joining their own room as participant
+    if room["host_email"] == current_user["email"]:
+        print(f"⚠️  Host {current_user['email']} tried to join their own room {room['room_code']}")
+        raise HTTPException(
+            status_code=400, 
+            detail="You are the host of this room. Hosts cannot join as participants."
         )
     
-    room["id"] = str(room["_id"])
+    # Check room status
+    if room["status"] == "completed":
+        raise HTTPException(status_code=400, detail="This room has already completed")
     
+    # Check room capacity
+    if len(room.get("participants", [])) >= room.get("max_participants", 50):
+        raise HTTPException(status_code=400, detail="Room is full")
+    
+    # Atomic add to prevent duplicate participants (race condition safe)
+    result = await db.rooms.update_one(
+        {
+            "_id": ObjectId(room["_id"]),
+            "status": {"$in": ["waiting", "active"]},  # Can join waiting or active rooms
+            "participants": {"$ne": current_user["email"]}  # Only if not already participant
+        },
+        {
+            "$addToSet": {"participants": current_user["email"]},  # Atomic add (no duplicates)
+            "$set": {"updated_at": datetime.utcnow()}
+        }
+    )
+    
+    # If no document was modified, user was already a participant or room state changed
+    if result.modified_count == 0:
+        # Check if already participant
+        refreshed_room = await db.rooms.find_one({"_id": ObjectId(room["_id"])})
+        if current_user["email"] in refreshed_room.get("participants", []):
+            print(f"ℹ️  User {current_user['email']} already in room {room['room_code']}")
+            return {
+                "message": "You are already in this room",
+                "room_id": str(room["_id"]),
+                "room_code": room["room_code"],
+                "already_joined": True
+            }
+        else:
+            raise HTTPException(
+                status_code=400, 
+                detail="Could not join room. Room may be full or closed."
+            )
+    
+    print(f"✅ User {current_user['email']} joined room {room['room_code']}")
     return {
         "message": "Joined room successfully",
-        "room_id": room["id"],
-        "room_code": room["room_code"]
+        "room_id": str(room["_id"]),
+        "room_code": room["room_code"],
+        "already_joined": False
     }
 
 @app.post("/rooms/{room_id}/start")
 async def start_room(room_id: str, current_user: dict = Depends(get_current_user)):
-    """Start the quiz room (host only)"""
+    """
+    Start the quiz room (HOST ONLY - STRICT VALIDATION)
+    Only the room creator can start the quiz
+    """
     from bson import ObjectId
     
     try:
+        # Fetch room with explicit host validation
         room = await db.rooms.find_one({"_id": ObjectId(room_id)})
         if not room:
             raise HTTPException(status_code=404, detail="Room not found")
         
         print(f"🎮 Start room request from {current_user['email']} for room {room_id}")
         print(f"   Room host: {room.get('host_email')}")
+        print(f"   Current user: {current_user['email']}")
         print(f"   Room status: {room.get('status')}")
         
-        if room["host_email"] != current_user["email"]:
-            raise HTTPException(status_code=403, detail="Only the host can start the room")
+        # STRICT HOST CHECK - exact email match (case-sensitive, trimmed)
+        room_host = str(room["host_email"]).strip()
+        current_email = str(current_user["email"]).strip()
         
+        if room_host != current_email:
+            print(f"❌ NOT HOST: '{current_email}' tried to start room owned by '{room_host}'")
+            raise HTTPException(
+                status_code=403, 
+                detail=f"Only the host can start the room. Host: {room_host}, You: {current_email}"
+            )
+        
+        # Check room status
         if room["status"] != "waiting":
             print(f"⚠️  Room already started (status: {room['status']})")
-            raise HTTPException(status_code=400, detail=f"Room has already started (current status: {room['status']})")
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Room cannot be started. Current status: {room['status']}"
+            )
         
-        await db.rooms.update_one(
-            {"_id": ObjectId(room_id)},
+        # Atomic update to prevent race conditions
+        result = await db.rooms.update_one(
+            {
+                "_id": ObjectId(room_id),
+                "host_email": current_email,  # Double-check host in query
+                "status": "waiting"  # Only update if still waiting
+            },
             {
                 "$set": {
                     "status": "active",
@@ -1193,37 +1254,91 @@ async def start_room(room_id: str, current_user: dict = Depends(get_current_user
             }
         )
         
-        print(f"✅ Room {room_id} started successfully!")
-        return {"message": "Room started successfully", "status": "active"}
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=400, 
+                detail="Room could not be started. It may have already been started by another request."
+            )
+        
+        print(f"✅ Room {room_id} started successfully by host {current_email}!")
+        return {
+            "message": "Room started successfully", 
+            "status": "active",
+            "started_by": current_email
+        }
+        
     except HTTPException:
         raise
     except Exception as e:
         print(f"❌ Error starting room: {str(e)}")
-        raise HTTPException(status_code=400, detail="Invalid room ID")
+        raise HTTPException(status_code=400, detail=f"Invalid room ID or server error: {str(e)}")
 
 @app.post("/rooms/{room_id}/complete")
 async def complete_room(room_id: str, current_user: dict = Depends(get_current_user)):
-    """Complete the quiz room (host only)"""
+    """
+    End/Complete the quiz room (HOST ONLY - STRICT VALIDATION)
+    Only the room creator can end the quiz
+    """
     from bson import ObjectId
     
     try:
+        # Fetch room with explicit host validation
         room = await db.rooms.find_one({"_id": ObjectId(room_id)})
         if not room:
             raise HTTPException(status_code=404, detail="Room not found")
         
-        if room["host_email"] != current_user["email"]:
-            raise HTTPException(status_code=403, detail="Only the host can complete the room")
+        # STRICT HOST CHECK - exact email match (case-sensitive, trimmed)
+        room_host = str(room["host_email"]).strip()
+        current_email = str(current_user["email"]).strip()
         
-        await db.rooms.update_one(
-            {"_id": ObjectId(room_id)},
-            {"$set": {"status": "completed"}}
+        print(f"🏁 End room request from {current_email} for room {room_id}")
+        print(f"   Room host: {room_host}")
+        print(f"   Room status: {room.get('status')}")
+        
+        if room_host != current_email:
+            print(f"❌ NOT HOST: '{current_email}' tried to end room owned by '{room_host}'")
+            raise HTTPException(
+                status_code=403, 
+                detail=f"Only the host can end the room. Host: {room_host}, You: {current_email}"
+            )
+        
+        # Check if room can be ended
+        if room["status"] == "completed":
+            raise HTTPException(status_code=400, detail="Room is already completed")
+        
+        # Atomic update to prevent race conditions
+        result = await db.rooms.update_one(
+            {
+                "_id": ObjectId(room_id),
+                "host_email": current_email,  # Double-check host in query
+                "status": {"$ne": "completed"}  # Only update if not already completed
+            },
+            {
+                "$set": {
+                    "status": "completed",
+                    "completed_at": datetime.utcnow()
+                }
+            }
         )
         
-        return {"message": "Room deleted successfully"}
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=400, 
+                detail="Room could not be ended. It may have already been ended."
+            )
+        
+        print(f"✅ Room {room_id} ended successfully by host {current_email}!")
+        return {
+            "message": "Room ended successfully",
+            "status": "completed",
+            "ended_by": current_email
+        }
+        
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Invalid room ID")
+        print(f"❌ Error ending room: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Invalid room ID or server error: {str(e)}")
 
 @app.get("/rooms/{room_id}/leaderboard")
 async def get_room_leaderboard(room_id: str, current_user: dict = Depends(get_current_user)):

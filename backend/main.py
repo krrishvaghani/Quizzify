@@ -306,94 +306,332 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return user
 
-def extract_text_from_pdf(file_content: bytes) -> str:
-    """Extract text from PDF file"""
+def extract_text_from_pdf(file_content: bytes) -> dict:
+    """Extract text from PDF file with structure analysis"""
     pdf_file = io.BytesIO(file_content)
     pdf_reader = PdfReader(pdf_file)
-    text = ""
+    
+    full_text = ""
+    structured_content = {
+        "full_text": "",
+        "headings": [],
+        "important_paragraphs": [],
+        "key_terms": []
+    }
+    
     for page in pdf_reader.pages:
-        text += page.extract_text()
-    return text
+        page_text = page.extract_text()
+        full_text += page_text + "\n"
+        
+        # Identify potential headings (all caps, short lines)
+        lines = page_text.split('\n')
+        for line in lines:
+            line = line.strip()
+            if line and len(line) < 100:
+                # Potential heading: short, mostly uppercase, or ends with colon
+                if line.isupper() or line.endswith(':') or (len(line.split()) <= 5 and line[0].isupper()):
+                    structured_content["headings"].append(line)
+                # Identify important paragraphs (longer, complete sentences)
+                elif len(line) > 50 and '. ' in line:
+                    structured_content["important_paragraphs"].append(line)
+    
+    structured_content["full_text"] = full_text
+    return structured_content
 
-def extract_text_from_pptx(file_content: bytes) -> str:
-    """Extract text from PowerPoint file"""
+def extract_text_from_pptx(file_content: bytes) -> dict:
+    """Extract text from PowerPoint file with slide structure"""
     pptx_file = io.BytesIO(file_content)
     prs = Presentation(pptx_file)
-    text = ""
-    for slide in prs.slides:
+    
+    structured_content = {
+        "full_text": "",
+        "headings": [],
+        "important_paragraphs": [],
+        "key_terms": []
+    }
+    
+    full_text = ""
+    for slide_num, slide in enumerate(prs.slides, 1):
+        slide_text = f"\n--- Slide {slide_num} ---\n"
+        
         for shape in slide.shapes:
-            if hasattr(shape, "text"):
-                text += shape.text + "\n"
-    return text
+            if hasattr(shape, "text") and shape.text.strip():
+                text = shape.text.strip()
+                
+                # Title shapes are usually headings
+                if shape.shape_type == 1 or (hasattr(shape, 'is_placeholder') and shape.is_placeholder):
+                    structured_content["headings"].append(text)
+                    slide_text += f"[HEADING] {text}\n"
+                else:
+                    # Body text
+                    if len(text) > 50:
+                        structured_content["important_paragraphs"].append(text)
+                    slide_text += f"{text}\n"
+        
+        full_text += slide_text
+    
+    structured_content["full_text"] = full_text
+    return structured_content
 
-def extract_text_from_docx(file_content: bytes) -> str:
-    """Extract text from Word document"""
+def extract_text_from_docx(file_content: bytes) -> dict:
+    """Extract text from Word document with heading analysis"""
     docx_file = io.BytesIO(file_content)
     doc = Document(docx_file)
-    text = ""
-    for paragraph in doc.paragraphs:
-        text += paragraph.text + "\n"
-    return text
-
-async def generate_mcqs_with_ai(text: str, num_questions: int, difficulty: str) -> List[dict]:
-    """Generate MCQs using AI (Gemini or fallback to simple generation)"""
     
-    prompt = f"""
-    You are an expert quiz creator. Analyze the following educational content and generate EXACTLY {num_questions} high-quality multiple-choice questions (MCQs) with {difficulty} difficulty level.
+    structured_content = {
+        "full_text": "",
+        "headings": [],
+        "important_paragraphs": [],
+        "key_terms": []
+    }
+    
+    full_text = ""
+    for paragraph in doc.paragraphs:
+        text = paragraph.text.strip()
+        if not text:
+            continue
+        
+        full_text += text + "\n"
+        
+        # Check if it's a heading based on style
+        if paragraph.style.name.startswith('Heading'):
+            structured_content["headings"].append(text)
+        # Bold text often indicates important terms
+        elif any(run.bold for run in paragraph.runs if run.text.strip()):
+            bold_text = ' '.join(run.text for run in paragraph.runs if run.bold and run.text.strip())
+            if bold_text and bold_text not in structured_content["key_terms"]:
+                structured_content["key_terms"].append(bold_text)
+        # Regular paragraphs with substantial content
+        elif len(text) > 50 and '. ' in text:
+            structured_content["important_paragraphs"].append(text)
+    
+    structured_content["full_text"] = full_text
+    return structured_content
 
-    CRITICAL REQUIREMENTS:
-    1. TOPIC-BASED QUESTIONS: Identify the main topics, concepts, and key information in the text
-    2. Each question MUST test understanding of a specific topic or concept from the content
-    3. Questions should cover DIFFERENT topics from the text (don't repeat the same concept)
-    4. Generate ONLY Multiple Choice Questions (MCQs), NOT Fill in the Blank questions
-    5. You MUST generate exactly {num_questions} questions, no more, no less
-    6. Each question should be clear, unambiguous, and directly related to the content
+def extract_key_concepts(structured_content: dict, max_concepts: int = 20) -> List[str]:
+    """Extract key concepts from structured content"""
+    concepts = []
+    
+    # Prioritize headings as main concepts
+    concepts.extend(structured_content.get("headings", [])[:max_concepts // 2])
+    
+    # Extract important terms from paragraphs
+    important_paras = structured_content.get("important_paragraphs", [])
+    for para in important_paras[:10]:
+        # Extract capitalized terms (likely proper nouns or important concepts)
+        words = para.split()
+        for i, word in enumerate(words):
+            if len(word) > 3 and word[0].isupper() and not word.isupper():
+                # Check if it's not at the start of sentence
+                if i > 0 or (i == 0 and len(concepts) < max_concepts):
+                    concept = word.strip('.,;:!?()')
+                    if concept and concept not in concepts:
+                        concepts.append(concept)
+                        if len(concepts) >= max_concepts:
+                            break
+        if len(concepts) >= max_concepts:
+            break
+    
+    # Add explicit key terms if available
+    key_terms = structured_content.get("key_terms", [])
+    for term in key_terms:
+        if term not in concepts and len(concepts) < max_concepts:
+            concepts.append(term)
+    
+    return concepts[:max_concepts]
 
-    DIFFICULTY LEVEL: {difficulty}
-    - Easy: Focus on definitions, basic facts, and direct recall
-    - Medium: Test comprehension, relationships between concepts, and application
-    - Hard: Require analysis, synthesis, evaluation, and deep understanding
+def analyze_content_topics(structured_content: dict) -> str:
+    """Analyze content and create a focused summary for AI"""
+    headings = structured_content.get("headings", [])
+    important_paras = structured_content.get("important_paragraphs", [])
+    key_terms = structured_content.get("key_terms", [])
+    
+    # Build a focused summary emphasizing important content
+    summary = ""
+    
+    if headings:
+        summary += "MAIN TOPICS:\n"
+        for i, heading in enumerate(headings[:10], 1):
+            summary += f"{i}. {heading}\n"
+        summary += "\n"
+    
+    if key_terms:
+        summary += "KEY TERMS: " + ", ".join(key_terms[:15]) + "\n\n"
+    
+    summary += "IMPORTANT CONTENT:\n"
+    # Include important paragraphs with context
+    for i, para in enumerate(important_paras[:15], 1):
+        # Limit paragraph length for efficiency
+        para_text = para[:300] + "..." if len(para) > 300 else para
+        summary += f"[{i}] {para_text}\n\n"
+    
+    # Add a portion of full text for context
+    full_text = structured_content.get("full_text", "")
+    if len(summary) < 3000:
+        remaining_chars = 6000 - len(summary)
+        summary += "\nADDITIONAL CONTEXT:\n" + full_text[:remaining_chars]
+    
+    return summary
 
-    CONTENT TO ANALYZE:
-    {text[:5000]}
+async def generate_mcqs_with_ai(structured_content: dict, num_questions: int, difficulty: str) -> List[dict]:
+    """Generate MCQs using AI with enhanced content analysis"""
+    
+    # Extract key concepts for better question generation
+    key_concepts = extract_key_concepts(structured_content, max_concepts=num_questions * 2)
+    
+    # Create focused content summary
+    analyzed_content = analyze_content_topics(structured_content)
+    
+    # Map difficulty to specific instructions
+    difficulty_instructions = {
+        "easy": """
+        - Focus on DEFINITIONS and BASIC FACTS from the content
+        - Test RECALL and RECOGNITION of key terms and concepts
+        - Use direct language and straightforward questions
+        - Example: "What is the definition of [term]?" or "Which of the following describes [concept]?"
+        """,
+        "medium": """
+        - Test COMPREHENSION and UNDERSTANDING of relationships between concepts
+        - Require APPLICATION of knowledge to new situations
+        - Ask about CAUSES, EFFECTS, and COMPARISONS
+        - Example: "How does [concept A] relate to [concept B]?" or "What is the primary purpose of [process]?"
+        """,
+        "hard": """
+        - Require ANALYSIS, SYNTHESIS, and EVALUATION of information
+        - Test CRITICAL THINKING and ability to draw conclusions
+        - Ask about IMPLICATIONS, PREDICTIONS, and COMPLEX RELATIONSHIPS
+        - Example: "Based on the principles discussed, what would happen if [scenario]?" or "Evaluate the significance of [concept]"
+        """
+    }
+    
+    prompt = f"""You are an EXPERT EXAM-QUESTION GENERATOR with specialized expertise in creating high-quality, meaningful multiple-choice questions for academic examinations.
 
-    QUESTION QUALITY GUIDELINES:
-    ✓ Extract main topics, key terms, important concepts, definitions, and principles
-    ✓ Create questions that test understanding of these specific topics
-    ✓ Design 4 options where all seem plausible but only one is definitively correct
-    ✓ Make wrong options believable (common misconceptions or related concepts)
-    ✓ Avoid obvious wrong answers like "None of the above" or "All of the above"
-    ✓ Use clear, professional language appropriate for the subject matter
-    ✓ Include brief explanations that reference the content
+🎯 CRITICAL MISSION: Generate EXACTLY {num_questions} EXAM-LEVEL multiple-choice questions strictly based on IMPORTANT concepts from the provided document. Every question must be meaningful, useful, and clearly understandable with realistic options.
 
-    OUTPUT FORMAT (Return ONLY valid JSON, no markdown or extra text):
-    [
-        {{
-            "question": "Based on the content, what is the primary purpose of [specific topic]?",
-            "options": [
-                {{"text": "Clear, specific answer option A", "is_correct": false}},
-                {{"text": "Clear, specific answer option B (CORRECT)", "is_correct": true}},
-                {{"text": "Plausible but incorrect option C", "is_correct": false}},
-                {{"text": "Related but incorrect option D", "is_correct": false}}
-            ],
-            "explanation": "The correct answer is B because according to the content, [specific reference to text]. This demonstrates [key concept]."
-        }}
-    ]
+📚 DOCUMENT CONTENT TO ANALYZE:
+{analyzed_content}
 
-    IMPORTANT: Return ONLY the JSON array. Do not include any markdown formatting, code blocks, or additional text before or after the JSON.
-    """
+🔑 KEY CONCEPTS IDENTIFIED FROM DOCUMENT:
+{chr(10).join(f"• {concept}" for concept in key_concepts[:num_questions])}
+
+DIFFICULTY LEVEL: {difficulty.upper()}
+{difficulty_instructions.get(difficulty.lower(), difficulty_instructions["medium"])}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ STRICT MANDATORY RULES - FOLLOW WITHOUT EXCEPTION:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ✅ SOURCE RESTRICTION:
+   - Generate questions ONLY from important concepts in the document
+   - DO NOT generate random or irrelevant questions
+   - Use ONLY information present inside the document
+   - NEVER add external knowledge or make assumptions
+
+2. ✅ QUESTION QUALITY:
+   - Focus on MAIN TOPICS, KEY CONCEPTS, and CENTRAL IDEAS
+   - NO trivial, vague, or superficial questions
+   - Each question must be EXAM-LEVEL and test real understanding
+   - Questions must be CLEAR, SPECIFIC, and UNAMBIGUOUS
+   - DO NOT repeat questions or ask the same concept twice
+
+3. ✅ ANSWER OPTIONS (CRITICAL):
+   - Every option must be MEANINGFUL, LOGICAL, and CLOSELY RELATED to the question
+   - All 4 options should be REALISTIC and about the SAME TOPIC
+   - 1 option is CORRECT based on document
+   - 3 options are INCORRECT but PLAUSIBLE (meaningful distractors)
+   - Wrong options should be:
+     * Related concepts from the document
+     * Common misconceptions
+     * Partial truths or incomplete answers
+     * Similar but incorrect variations
+   - AVOID:
+     * "None of the above"
+     * "All of the above"
+     * Obviously wrong options
+     * Unrelated or random options
+     * Combination options like "Both A and B"
+
+4. ✅ OPTION CONSISTENCY:
+   - All options must have similar LENGTH (±20 characters)
+   - All options must have similar COMPLEXITY
+   - All options must be grammatically parallel
+   - All options must be written in the same style
+
+5. ✅ CONCEPT COVERAGE:
+   - Each question covers a DIFFERENT important concept
+   - Questions should span across multiple sections
+   - Prioritize concepts from HEADINGS and KEY TERMS
+   - Focus on concepts that demonstrate MASTERY
+
+6. ✅ CLARITY & PROFESSIONALISM:
+   - Use professional academic language
+   - Questions should be self-contained (no ambiguity)
+   - Use terminology from the document
+   - Be precise and specific
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 REQUIRED JSON OUTPUT FORMAT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Return ONLY valid JSON array (no markdown, no code blocks, no extra text):
+
+[
+  {{
+    "question": "What is the primary mechanism by which [specific concept from document] functions?",
+    "options": [
+      {{"text": "Through process A as described in the document involving specific steps", "is_correct": true}},
+      {{"text": "Through process B which is a related but different mechanism", "is_correct": false}},
+      {{"text": "Through process C which is mentioned but applies to a different context", "is_correct": false}},
+      {{"text": "Through process D which represents a common misconception", "is_correct": false}}
+    ],
+    "explanation": "The correct answer is A. According to the document, [specific quote or reference from document]. This mechanism is fundamental because [why it matters]."
+  }},
+  {{
+    "question": "According to the document, which statement accurately describes [important concept]?",
+    "options": [
+      {{"text": "Related but incorrect statement mixing concepts from document", "is_correct": false}},
+      {{"text": "Accurate statement directly from document content", "is_correct": true}},
+      {{"text": "Partially correct statement missing key details", "is_correct": false}},
+      {{"text": "Opposite of what document states but plausible", "is_correct": false}}
+    ],
+    "explanation": "Option B is correct. The document explicitly states that [specific information]. This is a key concept because [relevance]."
+  }}
+]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️ FINAL CHECKLIST BEFORE SUBMITTING:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Generated EXACTLY {num_questions} questions
+✅ Each question is from IMPORTANT concepts in document
+✅ NO random or irrelevant questions
+✅ ALL options are meaningful, logical, and related to question topic
+✅ NO "None of the above" or "All of the above"
+✅ NO repeated questions or concepts
+✅ All options similar in length and complexity
+✅ Every question has clear, specific wording
+✅ Used ONLY information from the document
+✅ Each question tests a DIFFERENT concept
+✅ Returned ONLY JSON array (no markdown)
+
+CRITICAL: If you cannot create a high-quality question following ALL rules, skip it and create a different one. Quality over quantity - but you MUST generate exactly {num_questions} questions.
+"""
     
     try:
         if GEMINI_API_KEY:
-            print(f"🤖 Using Gemini AI to generate {num_questions} {difficulty} questions...")
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            print(f"🤖 Using Google Gemini AI to generate {num_questions} {difficulty} questions...")
+            print(f"📊 Identified {len(key_concepts)} key concepts for question generation")
             
-            # Configure generation parameters for better results
+            # Use Gemini Pro for high-quality question generation
+            model = genai.GenerativeModel('gemini-pro')
+            
+            # Optimized generation parameters for educational content
             generation_config = {
-                "temperature": 0.7,
-                "top_p": 0.95,
-                "top_k": 40,
+                "temperature": 0.3,  # Low temperature for precise, factual questions
+                "top_p": 0.85,       # Focus on high-probability outputs
+                "top_k": 30,         # Limit to most relevant tokens
                 "max_output_tokens": 8192,
+                "candidate_count": 1,
             }
             
             response = model.generate_content(
@@ -420,9 +658,11 @@ async def generate_mcqs_with_ai(text: str, num_questions: int, difficulty: str) 
                 
                 print(f"✅ AI generated {len(questions)} questions successfully")
                 
-                # Validate question structure
+                # Validate question structure and quality with scoring
                 valid_questions = []
-                for q in questions:
+                quality_scores = []
+                
+                for idx, q in enumerate(questions, 1):
                     if (isinstance(q, dict) and 
                         "question" in q and 
                         "options" in q and 
@@ -432,17 +672,105 @@ async def generate_mcqs_with_ai(text: str, num_questions: int, difficulty: str) 
                         # Ensure exactly one correct answer
                         correct_count = sum(1 for opt in q["options"] if opt.get("is_correct", False))
                         if correct_count == 1:
-                            valid_questions.append(q)
+                            # Additional quality checks
+                            question_text = q["question"].strip()
+                            if len(question_text) > 15:  # Reasonable question length
+                                # Check if options are not empty and substantial
+                                options_valid = all(
+                                    opt.get("text", "").strip() and len(opt.get("text", "").strip()) > 5 
+                                    for opt in q["options"]
+                                )
+                                
+                                if options_valid:
+                                    # Strict quality validation
+                                    quality_score = 0
+                                    quality_issues = []
+                                    
+                                    # Check 1: Has explanation (+1)
+                                    if q.get("explanation", "").strip() and len(q.get("explanation", "")) > 20:
+                                        quality_score += 1
+                                    else:
+                                        quality_issues.append("weak explanation")
+                                    
+                                    # Check 2: Question has key concept from document (+1)
+                                    if any(concept.lower() in question_text.lower() for concept in key_concepts[:10]):
+                                        quality_score += 1
+                                    else:
+                                        quality_issues.append("no key concept")
+                                    
+                                    # Check 3: Options are well-balanced in length (+1)
+                                    option_texts = [opt["text"] for opt in q["options"]]
+                                    option_lengths = [len(text) for text in option_texts]
+                                    length_variance = max(option_lengths) - min(option_lengths)
+                                    if length_variance < 50:
+                                        quality_score += 1
+                                    else:
+                                        quality_issues.append(f"unbalanced lengths (±{length_variance})")
+                                    
+                                    # Check 4: Question is specific, not overly generic (+1)
+                                    overly_generic = ["based on the content", "according to the text", "from the material", "mentioned above"]
+                                    if not any(phrase in question_text.lower() for phrase in overly_generic):
+                                        quality_score += 1
+                                    else:
+                                        quality_issues.append("generic phrasing")
+                                    
+                                    # Check 5: No "None/All of the above" in options (bonus check)
+                                    bad_options = ["none of the above", "all of the above", "both a and b", "a and b"]
+                                    has_bad_option = any(
+                                        any(bad in opt["text"].lower() for bad in bad_options)
+                                        for opt in q["options"]
+                                    )
+                                    
+                                    # Check 6: Options are meaningful (not too generic)
+                                    generic_option_phrases = ["is not mentioned", "not discussed", "unrelated", "none"]
+                                    meaningful_options = sum(
+                                        1 for opt in option_texts 
+                                        if not any(phrase in opt.lower() for phrase in generic_option_phrases)
+                                    )
+                                    
+                                    if not has_bad_option and meaningful_options >= 3:
+                                        quality_score += 1
+                                        
+                                    # Only accept high-quality questions (score >= 3)
+                                    if quality_score >= 3:
+                                        valid_questions.append(q)
+                                        quality_scores.append(quality_score)
+                                        
+                                        score_emoji = "⭐" * quality_score
+                                        print(f"  ✓ Question {idx}: {score_emoji} [{quality_score}/5] '{question_text[:60]}...'")
+                                    else:
+                                        print(f"  ⚠ Question {idx}: Low quality [{quality_score}/5] - {', '.join(quality_issues)}")
+                                else:
+                                    print(f"  ✗ Question {idx}: Invalid or too short options")
+                            else:
+                                print(f"  ✗ Question {idx}: Question text too short")
                         else:
-                            print(f"⚠️ Question has {correct_count} correct answers, skipping")
+                            print(f"  ✗ Question {idx}: Has {correct_count} correct answers (need exactly 1)")
+                    else:
+                        print(f"  ✗ Question {idx}: Invalid structure")
+                
+                # Log quality metrics
+                if quality_scores:
+                    avg_quality = sum(quality_scores) / len(quality_scores)
+                    print(f"📊 Average question quality: {avg_quality:.1f}/5.0")
+                    
+                    # Quality rating
+                    if avg_quality >= 4.5:
+                        print(f"🏆 EXCELLENT quality - Exam-ready questions!")
+                    elif avg_quality >= 4.0:
+                        print(f"✨ HIGH quality - Professional questions")
+                    elif avg_quality >= 3.5:
+                        print(f"✓ GOOD quality - Acceptable questions")
+                    else:
+                        print(f"⚠️ MODERATE quality - Consider regenerating")
                 
                 print(f"✅ {len(valid_questions)} valid questions after validation")
                 
-                # If AI generated fewer valid questions, try to generate more
+                # If AI generated fewer valid questions, use intelligent fallback
                 if len(valid_questions) < num_questions:
                     print(f"⚠️ Need {num_questions - len(valid_questions)} more questions")
                     remaining = num_questions - len(valid_questions)
-                    additional = generate_simple_mcqs(text, remaining)
+                    additional = generate_enhanced_mcqs(structured_content, remaining, difficulty)
                     valid_questions.extend(additional)
                 
                 return valid_questions[:num_questions]
@@ -454,98 +782,217 @@ async def generate_mcqs_with_ai(text: str, num_questions: int, difficulty: str) 
         import traceback
         traceback.print_exc()
     
-    # Fallback: Generate simple questions from the text
-    return generate_simple_mcqs(text, num_questions)
+    # Fallback: Generate enhanced questions from structured content
+    print(f"📝 Using enhanced fallback method to generate questions")
+    return generate_enhanced_mcqs(structured_content, num_questions, difficulty)
 
-def generate_simple_mcqs(text: str, num_questions: int) -> List[dict]:
-    """Fallback method to generate simple MCQs"""
-    # Split into sentences and filter
-    sentences = [s.strip() for s in text.replace('\n', '. ').split('.') if len(s.strip()) > 30]
+def generate_enhanced_mcqs(structured_content: dict, num_questions: int, difficulty: str) -> List[dict]:
+    """Enhanced fallback method to generate high-quality MCQs from structured content"""
     
     questions = []
-    sentence_index = 0
+    headings = structured_content.get("headings", [])
+    important_paras = structured_content.get("important_paragraphs", [])
+    # Ensure key_terms is a list
+    key_terms_raw = structured_content.get("key_terms", [])
+    key_terms = list(key_terms_raw) if isinstance(key_terms_raw, set) else key_terms_raw
     
-    # Common question templates for MCQs
-    mcq_templates = [
-        "According to the text, what can be inferred about",
-        "Which of the following best describes",
-        "What is the main idea regarding",
-        "Based on the information provided, which statement is true about",
-        "What does the text suggest about"
-    ]
+    # Question templates based on difficulty
+    templates = {
+        "easy": [
+            ("What is {concept}?", "definition"),
+            ("Which of the following describes {concept}?", "description"),
+            ("According to the content, what does {concept} refer to?", "reference"),
+            ("{concept} is best defined as:", "definition"),
+        ],
+        "medium": [
+            ("How does {concept} relate to the main topic?", "relationship"),
+            ("What is the primary purpose of {concept}?", "purpose"),
+            ("Which statement best explains {concept}?", "explanation"),
+            ("What can be inferred about {concept} from the content?", "inference"),
+        ],
+        "hard": [
+            ("Based on the content, what is the significance of {concept}?", "significance"),
+            ("Analyze the role of {concept} in the context discussed:", "analysis"),
+            ("What would be the consequence if {concept} were changed?", "evaluation"),
+            ("Compare {concept} with related concepts in the content:", "synthesis"),
+        ]
+    }
     
-    while len(questions) < num_questions and sentence_index < len(sentences):
-        sentence = sentences[sentence_index]
-        words = sentence.split()
+    current_templates = templates.get(difficulty.lower(), templates["medium"])
+    
+    # Strategy 1: Create questions from headings (most important)
+    for i, heading in enumerate(headings[:num_questions]):
+        if len(questions) >= num_questions:
+            break
         
-        if len(words) >= 5:
-            # Create a proper MCQ question based on the sentence
-            # Extract key terms (nouns/important words)
-            key_words = [w for w in words if len(w) > 4 and w[0].isupper()]
-            
-            if key_words:
-                key_term = key_words[0] if key_words else words[len(words) // 3]
-                template = mcq_templates[sentence_index % len(mcq_templates)]
-                
-                # Create question based on sentence content
-                question_text = f"{template} {key_term.lower()}?"
-                
-                # Use part of the sentence as the correct answer
-                correct_answer = ' '.join(words[:min(8, len(words))])
-                
-                # Generate plausible wrong answers
-                wrong_answers = [
-                    f"It is not mentioned in the text",
-                    f"The opposite of what is stated",
-                    f"An unrelated concept"
-                ]
-                
-                questions.append({
-                    "question": question_text,
-                    "options": [
-                        {"text": correct_answer, "is_correct": True},
-                        {"text": wrong_answers[0], "is_correct": False},
-                        {"text": wrong_answers[1], "is_correct": False},
-                        {"text": wrong_answers[2], "is_correct": False}
-                    ],
-                    "explanation": f"Based on the content: '{sentence}'"
-                })
-            else:
-                # Generate a generic MCQ if no key terms found
-                questions.append({
-                    "question": f"According to the content, which statement is most accurate?",
-                    "options": [
-                        {"text": sentence[:60] + "..." if len(sentence) > 60 else sentence, "is_correct": True},
-                        {"text": "This is not discussed in the text", "is_correct": False},
-                        {"text": "The content suggests otherwise", "is_correct": False},
-                        {"text": "None of the above", "is_correct": False}
-                    ],
-                    "explanation": f"The text states: '{sentence}'"
-                })
+        template, q_type = current_templates[i % len(current_templates)]
+        question_text = template.replace("{concept}", heading)
         
-        sentence_index += 1
+        # Create contextual answer based on next paragraph
+        correct_answer = heading
+        if i < len(important_paras):
+            # Use content from paragraph as correct answer
+            para_words = important_paras[i].split()[:15]
+            correct_answer = ' '.join(para_words)
         
-        # If we run out of sentences, wrap around with different patterns
-        if sentence_index >= len(sentences) and len(questions) < num_questions:
-            sentence_index = len(questions)  # Start from where we have questions
-            if sentence_index < len(sentences):
-                continue
-            else:
-                # Generate generic questions if we still need more
-                for i in range(len(questions), num_questions):
-                    questions.append({
-                        "question": f"Question {i+1}: Based on the content, what is a key concept?",
-                        "options": [
-                            {"text": "Concept A", "is_correct": True},
-                            {"text": "Concept B", "is_correct": False},
-                            {"text": "Concept C", "is_correct": False},
-                            {"text": "Concept D", "is_correct": False}
-                        ],
-                        "explanation": "This is a general question based on the content."
-                    })
+        # Generate plausible wrong answers
+        wrong_answers = generate_plausible_distractors(heading, important_paras, i, correct_answer)
+        
+        questions.append({
+            "question": question_text,
+            "options": [
+                {"text": correct_answer, "is_correct": True},
+                {"text": wrong_answers[0], "is_correct": False},
+                {"text": wrong_answers[1], "is_correct": False},
+                {"text": wrong_answers[2], "is_correct": False}
+            ],
+            "explanation": f"The content discusses {heading.lower()}, which is a key concept in understanding the material."
+        })
+    
+    # Strategy 2: Create questions from key terms
+    for i, term in enumerate(key_terms[:num_questions - len(questions)]):
+        if len(questions) >= num_questions:
+            break
+        
+        template, q_type = current_templates[i % len(current_templates)]
+        question_text = template.replace("{concept}", term)
+        
+        # Find context for this term in paragraphs
+        correct_answer = f"A fundamental concept related to {term}"
+        for para in important_paras:
+            if term.lower() in para.lower():
+                # Extract sentence containing the term
+                sentences = para.split('. ')
+                for sent in sentences:
+                    if term.lower() in sent.lower():
+                        correct_answer = sent.strip()
+                        break
                 break
+        
+        wrong_answers = generate_plausible_distractors(term, important_paras, len(questions), correct_answer)
+        
+        questions.append({
+            "question": question_text,
+            "options": [
+                {"text": correct_answer, "is_correct": True},
+                {"text": wrong_answers[0], "is_correct": False},
+                {"text": wrong_answers[1], "is_correct": False},
+                {"text": wrong_answers[2], "is_correct": False}
+            ],
+            "explanation": f"This relates to {term}, an important term in the content."
+        })
+    
+    # Strategy 3: Create questions from important paragraphs
+    para_start = len(questions)
+    for i, para in enumerate(important_paras):
+        if len(questions) >= num_questions:
+            break
+        
+        # Skip if already used this paragraph
+        if i < para_start:
+            continue
+        
+        # Extract main idea from paragraph
+        sentences = [s.strip() for s in para.split('. ') if len(s.strip()) > 20]
+        if not sentences:
+            continue
+        
+        main_sentence = sentences[0]  # First sentence often contains main idea
+        
+        # Extract key concept from sentence
+        words = main_sentence.split()
+        key_words = [w for w in words if len(w) > 4 and w[0].isupper()]
+        concept = key_words[0] if key_words else "this concept"
+        
+        template_idx = (len(questions) + i) % len(current_templates)
+        template, q_type = current_templates[template_idx]
+        question_text = template.replace("{concept}", concept)
+        
+        # Use part of the paragraph as correct answer
+        correct_answer = main_sentence
+        if len(correct_answer) > 100:
+            correct_answer = ' '.join(main_sentence.split()[:15]) + "..."
+        
+        wrong_answers = generate_plausible_distractors(concept, important_paras, i, correct_answer)
+        
+        questions.append({
+            "question": question_text,
+            "options": [
+                {"text": correct_answer, "is_correct": True},
+                {"text": wrong_answers[0], "is_correct": False},
+                {"text": wrong_answers[1], "is_correct": False},
+                {"text": wrong_answers[2], "is_correct": False}
+            ],
+            "explanation": f"According to the content: {main_sentence[:150]}..."
+        })
+    
+    # If still need more questions, create general comprehension questions
+    while len(questions) < num_questions:
+        idx = len(questions)
+        questions.append({
+            "question": f"Based on the content, which of the following is a key concept discussed?",
+            "options": [
+                {"text": headings[idx % len(headings)] if headings else "Main concept from the content", "is_correct": True},
+                {"text": "This concept is not mentioned in the material", "is_correct": False},
+                {"text": "An unrelated topic", "is_correct": False},
+                {"text": "A contradictory statement", "is_correct": False}
+            ],
+            "explanation": "This question tests understanding of the main concepts presented in the content."
+        })
     
     return questions[:num_questions]
+
+def generate_plausible_distractors(concept: str, paragraphs: List[str], exclude_idx: int, correct_answer: str) -> List[str]:
+    """Generate meaningful, realistic but incorrect answer options from document content"""
+    distractors = []
+    
+    # Strategy 1: Extract related concepts from other paragraphs
+    for i, para in enumerate(paragraphs[:10]):
+        if i != exclude_idx and len(distractors) < 3:
+            # Find sentences or phrases that are related but different
+            sentences = [s.strip() for s in para.split('.') if len(s.strip()) > 30]
+            for sent in sentences:
+                if sent != correct_answer and len(sent) > 25:
+                    # Make it similar length to correct answer
+                    words = sent.split()
+                    target_length = len(correct_answer.split())
+                    
+                    if len(words) >= target_length - 3:
+                        distractor_text = ' '.join(words[:target_length + 2])
+                        if distractor_text not in distractors and distractor_text != correct_answer:
+                            distractors.append(distractor_text)
+                            if len(distractors) >= 3:
+                                break
+            if len(distractors) >= 3:
+                break
+    
+    # Strategy 2: Create variations based on the concept
+    if len(distractors) < 3:
+        # Use similar structure but different meaning
+        correct_words = correct_answer.split()
+        if len(correct_words) > 5:
+            # Partial truth - use first part differently
+            variant = ' '.join(correct_words[:len(correct_words)//2]) + " in a different context"
+            if variant not in distractors:
+                distractors.append(variant)
+    
+    # Strategy 3: Use content from document but for different concepts
+    if len(distractors) < 3:
+        for para in paragraphs[exclude_idx+1:exclude_idx+5]:
+            if len(distractors) >= 3:
+                break
+            words = para.split()[:len(correct_answer.split()) + 1]
+            if len(words) > 5:
+                alt_text = ' '.join(words)
+                if alt_text != correct_answer and alt_text not in distractors:
+                    distractors.append(alt_text)
+    
+    # Ensure we have exactly 3 distractors with similar length
+    while len(distractors) < 3:
+        # Last resort: create meaningful but incorrect statement
+        distractors.append(f"Related to {concept} but represents a different aspect of the topic")
+    
+    return distractors[:3]
 
 # Routes
 @app.get("/")
@@ -800,7 +1247,7 @@ async def upload_and_generate(
     quiz_name: str = "",
     current_user: dict = Depends(get_current_user)
 ):
-    """Upload a file and generate MCQs"""
+    """Upload a file and generate high-quality MCQs focused on important concepts"""
     
     # Read file content
     content = await file.read()
@@ -809,33 +1256,63 @@ async def upload_and_generate(
     filename = file.filename.lower()
     
     try:
+        print(f"\n📄 Processing file: {file.filename}")
+        print(f"🎯 Target: {num_questions} questions at {difficulty} difficulty")
+        
+        # Extract structured content based on file type
         if filename.endswith('.pdf'):
-            text = extract_text_from_pdf(content)
+            structured_content = extract_text_from_pdf(content)
+            print(f"📊 Extracted from PDF: {len(structured_content.get('headings', []))} headings, {len(structured_content.get('important_paragraphs', []))} important paragraphs")
         elif filename.endswith('.pptx') or filename.endswith('.ppt'):
-            text = extract_text_from_pptx(content)
+            structured_content = extract_text_from_pptx(content)
+            print(f"📊 Extracted from PPTX: {len(structured_content.get('headings', []))} slide titles, {len(structured_content.get('important_paragraphs', []))} content blocks")
         elif filename.endswith('.docx') or filename.endswith('.doc'):
-            text = extract_text_from_docx(content)
+            structured_content = extract_text_from_docx(content)
+            print(f"📊 Extracted from DOCX: {len(structured_content.get('headings', []))} headings, {len(structured_content.get('key_terms', []))} key terms")
         elif filename.endswith('.txt'):
+            # For plain text, create basic structure
             text = content.decode('utf-8')
+            structured_content = {
+                "full_text": text,
+                "headings": [],
+                "important_paragraphs": [p.strip() for p in text.split('\n\n') if len(p.strip()) > 50][:20],
+                "key_terms": []
+            }
+            print(f"📊 Extracted from TXT: {len(structured_content['important_paragraphs'])} paragraphs")
         else:
-            raise HTTPException(status_code=400, detail="Unsupported file type")
+            raise HTTPException(status_code=400, detail="Unsupported file type. Please upload PDF, DOCX, PPTX, or TXT files.")
         
-        if not text.strip():
-            raise HTTPException(status_code=400, detail="No text could be extracted from the file")
+        # Validate extracted content
+        full_text = structured_content.get("full_text", "")
+        if not full_text.strip():
+            raise HTTPException(status_code=400, detail="No text could be extracted from the file. Please ensure the file contains readable text.")
         
-        # Generate MCQs
-        questions = await generate_mcqs_with_ai(text, num_questions, difficulty)
+        if len(full_text.strip()) < 100:
+            raise HTTPException(status_code=400, detail="The extracted content is too short. Please provide a document with more substantial content.")
+        
+        print(f"✅ Content extracted successfully ({len(full_text)} characters)")
+        
+        # Generate high-quality MCQs using enhanced AI
+        questions = await generate_mcqs_with_ai(structured_content, num_questions, difficulty)
+        
+        if not questions or len(questions) == 0:
+            raise HTTPException(status_code=500, detail="Failed to generate questions from the content. Please try again or use a different document.")
+        
+        print(f"✅ Generated {len(questions)} high-quality questions")
         
         # Use custom quiz name if provided, otherwise use filename
         title = quiz_name.strip() if quiz_name.strip() else f"Quiz from {file.filename}"
         
-        # Save quiz to database
+        # Save quiz to database with metadata
         quiz_data = {
             "title": title,
             "questions": questions,
             "created_by": current_user["email"],
             "created_at": datetime.utcnow(),
-            "source_file": file.filename
+            "source_file": file.filename,
+            "difficulty": difficulty,
+            "num_concepts": len(structured_content.get("headings", [])),
+            "content_length": len(full_text)
         }
         
         result = await db.quizzes.insert_one(quiz_data)
@@ -843,12 +1320,22 @@ async def upload_and_generate(
         del quiz_data["_id"]  # Remove the ObjectId before returning
         
         return {
-            "message": "Quiz generated successfully",
+            "message": "High-quality quiz generated successfully from important concepts",
             "quiz": quiz_data,
-            "num_questions": len(questions)
+            "num_questions": len(questions),
+            "insights": {
+                "headings_found": len(structured_content.get("headings", [])),
+                "key_concepts": len(structured_content.get("key_terms", [])),
+                "content_analyzed": f"{len(full_text)} characters"
+            }
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
+        import traceback
+        print(f"❌ Error processing file: {str(e)}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
 
 @app.get("/quizzes")
